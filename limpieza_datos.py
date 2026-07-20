@@ -45,7 +45,7 @@ def limpiar_fecha(fecha_str):
 # PROCESAMIENTO, ORDENAMIENTO Y CONVERSIÓN
 archivos = [f for f in os.listdir(CARPETA_ENTRADA) if f.endswith(('.json', '.csv', '.xlsx'))]
 
-print(f"🧹 Iniciando limpieza y conversión a JSON de {len(archivos)} archivos...\n")
+print(f"Iniciando limpieza y conversión a JSON de {len(archivos)} archivos...\n")
 
 for archivo in archivos:
     ruta_entrada = os.path.join(CARPETA_ENTRADA, archivo)
@@ -89,9 +89,9 @@ for archivo in archivos:
         with open(ruta_salida, 'w', encoding='utf-8') as f:
             json.dump(datos_json, f, ensure_ascii=False, indent=2)
             
-        print(f"✅ Limpio y convertido ({extension.upper()[1:]} -> JSON): {nombre}.json")
+        print(f"Limpio y convertido ({extension.upper()[1:]} -> JSON): {nombre}.json")
 
     except Exception as e:
-        print(f"❌ Error al procesar {archivo}: {str(e)}")
+        print(f"Error al procesar {archivo}: {str(e)}")
 
 print(f"\n ¡Proceso completado! Todos los archivos están limpios, ordenados y en formato JSON dentro de '{CARPETA_SALIDA}'.")
