@@ -1,0 +1,32 @@
+{
+  "info": {
+    "name": "Finance AI API MVP",
+    "_postman_id": "finance-ai-mvp",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8080"}
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/health"}
+    },
+    {
+      "name": "Version",
+      "request": {"method": "GET", "url": "{{baseUrl}}/api/v1/version"}
+    },
+    {
+      "name": "Análisis financiero",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ingresoMensual\": 4500,\n  \"nivelEndeudamiento\": 25,\n  \"frecuenciaAhorro\": \"Media\",\n  \"transacciones\": [\n    {\"descripcion\": \"Supermercado\", \"valor\": 420},\n    {\"descripcion\": \"Combustible\", \"valor\": 300},\n    {\"descripcion\": \"Netflix\", \"valor\": 40}\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/analisis-financiero"
+      }
+    }
+  ]
+}
