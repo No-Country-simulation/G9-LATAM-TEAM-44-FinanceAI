@@ -1,0 +1,15 @@
+# Maven / build output
+target/
+*.class
+
+# Python
+__pycache__/
+*.pyc
+scripts/archivos_financieros_usuarios/
+scripts/archivos_financieros_limpios/
+
+# IDE
+*.iml
+.idea/workspace.xml
+.idea/shelf/
+.idea/httpRequests/
