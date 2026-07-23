@@ -1,95 +1,213 @@
 {
   "info": {
-    "name": "Finance AI API",
-    "description": "Coleccion de la API de analisis de salud financiera (Spring Boot MVP). Importa tambien el environment 'Finance AI - Local'.",
+    "name": "FinanceAI – Colección de pruebas",
+    "_postman_id": "financeai-team44-pruebas",
+    "description": "Prueba las dos piezas del sistema.\n\n• Carpeta 'ml-service (contrato)': el servicio FastAPI del contrato en :8000 (financeai-ml-contract). Funciona hoy con el stub y seguirá válida cuando entren los modelos reales.\n\n• Carpeta 'finance-ai-api (backend)': el orquestador Spring Boot en :8080, con los 3 ejemplos oficiales en snake_case (formato del reto). Nota: el backend actual expone camelCase; hasta aplicar spring.jackson.property-naming-strategy=SNAKE_CASE usar la petición marcada como 'camelCase (backend actual)'.\n\nCorrer todo por consola: newman run FinanceAI.postman_collection.json --folder \"ml-service (contrato)\"",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    { "key": "ml_url", "value": "http://localhost:8000" },
+    { "key": "api_url", "value": "http://localhost:8080" }
+  ],
   "item": [
     {
-      "name": "Health",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/health",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "health"]
+      "name": "ml-service (contrato)",
+      "item": [
+        {
+          "name": "Health",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 y status ok', function () {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json().status).to.eql('ok');",
+            "});"
+          ]}}],
+          "request": { "method": "GET", "url": "{{ml_url}}/health" }
         },
-        "description": "Verifica que el servicio esta arriba. Devuelve 'Finance AI API is running'."
-      }
+        {
+          "name": "Modelo info",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 con categorias y perfiles canónicos', function () {",
+            "  pm.response.to.have.status(200);",
+            "  const b = pm.response.json();",
+            "  pm.expect(b.categorias).to.have.lengthOf(8);",
+            "  pm.expect(b.perfiles).to.eql(['Saludable', 'En observación', 'En riesgo']);",
+            "});"
+          ]}}],
+          "request": { "method": "GET", "url": "{{ml_url}}/modelo/info" }
+        },
+        {
+          "name": "Clasificar – lote de transacciones",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const CANONICAS = ['alimentacion','transporte','salud','vivienda','educacion','ocio','servicios','otras'];",
+            "pm.test('200 y misma cantidad de transacciones', function () {",
+            "  pm.response.to.have.status(200);",
+            "  const tx = pm.response.json().transacciones_clasificadas;",
+            "  pm.expect(tx).to.have.lengthOf(4);",
+            "});",
+            "pm.test('categorías canónicas y confianza en [0,1]', function () {",
+            "  const tx = pm.response.json().transacciones_clasificadas;",
+            "  tx.forEach(t => {",
+            "    pm.expect(CANONICAS).to.include(t.categoria);",
+            "    pm.expect(t.confianza).to.be.within(0, 1);",
+            "  });",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{ml_url}}/clasificar",
+            "body": { "mode": "raw", "raw": "{\n  \"transacciones\": [\n    { \"descripcion\": \"Supermercado Exito\", \"valor\": 420 },\n    { \"descripcion\": \"Gasolina Terpel\", \"valor\": 300 },\n    { \"descripcion\": \"Netflix\", \"valor\": 40 },\n    { \"descripcion\": \"Compra desconocida XYZ\", \"valor\": 15 }\n  ]\n}" }
+          }
+        },
+        {
+          "name": "Perfil – caso saludable",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200, etiqueta válida y factores', function () {",
+            "  pm.response.to.have.status(200);",
+            "  const b = pm.response.json();",
+            "  pm.expect(['Saludable','En observación','En riesgo']).to.include(b.perfil_financiero);",
+            "  pm.expect(b.probabilidad).to.be.within(0, 1);",
+            "  pm.expect(b.factores).to.have.lengthOf.at.least(1);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{ml_url}}/perfil",
+            "body": { "mode": "raw", "raw": "{\n  \"ingreso_mensual\": 4500,\n  \"nivel_endeudamiento\": 25,\n  \"frecuencia_ahorro\": \"Media\",\n  \"resumen_gastos\": { \"alimentacion\": 420, \"transporte\": 300, \"ocio\": 40 }\n}" }
+          }
+        },
+        {
+          "name": "Perfil – caso en riesgo",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('perfil En riesgo por deuda alta y gasto ≥ ingreso', function () {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json().perfil_financiero).to.eql('En riesgo');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{ml_url}}/perfil",
+            "body": { "mode": "raw", "raw": "{\n  \"ingreso_mensual\": 2000,\n  \"nivel_endeudamiento\": 55,\n  \"frecuencia_ahorro\": \"Nula\",\n  \"resumen_gastos\": { \"vivienda\": 1200, \"alimentacion\": 600, \"transporte\": 250, \"ocio\": 80 }\n}" }
+          }
+        },
+        {
+          "name": "Perfil – frecuencia inválida (422)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('422 de validación', function () {",
+            "  pm.response.to.have.status(422);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{ml_url}}/perfil",
+            "body": { "mode": "raw", "raw": "{\n  \"ingreso_mensual\": 4500,\n  \"nivel_endeudamiento\": 25,\n  \"frecuencia_ahorro\": \"Siempre\",\n  \"resumen_gastos\": { \"ocio\": 10 }\n}" }
+          }
+        }
+      ]
     },
     {
-      "name": "Version",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/version",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "version"]
+      "name": "finance-ai-api (backend)",
+      "item": [
+        {
+          "name": "Health",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200', function () { pm.response.to.have.status(200); });"
+          ]}}],
+          "request": { "method": "GET", "url": "{{api_url}}/api/v1/health" }
         },
-        "description": "Devuelve la version del API (1.0.0-MVP)."
-      }
-    },
-    {
-      "name": "Analisis financiero (caso valido)",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"ingresoMensual\": 3000,\n  \"nivelEndeudamiento\": 20,\n  \"frecuenciaAhorro\": \"Alta\",\n  \"transacciones\": [\n    { \"descripcion\": \"Supermercado Exito\", \"valor\": 450.0, \"fecha\": \"2026-01-05\" },\n    { \"descripcion\": \"Pago Luz Enel\", \"valor\": 80.0, \"fecha\": \"2026-01-10\" },\n    { \"descripcion\": \"Netflix Streaming\", \"valor\": 15.0, \"fecha\": \"2026-01-12\" }\n  ]\n}"
+        {
+          "name": "Version",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200', function () { pm.response.to.have.status(200); });"
+          ]}}],
+          "request": { "method": "GET", "url": "{{api_url}}/api/v1/version" }
         },
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/analisis-financiero",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "analisis-financiero"]
+        {
+          "name": "Ejemplo oficial 1 – del reto (snake_case)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 con la estructura del reto', function () {",
+            "  pm.response.to.have.status(200);",
+            "  const b = pm.response.json();",
+            "  pm.expect(b).to.have.keys(['perfil_financiero','probabilidad','resumen_gastos','recomendaciones']);",
+            "  pm.expect(['Saludable','En observación','En riesgo']).to.include(b.perfil_financiero);",
+            "  pm.expect(b.probabilidad).to.be.within(0, 1);",
+            "  pm.expect(b.recomendaciones).to.be.an('array').that.is.not.empty;",
+            "});"
+          ]}}],
+          "request": {
+            "name": "Analisis financiero",
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{api_url}}/api/v1/analisis-financiero",
+            "description": "Entrada exacta del enunciado del reto. Requiere el cambio a SNAKE_CASE en application.properties.",
+            "body": { "mode": "raw", "raw": "{\n  \"ingreso_mensual\": 4500,\n  \"nivel_endeudamiento\": 25,\n  \"frecuencia_ahorro\": \"Media\",\n  \"transacciones\": [\n    { \"descripcion\": \"Supermercado\", \"valor\": 420 },\n    { \"descripcion\": \"Combustible\", \"valor\": 300 },\n    { \"descripcion\": \"Streaming\", \"valor\": 40 }\n  ]\n}" }
+          }
         },
-        "description": "Clasifica los gastos por categoria y devuelve el perfil financiero, la probabilidad y las recomendaciones."
-      }
-    },
-    {
-      "name": "Analisis financiero (perfil en riesgo)",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"ingresoMensual\": 2000,\n  \"nivelEndeudamiento\": 55,\n  \"frecuenciaAhorro\": \"Baja\",\n  \"transacciones\": [\n    { \"descripcion\": \"Arriendo Mensual\", \"valor\": 900.0, \"fecha\": \"2026-01-01\" },\n    { \"descripcion\": \"Supermercado Jumbo\", \"valor\": 700.0, \"fecha\": \"2026-01-08\" },\n    { \"descripcion\": \"Gasolinera Primax\", \"valor\": 500.0, \"fecha\": \"2026-01-15\" }\n  ]\n}"
+        {
+          "name": "Ejemplo oficial 2 – endeudamiento medio (snake_case)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('perfil En observación (deuda 35, gasto moderado)', function () {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json().perfil_financiero).to.eql('En observación');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{api_url}}/api/v1/analisis-financiero",
+            "body": { "mode": "raw", "raw": "{\n  \"ingreso_mensual\": 3200,\n  \"nivel_endeudamiento\": 35,\n  \"frecuencia_ahorro\": \"Baja\",\n  \"transacciones\": [\n    { \"descripcion\": \"Arriendo apartamento\", \"valor\": 900 },\n    { \"descripcion\": \"Mercado Carulla\", \"valor\": 450 },\n    { \"descripcion\": \"Uber\", \"valor\": 120 },\n    { \"descripcion\": \"Netflix\", \"valor\": 40 },\n    { \"descripcion\": \"Farmacia Cruz Verde\", \"valor\": 80 }\n  ]\n}" }
+          }
         },
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/analisis-financiero",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "analisis-financiero"]
+        {
+          "name": "Ejemplo oficial 3 – gasto supera ingreso (snake_case)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('perfil En riesgo (deuda 55 y gasto mayor al ingreso)', function () {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json().perfil_financiero).to.eql('En riesgo');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{api_url}}/api/v1/analisis-financiero",
+            "body": { "mode": "raw", "raw": "{\n  \"ingreso_mensual\": 2000,\n  \"nivel_endeudamiento\": 55,\n  \"frecuencia_ahorro\": \"Nula\",\n  \"transacciones\": [\n    { \"descripcion\": \"Alquiler\", \"valor\": 1200 },\n    { \"descripcion\": \"Supermercado\", \"valor\": 600 },\n    { \"descripcion\": \"Gasolina\", \"valor\": 250 },\n    { \"descripcion\": \"Cine\", \"valor\": 80 }\n  ]\n}" }
+          }
         },
-        "description": "Ejemplo con endeudamiento alto y gastos que superan el ingreso: devuelve perfil 'En riesgo' y recomendaciones."
-      }
-    },
-    {
-      "name": "Analisis financiero (payload invalido -> 400)",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"ingresoMensual\": 3000,\n  \"nivelEndeudamiento\": 20,\n  \"frecuenciaAhorro\": \"\",\n  \"transacciones\": []\n}"
+        {
+          "name": "Entrada inválida – valor negativo (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('400 con detalles de validación', function () {",
+            "  pm.response.to.have.status(400);",
+            "  pm.expect(pm.response.json()).to.have.property('detalles');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{api_url}}/api/v1/analisis-financiero",
+            "body": { "mode": "raw", "raw": "{\n  \"ingreso_mensual\": 4500,\n  \"nivel_endeudamiento\": 25,\n  \"frecuencia_ahorro\": \"Media\",\n  \"transacciones\": [\n    { \"descripcion\": \"Supermercado\", \"valor\": -5 }\n  ]\n}" }
+          }
         },
-        "url": {
-          "raw": "{{baseUrl}}/api/v1/analisis-financiero",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "v1", "analisis-financiero"]
-        },
-        "description": "frecuenciaAhorro vacia y sin transacciones: debe devolver HTTP 400 con el detalle de los campos invalidos."
-      }
+        {
+          "name": "Ejemplo 1 – camelCase (backend actual, borrar tras el cambio a snake_case)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 con el naming actual del backend', function () {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json()).to.have.property('perfilFinanciero');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{api_url}}/api/v1/analisis-financiero",
+            "description": "Compatibilidad con el código de hoy (camelCase). Eliminar esta petición cuando se active SNAKE_CASE.",
+            "body": { "mode": "raw", "raw": "{\n  \"ingresoMensual\": 4500,\n  \"nivelEndeudamiento\": 25,\n  \"frecuenciaAhorro\": \"Media\",\n  \"transacciones\": [\n    { \"descripcion\": \"Supermercado\", \"valor\": 420 },\n    { \"descripcion\": \"Combustible\", \"valor\": 300 },\n    { \"descripcion\": \"Netflix\", \"valor\": 40 }\n  ]\n}" }
+          }
+        }
+      ]
     }
-  ],
-  "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" }
   ]
 }
