@@ -1,0 +1,95 @@
+{
+  "info": {
+    "name": "Finance AI API",
+    "description": "Coleccion de la API de analisis de salud financiera (Spring Boot MVP). Importa tambien el environment 'Finance AI - Local'.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "health"]
+        },
+        "description": "Verifica que el servicio esta arriba. Devuelve 'Finance AI API is running'."
+      }
+    },
+    {
+      "name": "Version",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/version",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "version"]
+        },
+        "description": "Devuelve la version del API (1.0.0-MVP)."
+      }
+    },
+    {
+      "name": "Analisis financiero (caso valido)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ingresoMensual\": 3000,\n  \"nivelEndeudamiento\": 20,\n  \"frecuenciaAhorro\": \"Alta\",\n  \"transacciones\": [\n    { \"descripcion\": \"Supermercado Exito\", \"valor\": 450.0, \"fecha\": \"2026-01-05\" },\n    { \"descripcion\": \"Pago Luz Enel\", \"valor\": 80.0, \"fecha\": \"2026-01-10\" },\n    { \"descripcion\": \"Netflix Streaming\", \"valor\": 15.0, \"fecha\": \"2026-01-12\" }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/analisis-financiero",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "analisis-financiero"]
+        },
+        "description": "Clasifica los gastos por categoria y devuelve el perfil financiero, la probabilidad y las recomendaciones."
+      }
+    },
+    {
+      "name": "Analisis financiero (perfil en riesgo)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ingresoMensual\": 2000,\n  \"nivelEndeudamiento\": 55,\n  \"frecuenciaAhorro\": \"Baja\",\n  \"transacciones\": [\n    { \"descripcion\": \"Arriendo Mensual\", \"valor\": 900.0, \"fecha\": \"2026-01-01\" },\n    { \"descripcion\": \"Supermercado Jumbo\", \"valor\": 700.0, \"fecha\": \"2026-01-08\" },\n    { \"descripcion\": \"Gasolinera Primax\", \"valor\": 500.0, \"fecha\": \"2026-01-15\" }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/analisis-financiero",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "analisis-financiero"]
+        },
+        "description": "Ejemplo con endeudamiento alto y gastos que superan el ingreso: devuelve perfil 'En riesgo' y recomendaciones."
+      }
+    },
+    {
+      "name": "Analisis financiero (payload invalido -> 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ingresoMensual\": 3000,\n  \"nivelEndeudamiento\": 20,\n  \"frecuenciaAhorro\": \"\",\n  \"transacciones\": []\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/analisis-financiero",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "analisis-financiero"]
+        },
+        "description": "frecuenciaAhorro vacia y sin transacciones: debe devolver HTTP 400 con el detalle de los campos invalidos."
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" }
+  ]
+}
