@@ -3,35 +3,45 @@ package com.financeai.api.exception;
 import com.financeai.api.dto.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
-import java.util.LinkedHashMap;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> validation(MethodArgumentNotValidException ex) {
-        Map<String, String> details = new LinkedHashMap<>();
-        ex.getBindingResult().getFieldErrors()
-                .forEach(error -> details.put(error.getField(), error.getDefaultMessage()));
+    public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errores = new HashMap<>();
 
-        ErrorResponseDTO response = new ErrorResponseDTO(
-                Instant.now(), 400, "Bad Request",
-                "Los datos enviados no son válidos.", details);
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            errores.put(error.getField(), error.getDefaultMessage());
+        }
 
-        return ResponseEntity.badRequest().body(response);
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                "Error de validación en los campos enviados",   // mensaje
+                HttpStatus.BAD_REQUEST.value(),                         // codigo_estado
+                LocalDateTime.now(),                                    // timestamp
+                errores                                                 // detalles
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> general(Exception ex) {
-        ErrorResponseDTO response = new ErrorResponseDTO(
-                Instant.now(), 500, "Internal Server Error",
-                "Error interno del servidor.", Map.of());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    public ResponseEntity<ErrorResponseDTO> handleGlobalException(Exception ex) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                ex.getMessage() != null ? ex.getMessage() : "Ocurrió un error interno en el servidor",
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                LocalDateTime.now(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }

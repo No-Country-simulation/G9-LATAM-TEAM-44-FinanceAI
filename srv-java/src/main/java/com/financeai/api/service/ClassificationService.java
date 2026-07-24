@@ -21,10 +21,15 @@ public class ClassificationService {
         Map<String, Double> summary = new LinkedHashMap<>();
 
         for (TransactionDTO transaction : transactions) {
-            String category = transaction.categoria();
+            // Se obtiene la categoría llamando al cliente ML
+            String category = modelClient.classify(transaction.descripcion());
+
+            // Manejo por si el cliente retorna nulo o vacío
             if (category == null || category.isBlank()) {
-                category = modelClient.classify(transaction.descripcion());
+                category = "OTROS";
             }
+
+            // Agrupa y suma el valor por categoría
             summary.merge(category, transaction.valor(), Double::sum);
         }
 

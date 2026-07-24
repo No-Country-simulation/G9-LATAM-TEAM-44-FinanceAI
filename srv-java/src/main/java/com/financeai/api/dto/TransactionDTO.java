@@ -1,17 +1,13 @@
 package com.financeai.api.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 public record TransactionDTO(
-    @NotBlank(message = "La descripción es obligatoria")
-    String descripcion,
+        @NotNull(message = "La descripción es requerida")
+        String descripcion,
 
-    @NotNull(message = "El valor es obligatorio")
-    @DecimalMin(value = "0.01", message = "El valor debe ser mayor que 0")
-    Double valor,
-
-    String categoria,
-    String fecha
+        @NotNull(message = "El valor es requerido")
+        @Positive(message = "El valor debe ser mayor a 0")
+        Double valor
 ) {}
