@@ -1,0 +1,37 @@
+# FinanceAI — levanta el sistema completo con un solo comando:
+#   docker compose up --build
+#
+#   API (Java)    -> http://localhost:8080/swagger-ui.html
+#   ml-service    -> http://localhost:8000/docs
+#
+# Nota para el frontend: apunta a http://localhost:8080. El ml-service NO se
+# consume directamente desde el navegador; el orquestador Java es la unica
+# puerta de entrada.
+
+services:
+  ml-service:
+    build: ./srv-python
+    container_name: financeai-ml
+    ports:
+      - "8000:8000"
+    healthcheck:
+      # Sin curl en la imagen slim: usamos el propio Python.
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  api:
+    build: ./srv-java
+    container_name: financeai-api
+    ports:
+      - "8080:8080"
+    environment:
+      # Dentro de la red de compose el host es el nombre del servicio, no localhost.
+      ML_SERVICE_URL: http://ml-service:8000
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000
+    depends_on:
+      ml-service:
+        condition: service_healthy
