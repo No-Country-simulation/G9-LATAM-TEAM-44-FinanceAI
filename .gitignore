@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ==================================================
 # Python
 # ==================================================
@@ -49,6 +48,15 @@ coverage.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints/
+
+# Salidas de los scripts de generacion / limpieza de datos
+scripts/archivos_financieros_usuarios/
+scripts/archivos_financieros_limpios/
+
+# Modelos serializados (viven en Object Storage, no en git)
+*.pkl
+*.joblib
+*.onnx
 
 # Environment variables
 .env
@@ -117,6 +125,30 @@ out/
 
 
 # ==================================================
+# Node / Frontend
+# ==================================================
+
+node_modules/
+.pnp/
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output de Vite / Next
+.vite/
+.next/
+.nuxt/
+.svelte-kit/
+.turbo/
+
+# Cache de linters / formatters
+.eslintcache
+.stylelintcache
+
+
+# ==================================================
 # Editors and operating systems
 # ==================================================
 
@@ -140,20 +172,3 @@ Desktop.ini
 *.temp
 *.swp
 *.swo
-=======
-# Maven / build output
-target/
-*.class
-
-# Python
-__pycache__/
-*.pyc
-scripts/archivos_financieros_usuarios/
-scripts/archivos_financieros_limpios/
-
-# IDE
-*.iml
-.idea/workspace.xml
-.idea/shelf/
-.idea/httpRequests/
->>>>>>> a64459b120f5c0d467831f6abe9a6c43922d3758

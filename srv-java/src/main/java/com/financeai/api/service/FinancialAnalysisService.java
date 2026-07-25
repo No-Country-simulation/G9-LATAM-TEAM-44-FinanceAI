@@ -7,38 +7,53 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Orquestador del analisis financiero.
+ *
+ * Flujo (particion "necesidad de saber"):
+ *   1. /clasificar  -> solo transacciones      (srv-python nunca ve el ingreso)
+ *   2. agregacion   -> resumen por categoria   (aqui, en Java)
+ *   3. /perfil      -> solo agregados          (srv-python nunca ve descripciones)
+ *   4. recomendaciones                          (reglas de negocio, siempre en Java)
+ *
+ * Solo este servicio ve el cuadro completo.
+ */
 @Service
 public class FinancialAnalysisService {
 
     private final ClassificationService classificationService;
+    private final ProfileService profileService;
     private final RecommendationService recommendationService;
 
     public FinancialAnalysisService(
             ClassificationService classificationService,
+            ProfileService profileService,
             RecommendationService recommendationService) {
         this.classificationService = classificationService;
+        this.profileService = profileService;
         this.recommendationService = recommendationService;
     }
 
     public FinancialAnalysisResponseDTO analyze(FinancialAnalysisRequestDTO request) {
-        Map<String, Double> summary = classificationService.classify(request.transacciones());
-        List<String> recommendations = recommendationService.generateRecommendations(request, summary);
+        ClassificationResult clasificacion = classificationService.classify(request.transacciones());
+        Map<String, Double> resumenGastos = clasificacion.resumenGastos();
 
-        double ratio = request.ingresoMensual() == 0 ? 1.0 :
-                summary.values().stream().mapToDouble(Double::doubleValue).sum() / request.ingresoMensual();
+        ProfileResult perfil = profileService.evaluar(request, resumenGastos);
 
-        String profile;
-        if (request.nivelEndeudamiento() >= 50 || ratio >= 1.0) {
-            profile = "En riesgo";
-        } else if (request.nivelEndeudamiento() >= 30 || ratio >= 0.8) {
-            profile = "En observación";
-        } else {
-            profile = "Saludable";
-        }
+        List<String> recomendaciones =
+                recommendationService.generateRecommendations(request, resumenGastos);
 
-        double probability = profile.equals("Saludable") ? 0.90 :
-                profile.equals("En observación") ? 0.82 : 0.75;
+        // Basta con que UNA de las dos etapas haya degradado para avisarlo:
+        // el consumidor debe saber que el resultado no viene del modelo.
+        boolean modoDegradado = clasificacion.modoDegradado() || perfil.modoDegradado();
 
-        return new FinancialAnalysisResponseDTO(profile, probability, summary, recommendations);
+        return new FinancialAnalysisResponseDTO(
+                perfil.perfilFinanciero(),
+                perfil.probabilidad(),
+                resumenGastos,
+                recomendaciones,
+                perfil.factores(),
+                modoDegradado
+        );
     }
 }

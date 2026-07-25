@@ -1,6 +1,8 @@
 package com.financeai.api.exception;
 
 import com.financeai.api.dto.ErrorResponseDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -14,6 +16,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -33,10 +37,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
+    /**
+     * Red de seguridad. El detalle tecnico va al log, NUNCA al cliente:
+     * ex.getMessage() puede filtrar rutas, queries o nombres de clases internos.
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGlobalException(Exception ex) {
+        log.error("Error no controlado atendiendo la peticion", ex);
+
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                ex.getMessage() != null ? ex.getMessage() : "Ocurrió un error interno en el servidor",
+                "Ocurrió un error interno en el servidor",
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 LocalDateTime.now(),
                 null
