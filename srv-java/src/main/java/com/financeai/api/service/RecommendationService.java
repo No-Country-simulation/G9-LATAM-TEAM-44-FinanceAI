@@ -16,14 +16,15 @@ public class RecommendationService {
 
         List<String> recommendations = new ArrayList<>();
 
-        double income = request.ingresoMensual();
+        double income = request.ingresoMensual() == null ? 0.0 : request.ingresoMensual();
+        int debtLevel = request.nivelEndeudamiento() == null ? 0 : request.nivelEndeudamiento();
         double totalExpenses = summary.values().stream().mapToDouble(Double::doubleValue).sum();
 
         if (income > 0 && totalExpenses / income > 0.8) {
             recommendations.add("Revisar gastos totales: superan el 80% del ingreso mensual.");
         }
 
-        if (request.nivelEndeudamiento() >= 40) {
+        if (debtLevel >= 40) {
             recommendations.add("Reducir el nivel de endeudamiento y priorizar obligaciones financieras.");
         }
 

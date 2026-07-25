@@ -6,12 +6,13 @@ esperar a los modelos. Los TODO(DS)/TODO(ML) marcan dónde entran los artefactos
 
 ## Correr
 ```bash
-python -m venv venv # crea tu ambiente de python.
-venv/Scripts/activate # activa tu ambiente.
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000   # docs interactivas: http://localhost:8000/docs
-./curl.sh                                    # ejemplos del contrato
-pip install pytest httpx && pytest -q        # pruebas del contrato
+python -m venv .venv                          # crea tu ambiente de python
+.venv/Scripts/activate                        # activa tu ambiente (Windows)
+pip install -r requirements.txt               # dependencias de ejecucion
+pip install -r requirements-dev.txt           # pytest + httpx (solo para pruebas)
+uvicorn app.main:app --reload --port 8000     # docs interactivas: http://localhost:8000/docs
+./curl.sh                                     # ejemplos del contrato
+pytest -q                                     # pruebas del contrato
 ```
 
 ## El contrato (resumen)
@@ -26,20 +27,30 @@ Categorías canónicas (= enum `FinancialCategory` del backend, en minúscula):
 Perfiles: `Saludable · En observación · En riesgo`. Los umbrales del stub replican
 `FinancialAnalysisService` (deuda≥50 o gasto/ingreso≥1 → riesgo; ≥30 o ≥0.8 → observación).
 
-## Conectar el backend Java (reemplazo de PythonModelClient)
-`application.properties`:
+## Conexión con el backend Java — YA IMPLEMENTADA
+
+`PythonModelClient` (Java) llama a este servicio por HTTP, **por lote**: una
+petición a `/clasificar` y una a `/perfil` por análisis, no una por transacción.
+
+Configuración en `srv-java/src/main/resources/application.properties`:
 ```properties
-ml.service.url=http://localhost:8000
+ml.service.url=${ML_SERVICE_URL:http://localhost:8000}
+ml.service.enabled=${ML_SERVICE_ENABLED:true}
+ml.service.connect-timeout=1s
+ml.service.read-timeout=2s
+ml.service.confianza-minima=0.5
 ```
-Cliente por lotes (una llamada por request, no por transacción):
-```java
-RestClient rc = RestClient.builder().baseUrl(mlServiceUrl).build();
-ClasificarResponse out = rc.post().uri("/clasificar")
-    .body(new ClasificarRequest(transacciones))
-    .retrieve().body(ClasificarResponse.class);
-```
-Timeout 2 s + si el servicio no responde, conservar las reglas actuales de
-`PythonModelClient` como fallback y marcar `modo_degradado` (UC1 · alternativo A2).
+
+Comportamiento ante fallos (UC1 · alternativo A2): si este servicio no responde,
+Java **no devuelve 5xx**. Cae a las reglas por palabra clave de
+`FallbackClassifier` (espejo de `KEYWORDS` de este archivo) y marca
+`modo_degradado: true` en la respuesta.
+
+> Si agregas palabras a `KEYWORDS`, agrégalas también en
+> `srv-java/.../integration/FallbackClassifier.java` para que el modo degradado
+> siga dando resultados equivalentes.
+
+Diagnóstico rápido: `GET http://localhost:8080/api/v1/ml-status`
 
 ## Partición de la información (necesidad de saber)
 `/clasificar` nunca recibe ingreso, deuda ni identidad; `/perfil` nunca recibe las
