@@ -2,7 +2,7 @@
   "info": {
     "name": "FinanceAI – Colección de pruebas",
     "_postman_id": "financeai-team44-pruebas",
-    "description": "Prueba las dos piezas del sistema.\n\n• Carpeta 'ml-service (contrato)': el servicio FastAPI del contrato en :8000 (financeai-ml-contract). Funciona hoy con el stub y seguirá válida cuando entren los modelos reales.\n\n• Carpeta 'finance-ai-api (backend)': el orquestador Spring Boot en :8080, con los 3 ejemplos oficiales en snake_case (formato del reto). Nota: el backend actual expone camelCase; hasta aplicar spring.jackson.property-naming-strategy=SNAKE_CASE usar la petición marcada como 'camelCase (backend actual)'.\n\nCorrer todo por consola: newman run FinanceAI.postman_collection.json --folder \"ml-service (contrato)\"",
+    "description": "Prueba las dos piezas del sistema.\n\n• Carpeta 'ml-service (contrato)': el servicio FastAPI en :8000. Funciona con el stub y seguirá válida cuando entren los modelos reales.\n\n• Carpeta 'finance-ai-api (backend)': el orquestador Spring Boot en :8080, con los 3 ejemplos oficiales en snake_case (formato del reto). El backend ya llama al ml-service por HTTP: si :8000 está apagado, las peticiones siguen respondiendo 200 pero con 'modo_degradado': true.\n\nCorrer todo por consola: newman run FinanceAI.postman_collection.json --folder \"ml-service (contrato)\"",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -131,10 +131,23 @@
             "pm.test('200 con la estructura del reto', function () {",
             "  pm.response.to.have.status(200);",
             "  const b = pm.response.json();",
-            "  pm.expect(b).to.have.keys(['perfil_financiero','probabilidad','resumen_gastos','recomendaciones']);",
+            "  pm.expect(b).to.have.keys(['perfil_financiero','probabilidad','resumen_gastos','recomendaciones','factores','modo_degradado']);",
             "  pm.expect(['Saludable','En observación','En riesgo']).to.include(b.perfil_financiero);",
             "  pm.expect(b.probabilidad).to.be.within(0, 1);",
             "  pm.expect(b.recomendaciones).to.be.an('array').that.is.not.empty;",
+            "});",
+            "pm.test('factores explican el perfil', function () {",
+            "  const b = pm.response.json();",
+            "  pm.expect(b.factores).to.be.an('array').that.is.not.empty;",
+            "  b.factores.forEach(f => {",
+            "    pm.expect(['sube_riesgo','baja_riesgo']).to.include(f.impacto);",
+            "  });",
+            "});",
+            "pm.test('categorias del resumen son canonicas', function () {",
+            "  const CANONICAS = ['alimentacion','transporte','salud','vivienda','educacion','ocio','servicios','otras'];",
+            "  Object.keys(pm.response.json().resumen_gastos).forEach(c => {",
+            "    pm.expect(CANONICAS).to.include(c);",
+            "  });",
             "});"
           ]}}],
           "request": {
@@ -142,7 +155,7 @@
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": "{{api_url}}/api/v1/analisis-financiero",
-            "description": "Entrada exacta del enunciado del reto. Requiere el cambio a SNAKE_CASE en application.properties.",
+            "description": "Entrada exacta del enunciado del reto (snake_case).",
             "body": { "mode": "raw", "raw": "{\n  \"ingreso_mensual\": 4500,\n  \"nivel_endeudamiento\": 25,\n  \"frecuencia_ahorro\": \"Media\",\n  \"transacciones\": [\n    { \"descripcion\": \"Supermercado\", \"valor\": 420 },\n    { \"descripcion\": \"Combustible\", \"valor\": 300 },\n    { \"descripcion\": \"Streaming\", \"valor\": 40 }\n  ]\n}" }
           }
         },
@@ -192,19 +205,38 @@
           }
         },
         {
-          "name": "Ejemplo 1 – camelCase (backend actual, borrar tras el cambio a snake_case)",
+          "name": "Entrada inválida – endeudamiento fuera de rango (400)",
           "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('200 con el naming actual del backend', function () {",
-            "  pm.response.to.have.status(200);",
-            "  pm.expect(pm.response.json()).to.have.property('perfilFinanciero');",
+            "pm.test('400: el backend corta antes de llamar a Python', function () {",
+            "  pm.response.to.have.status(400);",
+            "  const d = pm.response.json().detalles;",
+            "  pm.expect(d).to.have.property('nivelEndeudamiento');",
+            "  pm.expect(d).to.have.property('frecuenciaAhorro');",
             "});"
           ]}}],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": "{{api_url}}/api/v1/analisis-financiero",
-            "description": "Compatibilidad con el código de hoy (camelCase). Eliminar esta petición cuando se active SNAKE_CASE.",
-            "body": { "mode": "raw", "raw": "{\n  \"ingresoMensual\": 4500,\n  \"nivelEndeudamiento\": 25,\n  \"frecuenciaAhorro\": \"Media\",\n  \"transacciones\": [\n    { \"descripcion\": \"Supermercado\", \"valor\": 420 },\n    { \"descripcion\": \"Combustible\", \"valor\": 300 },\n    { \"descripcion\": \"Netflix\", \"valor\": 40 }\n  ]\n}" }
+            "description": "El endeudamiento es un porcentaje (0-100) y la frecuencia de ahorro solo acepta Alta/Media/Baja/Nula. Son las mismas reglas del contrato de srv-python, validadas aquí para devolver 400 en vez de dejar que Python responda 422.",
+            "body": { "mode": "raw", "raw": "{\n  \"ingreso_mensual\": 4500,\n  \"nivel_endeudamiento\": 150,\n  \"frecuencia_ahorro\": \"Siempre\",\n  \"transacciones\": [\n    { \"descripcion\": \"Supermercado\", \"valor\": 420 }\n  ]\n}" }
+          }
+        },
+        {
+          "name": "ML status – ¿el backend ve al ml-service?",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 con el estado de la integración', function () {",
+            "  pm.response.to.have.status(200);",
+            "  const b = pm.response.json();",
+            "  pm.expect(b).to.have.property('ml_service_url');",
+            "  pm.expect(b.disponible).to.be.a('boolean');",
+            "});",
+            "console.log('Modo actual del backend: ' + pm.response.json().modo);"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "url": "{{api_url}}/api/v1/ml-status",
+            "description": "Diagnóstico de la integración Java -> Python. Si 'disponible' es false, las respuestas de análisis vendrán con modo_degradado: true."
           }
         }
       ]
