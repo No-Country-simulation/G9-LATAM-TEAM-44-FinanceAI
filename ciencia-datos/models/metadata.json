@@ -1,0 +1,41 @@
+{
+    "version": "1.0.0",
+    "fecha_entrenamiento": "2026-08-17 15:52:13",
+    "semilla_global": 42,
+    "modelos": {
+        "clasificador_transacciones": {
+            "archivo": "clasificador.joblib",
+            "algoritmo": "TfidfVectorizer(char_wb, 3-5) + LogisticRegression",
+            "f1_macro_test": 1.0,
+            "umbral_confianza_otras": 0.5,
+            "clases": [
+                "alimentacion",
+                "educacion",
+                "ocio",
+                "otras",
+                "salud",
+                "servicios",
+                "transporte",
+                "vivienda"
+            ]
+        },
+        "perfil_financiero": {
+            "archivo": "perfil.joblib",
+            "algoritmo": "CalibratedClassifierCV(RandomForestClassifier, sigmoid)",
+            "accuracy_test": 0.9333,
+            "f1_macro_test": 0.9265,
+            "features_requeridas": [
+                "ingreso",
+                "ratio_deuda",
+                "tasa_gasto",
+                "pct_gasto_esencial",
+                "concentracion_gasto"
+            ],
+            "clases": [
+                "En observación",
+                "En riesgo",
+                "Saludable"
+            ]
+        }
+    }
+}
