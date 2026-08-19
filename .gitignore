@@ -49,14 +49,19 @@ coverage.xml
 # Jupyter Notebook
 .ipynb_checkpoints/
 
-# Salidas de los scripts de generacion / limpieza de datos
-scripts/archivos_financieros_usuarios/
-scripts/archivos_financieros_limpios/
+# Dataset generado. No se versiona porque son ~65.000 filas que se reproducen
+# exactamente con:
+#   python ciencia-datos/scripts/generador_usuarios.py --semilla 42
+ciencia-datos/datos/
 
-# Modelos serializados (viven en Object Storage, no en git)
+# Modelos serializados: la fuente de verdad es OCI Object Storage.
 *.pkl
 *.joblib
 *.onnx
+
+# Excepcion: los artefactos entrenados si se versionan (~3 MB). Sin ellos, un
+# clon sin credenciales de OCI arrancaria en modo degradado.
+!ciencia-datos/artefactos/*.joblib
 
 # Environment variables
 .env
@@ -84,7 +89,11 @@ scripts/archivos_financieros_limpios/
 hs_err_pid*
 replay_pid*
 
-# Maven
+# Logs del lanzador iniciar.sh
+.logs/
+
+# Maven. mvnw, mvnw.cmd y .mvn/wrapper/ si se versionan: permiten compilar sin
+# tener Maven instalado.
 target/
 pom.xml.tag
 pom.xml.releaseBackup

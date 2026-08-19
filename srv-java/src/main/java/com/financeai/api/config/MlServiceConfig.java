@@ -10,8 +10,8 @@ import org.springframework.web.client.RestClient;
 /**
  * Cliente HTTP hacia el servicio de AI.
  *
- * Los timeouts son explicitos a proposito: sin ellos, si srv-python se cuelga,
- * el hilo de Tomcat se cuelga con el y la API entera deja de responder.
+ * Los timeouts son explicitos: sin ellos, un srv-python colgado bloquea el
+ * hilo de Tomcat y la API deja de responder.
  */
 @Configuration
 @EnableConfigurationProperties(MlServiceProperties.class)

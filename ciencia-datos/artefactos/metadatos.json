@@ -1,0 +1,76 @@
+{
+  "version": "1.0.0",
+  "entrenado_en": "2026-08-17T17:49:00",
+  "scikit_learn": "1.9.0",
+  "semilla": 42,
+  "dataset": {
+    "usuarios": 400,
+    "transacciones": 65123,
+    "egresos_etiquetados": 58894,
+    "filas_usuario_mes": 2400,
+    "origen": "sintetico (scripts/generador_usuarios.py, semilla 42)"
+  },
+  "categorias": [
+    "alimentacion",
+    "transporte",
+    "salud",
+    "vivienda",
+    "educacion",
+    "ocio",
+    "servicios",
+    "otras"
+  ],
+  "perfiles": [
+    "Saludable",
+    "En observación",
+    "En riesgo"
+  ],
+  "columnas_perfil": [
+    "ingreso_mensual",
+    "ratio_endeudamiento",
+    "ahorro_ordinal",
+    "gasto_total",
+    "tasa_gasto",
+    "capacidad_ahorro",
+    "gasto_esencial_pct",
+    "gasto_discrecional_pct",
+    "concentracion_gasto",
+    "categorias_activas",
+    "vivienda_sobre_ingreso",
+    "carga_deuda_absoluta",
+    "pct_alimentacion",
+    "pct_transporte",
+    "pct_salud",
+    "pct_vivienda",
+    "pct_educacion",
+    "pct_ocio",
+    "pct_servicios",
+    "pct_otras"
+  ],
+  "umbral_confianza": 0.5,
+  "metricas": {
+    "clasificador_particion_aleatoria": {
+      "accuracy": 0.9999,
+      "f1_macro": 0.9999
+    },
+    "clasificador_comercios_no_vistos": {
+      "accuracy": 0.4111,
+      "f1_macro": 0.4181
+    },
+    "perfil_cv_agrupada": {
+      "accuracy": 0.8692,
+      "f1_macro": 0.8613
+    }
+  },
+  "referencia_saludable": {
+    "alimentacion": 0.0569,
+    "transporte": 0.0617,
+    "salud": 0.0808,
+    "vivienda": 0.4342,
+    "educacion": 0.0616,
+    "ocio": 0.0914,
+    "servicios": 0.0917,
+    "otras": 0.0521,
+    "tasa_gasto": 0.578
+  }
+}

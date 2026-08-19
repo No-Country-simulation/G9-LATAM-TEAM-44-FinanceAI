@@ -2,6 +2,7 @@ package com.financeai.api.service;
 
 import com.financeai.api.dto.FinancialAnalysisRequestDTO;
 import com.financeai.api.dto.FinancialAnalysisResponseDTO;
+import com.financeai.api.integration.OCIStorageService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,14 +25,17 @@ public class FinancialAnalysisService {
     private final ClassificationService classificationService;
     private final ProfileService profileService;
     private final RecommendationService recommendationService;
+    private final OCIStorageService ociStorageService;
 
     public FinancialAnalysisService(
             ClassificationService classificationService,
             ProfileService profileService,
-            RecommendationService recommendationService) {
+            RecommendationService recommendationService,
+            OCIStorageService ociStorageService) {
         this.classificationService = classificationService;
         this.profileService = profileService;
         this.recommendationService = recommendationService;
+        this.ociStorageService = ociStorageService;
     }
 
     public FinancialAnalysisResponseDTO analyze(FinancialAnalysisRequestDTO request) {
@@ -43,11 +47,11 @@ public class FinancialAnalysisService {
         List<String> recomendaciones =
                 recommendationService.generateRecommendations(request, resumenGastos);
 
-        // Basta con que UNA de las dos etapas haya degradado para avisarlo:
-        // el consumidor debe saber que el resultado no viene del modelo.
+        // Con que una de las dos etapas degrade, se marca: el consumidor tiene
+        // que saber que el resultado no viene del modelo.
         boolean modoDegradado = clasificacion.modoDegradado() || perfil.modoDegradado();
 
-        return new FinancialAnalysisResponseDTO(
+        FinancialAnalysisResponseDTO respuesta = new FinancialAnalysisResponseDTO(
                 perfil.perfilFinanciero(),
                 perfil.probabilidad(),
                 resumenGastos,
@@ -55,5 +59,11 @@ public class FinancialAnalysisService {
                 perfil.factores(),
                 modoDegradado
         );
+
+        // Archivado en Object Storage, asincrono. Permite seguir la evolucion
+        // en el tiempo sin meter latencia en el camino de la peticion.
+        ociStorageService.guardarAnalisis(request, respuesta);
+
+        return respuesta;
     }
 }

@@ -1,27 +1,36 @@
 # FinanceAI — levanta el sistema completo con un solo comando:
+#
 #   docker compose up --build
 #
-#   API (Java)    -> http://localhost:8080/swagger-ui.html
+#   Frontend      -> http://localhost:8081
+#   API (Swagger) -> http://localhost:8080/swagger-ui.html
 #   ml-service    -> http://localhost:8000/docs
 #
-# Nota para el frontend: apunta a http://localhost:8080. El ml-service NO se
-# consume directamente desde el navegador; el orquestador Java es la unica
-# puerta de entrada.
+# El navegador habla con el frontend (:8081), que hace de proxy hacia la API.
+# La API es la unica que llama al ml-service, y este el unico que carga los
+# modelos.
 
 services:
   ml-service:
-    build: ./srv-python
+    build:
+      # Contexto en la raiz: la imagen necesita ciencia-datos/features.py.
+      context: .
+      dockerfile: srv-python/Dockerfile
     container_name: financeai-ml
     ports:
       - "8000:8000"
-    healthcheck:
-      # Sin curl en la imagen slim: usamos el propio Python.
-      test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
+    environment:
+      # Descarga de modelos desde OCI Object Storage. Sin estas variables el
+      # servicio usa los artefactos montados en el volumen de abajo.
+      OCI_BUCKET: ${OCI_BUCKET:-}
+      OCI_NAMESPACE: ${OCI_NAMESPACE:-}
+      OCI_REGION: ${OCI_REGION:-}
+      OCI_PREFIJO: ${OCI_PREFIJO:-}
+      OCI_PAR_URL: ${OCI_PAR_URL:-}
+    volumes:
+      # Artefactos del notebook en solo lectura, para desarrollo. En
+      # despliegue se descargan de Object Storage.
+      - ./ciencia-datos/artefactos:/srv/artefactos:ro
 
   api:
     build: ./srv-java
@@ -29,9 +38,22 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Dentro de la red de compose el host es el nombre del servicio, no localhost.
+      # Dentro de la red de compose el host es el nombre del servicio.
       ML_SERVICE_URL: http://ml-service:8000
-      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000
+      CORS_ALLOWED_ORIGINS: http://localhost:8081,http://localhost:5173,http://localhost:3000
+      # Archivado de analisis en Object Storage (opcional). Ver docs/OCI.md.
+      OCI_PAR_URL: ${OCI_PAR_URL:-}
+      OCI_BUCKET: ${OCI_BUCKET:-finance-ai-models}
+      OCI_NAMESPACE: ${OCI_NAMESPACE:-}
+      OCI_REGION: ${OCI_REGION:-}
     depends_on:
       ml-service:
         condition: service_healthy
+
+  web:
+    build: ./web
+    container_name: financeai-web
+    ports:
+      - "8081:80"
+    depends_on:
+      - api

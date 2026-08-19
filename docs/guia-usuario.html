@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>FinanceAI · Guía para entender la aplicación</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 10.5pt; line-height: 1.55; color: #1a1a1a; margin: 0;
+  }
+  h1 { font-size: 22pt; margin: 0 0 4pt; letter-spacing: -.5pt; }
+  h2 {
+    font-size: 14pt; margin: 22pt 0 8pt; padding-bottom: 4pt;
+    border-bottom: 1.5pt solid #2563eb; color: #12305e; page-break-after: avoid;
+  }
+  h3 { font-size: 11.5pt; margin: 14pt 0 4pt; color: #12305e; page-break-after: avoid; }
+  p { margin: 0 0 8pt; text-align: justify; }
+  ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin-bottom: 4pt; }
+  .portada { border-bottom: 3pt solid #2563eb; padding-bottom: 12pt; margin-bottom: 6pt; }
+  .subtitulo { font-size: 12pt; color: #444; margin: 0; font-style: italic; }
+  .meta { font-size: 9pt; color: #666; margin-top: 8pt; }
+  table { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt; font-size: 9.5pt; }
+  th, td { border: .75pt solid #c9d3e0; padding: 5pt 7pt; text-align: left; vertical-align: top; }
+  th { background: #eef3fb; font-weight: bold; color: #12305e; }
+  .nota {
+    background: #f4f7fc; border-left: 3pt solid #2563eb;
+    padding: 8pt 11pt; margin: 10pt 0; font-size: 10pt;
+  }
+  .pregunta { font-weight: bold; color: #12305e; margin: 12pt 0 3pt; page-break-after: avoid; }
+  .respuesta { margin: 0 0 8pt; }
+  .perfil { padding: 8pt 11pt; margin: 7pt 0; border-left: 4pt solid #999; background: #fafafa; }
+  .verde { border-left-color: #0a8f5f; }
+  .ambar { border-left-color: #c47f00; }
+  .rojo  { border-left-color: #c2334d; }
+  .perfil strong { font-size: 11pt; }
+  code { font-family: Consolas, monospace; font-size: 9pt; background: #eef1f6; padding: 1pt 3pt; }
+  .seccion { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <h1>FinanceAI</h1>
+  <p class="subtitulo">Guía para entender la aplicación</p>
+  <p class="meta">
+    Documento explicativo en lenguaje sencillo · Hackathon ONE · Equipo 44, G9 LATAM · Versión 1.0
+  </p>
+</div>
+
+<h2>1. Qué es FinanceAI</h2>
+
+<p>
+FinanceAI es una aplicación que lee el listado de gastos de una persona y le explica, en pocos
+segundos, tres cosas: en qué se le va el dinero, cómo está su salud financiera y qué puede
+hacer para mejorarla.
+</p>
+
+<p>
+La idea de fondo es sencilla. Mucha gente tiene acceso a sus movimientos bancarios, pero ver
+una lista de cien líneas con fechas y montos no ayuda a decidir nada. FinanceAI convierte esa
+lista en un diagnóstico claro y en dos o tres consejos concretos.
+</p>
+
+<div class="nota">
+  <strong>En una frase:</strong> le das tus gastos del mes y tu ingreso, y te devuelve un
+  diagnóstico de tu situación financiera con recomendaciones para mejorarla.
+</div>
+
+<h2>2. Qué problema resuelve</h2>
+
+<p>
+Organizar las finanzas personales a mano tiene tres obstáculos que la aplicación elimina:
+</p>
+
+<ul>
+  <li>
+    <strong>Clasificar los gastos es tedioso.</strong> Nadie quiere etiquetar cien
+    transacciones una por una para saber cuánto gastó en comida. La aplicación lo hace sola.
+  </li>
+  <li>
+    <strong>Los nombres de los comercios son confusos.</strong> En un extracto bancario real
+    una compra aparece como <code>TRF/POS SUPERMERCADO JUMBO REF993021</code>, no como
+    "supermercado". La aplicación entiende esos nombres aunque vengan con códigos, errores de
+    escritura o texto de más.
+  </li>
+  <li>
+    <strong>Saber si vas bien o mal no es evidente.</strong> Gastar 1.500 al mes puede ser
+    excelente o preocupante según cuánto ganes y cuánto debas. La aplicación compara tu
+    situación con la de perfiles sanos y te dice dónde estás.
+  </li>
+</ul>
+
+<h2>3. Cómo funciona, paso a paso</h2>
+
+<p>
+El proceso completo tiene cinco pasos y ocurre en menos de un segundo.
+</p>
+
+<table>
+  <tr>
+    <th style="width:34pt">Paso</th>
+    <th>Qué ocurre</th>
+  </tr>
+  <tr>
+    <td><strong>1</strong></td>
+    <td>
+      <strong>Entregas tus datos.</strong> Tu ingreso mensual, cuánto de ese ingreso se te va
+      en deudas, con qué frecuencia ahorras y la lista de gastos del periodo.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>2</strong></td>
+    <td>
+      <strong>Cada gasto se clasifica.</strong> El sistema lee la descripción de cada
+      transacción y decide a qué categoría pertenece: alimentación, transporte, salud,
+      vivienda, educación, ocio, servicios u otros.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>3</strong></td>
+    <td>
+      <strong>Se suma por categoría.</strong> Así se ve de un vistazo cuánto pesa cada tipo de
+      gasto sobre el total.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>4</strong></td>
+    <td>
+      <strong>Se evalúa tu perfil financiero.</strong> Con esos totales, tu ingreso, tu deuda y
+      tu hábito de ahorro, el sistema decide si estás en situación saludable, en observación o
+      en riesgo.
+    </td>
+  </tr>
+  <tr>
+    <td><strong>5</strong></td>
+    <td>
+      <strong>Se generan recomendaciones.</strong> Entre una y cuatro sugerencias concretas,
+      ordenadas de mayor a menor impacto.
+    </td>
+  </tr>
+</table>
+
+<h2>4. Las ocho categorías de gasto</h2>
+
+<p>
+Todo gasto se asigna a una de estas ocho categorías. No hay más, y ninguna transacción se
+queda sin clasificar.
+</p>
+
+<table>
+  <tr>
+    <th style="width:78pt">Categoría</th>
+    <th>Qué incluye</th>
+    <th style="width:155pt">Ejemplos</th>
+  </tr>
+  <tr>
+    <td><strong>Alimentación</strong></td>
+    <td>Compra de comida y restaurantes</td>
+    <td>Supermercados, panaderías, comida a domicilio, cafeterías</td>
+  </tr>
+  <tr>
+    <td><strong>Transporte</strong></td>
+    <td>Todo lo relacionado con moverse</td>
+    <td>Gasolina, taxis y apps de viaje, metro, peajes, taller mecánico</td>
+  </tr>
+  <tr>
+    <td><strong>Salud</strong></td>
+    <td>Atención médica y medicamentos</td>
+    <td>Farmacias, consultas, laboratorios, dentista, óptica</td>
+  </tr>
+  <tr>
+    <td><strong>Vivienda</strong></td>
+    <td>El techo y su mantenimiento</td>
+    <td>Alquiler, hipoteca, administración, ferretería, reparaciones</td>
+  </tr>
+  <tr>
+    <td><strong>Educación</strong></td>
+    <td>Formación propia o de la familia</td>
+    <td>Matrículas, cursos online, librerías, útiles escolares</td>
+  </tr>
+  <tr>
+    <td><strong>Ocio</strong></td>
+    <td>Entretenimiento y tiempo libre</td>
+    <td>Cine, videojuegos, bares, gimnasio, viajes, plataformas de streaming</td>
+  </tr>
+  <tr>
+    <td><strong>Servicios</strong></td>
+    <td>Suministros y servicios del hogar</td>
+    <td>Luz, agua, gas, internet, telefonía, software</td>
+  </tr>
+  <tr>
+    <td><strong>Otros</strong></td>
+    <td>Lo que no encaja en las anteriores</td>
+    <td>Retiros de cajero, transferencias, comisiones bancarias, ropa, mascotas</td>
+  </tr>
+</table>
+
+<div class="nota">
+  <strong>Sobre el streaming:</strong> Netflix, Spotify o Disney+ se cuentan como
+  <em>ocio</em> y no como servicios, porque son entretenimiento aunque se paguen como
+  suscripción mensual.
+</div>
+
+<h2>5. Los tres perfiles financieros</h2>
+
+<p>
+El diagnóstico siempre es uno de estos tres. No son notas ni calificaciones: describen una
+situación en un momento concreto, y pueden cambiar de un mes a otro.
+</p>
+
+<div class="perfil verde">
+  <strong>Saludable</strong><br>
+  Gastas bastante menos de lo que ingresas, tu nivel de deuda es bajo y ahorras con
+  regularidad. Tienes margen para imprevistos. El objetivo aquí no es corregir nada, sino
+  mantener el hábito y empezar a construir un fondo de emergencia.
+</div>
+
+<div class="perfil ambar">
+  <strong>En observación</strong><br>
+  Todavía no hay un problema, pero el margen se está estrechando: gastas una parte alta de tu
+  ingreso, o arrastras una deuda que empieza a pesar. Es el momento de ajustar, porque hacerlo
+  ahora cuesta mucho menos que hacerlo más tarde.
+</div>
+
+<div class="perfil rojo">
+  <strong>En riesgo</strong><br>
+  Hay señales que conviene atender pronto: los gastos se acercan o superan al ingreso, el nivel
+  de deuda es alto, o no hay hábito de ahorro. No significa que la situación sea irreversible,
+  sino que necesita decisiones concretas este mes.
+</div>
+
+<h2>6. El porcentaje de confianza</h2>
+
+<p>
+Junto al perfil, la aplicación muestra un porcentaje. Ese número <strong>no</strong> es una
+nota de tu salud financiera: indica cuánta seguridad tiene el sistema en el diagnóstico que
+acaba de dar.
+</p>
+
+<p>
+Un 95% significa que tu situación encaja claramente en ese perfil. Un 65% significa que estás
+en una zona intermedia, cerca de la frontera entre dos perfiles. Los casos que caen en
+"En observación" suelen tener el porcentaje más bajo, precisamente porque es la banda del
+medio y es la más difícil de distinguir.
+</p>
+
+<h2>7. Los factores explicativos</h2>
+
+<p>
+La aplicación no se limita a dar un veredicto: muestra los tres elementos que más pesaron en
+la decisión, con una flecha que indica si empujan hacia el riesgo o lo alejan.
+</p>
+
+<p>
+Hay un detalle importante para no malinterpretarlos. Esas flechas comparan tu situación con la
+de un <strong>usuario promedio</strong>, no con un ideal. Por eso un nivel de endeudamiento del
+35% puede aparecer con la flecha hacia abajo, es decir, reduciendo el riesgo: no quiere decir
+que 35% sea poco, sino que está por debajo de la media de las personas con las que se compara.
+</p>
+
+<h2>8. Las recomendaciones</h2>
+
+<p>
+La aplicación devuelve entre una y cuatro recomendaciones, siempre ordenadas de mayor a menor
+impacto. El orden es intencionado: primero lo estructural, después el detalle.
+</p>
+
+<ol>
+  <li><strong>Gastar más de lo que se ingresa.</strong> Si ocurre, es siempre lo primero.</li>
+  <li><strong>Nivel de deuda alto.</strong> Cuando supera el 40% del ingreso.</li>
+  <li><strong>Falta de hábito de ahorro.</strong> Cuando se ahorra poco o nada.</li>
+  <li><strong>Categorías desviadas.</strong> Un tipo de gasto que pesa mucho más de lo normal.</li>
+</ol>
+
+<p>
+Las recomendaciones incluyen números para que se puedan verificar. En vez de decir "gasta
+menos en ocio", la aplicación dice: "tu gasto en ocio representa el 21% del total, 2,8 veces el
+patrón de un perfil saludable". Ese patrón sale de analizar el comportamiento de los usuarios
+con perfil saludable dentro del conjunto de datos.
+</p>
+
+<p>
+Si no se detecta ningún problema, la aplicación no se inventa uno: devuelve un mensaje de
+refuerzo sugiriendo destinar el excedente a un fondo de emergencia de entre tres y seis meses
+de gastos.
+</p>
+
+<h2>9. Preguntas frecuentes</h2>
+
+<div class="seccion">
+<p class="pregunta">¿Necesito conectar mi cuenta bancaria?</p>
+<p class="respuesta">
+No. La aplicación no se conecta a ningún banco. Los datos se introducen a mano o se importan
+desde un archivo CSV que tú mismo preparas.
+</p>
+</div>
+
+<div class="seccion">
+<p class="pregunta">¿Qué pasa si la descripción de un gasto está mal escrita o llena de códigos?</p>
+<p class="respuesta">
+Se clasifica igual. El sistema está preparado para nombres de comercio deformados. Por ejemplo,
+reconoce <code>Gasolinera Pemx</code> como transporte aunque el nombre correcto sea Pemex, y
+limpia prefijos como <code>TRF/POS</code> o números de referencia antes de analizar el texto.
+</p>
+</div>
+
+<div class="seccion">
+<p class="pregunta">¿Y si compro en un comercio que la aplicación no conoce?</p>
+<p class="respuesta">
+Si el sistema no está razonablemente seguro, coloca el gasto en la categoría "Otros" en lugar
+de adivinar. Es una decisión deliberada: en un informe financiero, un gasto sin clasificar
+molesta menos que uno mal atribuido, porque el primero se detecta a simple vista y el segundo
+distorsiona el análisis sin que nadie lo note.
+</p>
+</div>
+
+<div class="seccion">
+<p class="pregunta">¿Qué significa el aviso de "resultado aproximado"?</p>
+<p class="respuesta">
+La aplicación tiene dos motores. El principal usa modelos entrenados; si por algún motivo no
+está disponible, entra un sistema de respaldo basado en reglas. El resultado sigue siendo
+válido y útil, pero algo menos preciso, y por eso se avisa en pantalla. Lo importante es que la
+aplicación nunca se queda sin responder.
+</p>
+</div>
+
+<div class="seccion">
+<p class="pregunta">¿Mis datos se guardan en algún sitio?</p>
+<p class="respuesta">
+Cada análisis se archiva para poder seguir la evolución en el tiempo, pero solo se guardan el
+perfil resultante, los totales por categoría y los indicadores generales.
+<strong>Las descripciones de las transacciones no se almacenan.</strong> Para estudiar cómo
+evoluciona una situación financiera no hacen falta, y guardarlas convertiría el archivo en un
+registro de hábitos de consumo identificables.
+</p>
+</div>
+
+<div class="seccion">
+<p class="pregunta">¿Puedo usarla varios meses y comparar?</p>
+<p class="respuesta">
+Sí. La aplicación guarda el historial de análisis y muestra una gráfica de evolución con la
+proporción de ingreso que gastas en cada periodo, junto a una línea de referencia que marca el
+100% del ingreso.
+</p>
+</div>
+
+<div class="seccion">
+<p class="pregunta">¿El diagnóstico es un consejo financiero profesional?</p>
+<p class="respuesta">
+No. Es una herramienta de orientación y educación financiera. No sustituye a un asesor, no
+conoce tu situación completa (patrimonio, contratos, cargas familiares, planes a futuro) y no
+debe usarse como única base para decisiones importantes como pedir un crédito o invertir.
+</p>
+</div>
+
+<div class="seccion">
+<p class="pregunta">¿Puedo cargar mis gastos desde un archivo?</p>
+<p class="respuesta">
+Sí. La aplicación acepta archivos CSV con dos columnas: la descripción del gasto y su monto.
+También se puede exportar el informe resultante en formato JSON o imprimirlo en PDF.
+</p>
+</div>
+
+<div class="seccion">
+<p class="pregunta">¿Por qué el mismo gasto puede caer en categorías distintas según quién lo mire?</p>
+<p class="respuesta">
+Porque algunas fronteras son opinables. Un café puede verse como alimentación o como ocio, y
+una suscripción a un periódico como educación o como servicios. La aplicación aplica un
+criterio único y consistente para que las comparaciones entre meses tengan sentido, aunque en
+algún caso concreto se pueda discrepar.
+</p>
+</div>
+
+<div class="seccion">
+<p class="pregunta">¿Cuánto tarda en darme el resultado?</p>
+<p class="respuesta">
+Alrededor de veinte milisegundos. En la práctica, el resultado aparece en cuanto pulsas el
+botón.
+</p>
+</div>
+
+<h2>10. Qué no hace la aplicación</h2>
+
+<p>
+Conviene tener claro el alcance, para no esperar de la herramienta algo que no ofrece.
+</p>
+
+<ul>
+  <li>No se conecta a bancos ni importa movimientos automáticamente.</li>
+  <li>No gestiona presupuestos, metas de ahorro ni recordatorios de pago.</li>
+  <li>No predice el futuro: analiza el periodo que se le entrega, no proyecta el siguiente.</li>
+  <li>No compara tu situación con la de otras personas reales, sino con un conjunto de datos
+      construido para el proyecto.</li>
+  <li>No sustituye asesoría financiera profesional.</li>
+</ul>
+
+<h2>11. Glosario</h2>
+
+<table>
+  <tr><th style="width:118pt">Término</th><th>Qué significa</th></tr>
+  <tr>
+    <td><strong>Ingreso mensual</strong></td>
+    <td>El dinero que entra cada mes, ya libre de descuentos.</td>
+  </tr>
+  <tr>
+    <td><strong>Nivel de endeudamiento</strong></td>
+    <td>Qué porcentaje de tu ingreso está comprometido en pagar deudas. Si ganas 3.000 y pagas
+        900 en cuotas, tu nivel de endeudamiento es del 30%.</td>
+  </tr>
+  <tr>
+    <td><strong>Frecuencia de ahorro</strong></td>
+    <td>Con qué regularidad apartas dinero: alta, media, baja o nula. Mide el hábito, no el
+        monto.</td>
+  </tr>
+  <tr>
+    <td><strong>Tasa de gasto</strong></td>
+    <td>Qué porcentaje de tu ingreso se va en gastos. Por encima del 100% significa que gastas
+        más de lo que ingresas.</td>
+  </tr>
+  <tr>
+    <td><strong>Gasto discrecional</strong></td>
+    <td>El que se puede recortar a corto plazo sin consecuencias graves: ocio, compras varias.
+        Se opone al gasto esencial, como vivienda o alimentación.</td>
+  </tr>
+  <tr>
+    <td><strong>Perfil financiero</strong></td>
+    <td>El diagnóstico general: saludable, en observación o en riesgo.</td>
+  </tr>
+  <tr>
+    <td><strong>Confianza</strong></td>
+    <td>Cuánta seguridad tiene el sistema en la clasificación o el diagnóstico que ha dado.</td>
+  </tr>
+  <tr>
+    <td><strong>Modo degradado</strong></td>
+    <td>Situación en la que la aplicación responde con su sistema de respaldo porque el motor
+        principal no está disponible.</td>
+  </tr>
+</table>
+
+<h2>12. Ficha técnica resumida</h2>
+
+<p>
+Para quien tenga curiosidad por lo que hay debajo, sin entrar en detalle:
+</p>
+
+<table>
+  <tr><th style="width:128pt">Aspecto</th><th>Detalle</th></tr>
+  <tr><td><strong>Qué analiza</strong></td>
+      <td>Descripción y monto de cada gasto, ingreso mensual, nivel de deuda y frecuencia de ahorro</td></tr>
+  <tr><td><strong>Qué devuelve</strong></td>
+      <td>Categoría de cada gasto, totales por categoría, perfil financiero con su confianza,
+          factores explicativos y recomendaciones</td></tr>
+  <tr><td><strong>Categorías</strong></td>
+      <td>Ocho, fijas</td></tr>
+  <tr><td><strong>Perfiles</strong></td>
+      <td>Tres: saludable, en observación, en riesgo</td></tr>
+  <tr><td><strong>Tiempo de respuesta</strong></td>
+      <td>Alrededor de 20 milisegundos por análisis</td></tr>
+  <tr><td><strong>Datos de entrenamiento</strong></td>
+      <td>Conjunto simulado de 400 usuarios a lo largo de 6 meses, unas 64.700 transacciones</td></tr>
+  <tr><td><strong>Disponibilidad</strong></td>
+      <td>Si el motor principal falla, un sistema de respaldo mantiene el servicio y lo avisa en
+          pantalla</td></tr>
+</table>
+
+<div class="nota">
+  <strong>Una aclaración sobre los datos.</strong> Los modelos se entrenaron con un conjunto de
+  datos simulado, no con extractos bancarios reales, porque no existe un conjunto público en
+  español con esa información etiquetada. Eso significa que la herramienta funciona bien con los
+  comercios que conoce, y que ampliar ese catálogo con datos reales es la vía natural para
+  mejorarla.
+</div>
+
+</body>
+</html>
