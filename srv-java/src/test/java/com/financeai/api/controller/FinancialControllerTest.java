@@ -1,8 +1,12 @@
 package com.financeai.api.controller;
 
+import com.financeai.api.dto.ClassifiedTransactionDTO;
 import com.financeai.api.dto.FactorDTO;
 import com.financeai.api.dto.FinancialAnalysisResponseDTO;
+import com.financeai.api.integration.OCIStorageService;
 import com.financeai.api.integration.PythonModelClient;
+import com.financeai.api.service.ClassificationResult;
+import com.financeai.api.service.ClassificationService;
 import com.financeai.api.service.FinancialAnalysisService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +37,13 @@ class FinancialControllerTest {
     private FinancialAnalysisService analysisService;
 
     @MockitoBean
+    private ClassificationService classificationService;
+
+    @MockitoBean
     private PythonModelClient modelClient;
+
+    @MockitoBean
+    private OCIStorageService ociStorageService;
 
     private static final String PETICION_VALIDA = """
             {
@@ -136,5 +146,75 @@ class FinancialControllerTest {
                 .andExpect(jsonPath("$.detalles.transacciones").exists());
 
         verify(analysisService, never()).analyze(any());
+    }
+
+    // ------------------------------------------------ /clasificar-transacciones
+
+    @Test
+    @DisplayName("Clasificar devuelve el detalle por transaccion y el agregado por categoria")
+    void clasificaTransacciones() throws Exception {
+        when(classificationService.classify(any())).thenReturn(new ClassificationResult(
+                List.of(
+                        new ClassifiedTransactionDTO("Supermercado Exito", 420.0, "alimentacion", 0.99),
+                        new ClassifiedTransactionDTO("Gasolinera Terpel", 300.0, "transporte", 0.97)),
+                Map.of("alimentacion", 420.0, "transporte", 300.0),
+                false));
+
+        String peticion = """
+                {
+                  "transacciones": [
+                    {"descripcion": "Supermercado Exito", "valor": 420},
+                    {"descripcion": "Gasolinera Terpel", "valor": 300}
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/clasificar-transacciones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(peticion))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transacciones_clasificadas[0].categoria").value("alimentacion"))
+                .andExpect(jsonPath("$.transacciones_clasificadas[0].confianza").value(0.99))
+                .andExpect(jsonPath("$.transacciones_clasificadas[1].categoria").value("transporte"))
+                .andExpect(jsonPath("$.resumen_gastos.alimentacion").value(420.0))
+                .andExpect(jsonPath("$.total_gastos").value(720.0))
+                .andExpect(jsonPath("$.modo_degradado").value(false));
+    }
+
+    @Test
+    @DisplayName("Clasificar no exige ingreso ni endeudamiento: no los necesita")
+    void clasificarNoPideDatosFinancieros() throws Exception {
+        when(classificationService.classify(any())).thenReturn(new ClassificationResult(
+                List.of(new ClassifiedTransactionDTO("Netflix", 40.0, "ocio", 0.95)),
+                Map.of("ocio", 40.0),
+                false));
+
+        mockMvc.perform(post("/api/v1/clasificar-transacciones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"transacciones\":[{\"descripcion\":\"Netflix\",\"valor\":40}]}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Clasificar rechaza una lista vacia con 400")
+    void clasificarRechazaListaVacia() throws Exception {
+        mockMvc.perform(post("/api/v1/clasificar-transacciones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"transacciones\": []}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detalles.transacciones").exists());
+
+        verify(classificationService, never()).classify(any());
+    }
+
+    @Test
+    @DisplayName("Clasificar rechaza un valor negativo con 400")
+    void clasificarRechazaValorNegativo() throws Exception {
+        mockMvc.perform(post("/api/v1/clasificar-transacciones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"transacciones\":[{\"descripcion\":\"Compra\",\"valor\":-5}]}"))
+                .andExpect(status().isBadRequest());
+
+        verify(classificationService, never()).classify(any());
     }
 }

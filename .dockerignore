@@ -1,0 +1,29 @@
+# El contexto de build de srv-python es la raiz del repositorio, asi que sin
+# este archivo Docker enviaria al daemon el dataset, el .venv y target/.
+
+.git/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Dataset generado: se reproduce con el generador y la semilla.
+ciencia-datos/datos/
+ciencia-datos/notebook.ipynb
+.ipynb_checkpoints/
+
+# Artefactos de modelo: se descargan de OCI o se montan como volumen.
+ciencia-datos/artefactos/
+
+# Compilados de Java.
+srv-java/target/
+*.class
+*.jar
+
+# Frontend (tiene su propio contexto de build).
+web/
+
+node_modules/
+.idea/
+.vscode/
+*.md

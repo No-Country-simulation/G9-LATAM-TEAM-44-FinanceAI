@@ -11,21 +11,20 @@ import java.util.Map;
 /**
  * Clasificador de respaldo por palabras clave.
  *
- * Es el plan B cuando srv-python no responde (flujo alternativo A2 del caso de
- * uso): la API sigue devolviendo un analisis util en vez de un error 5xx.
+ * Entra cuando srv-python no responde, para seguir devolviendo un analisis en
+ * vez de un 5xx.
  *
- * El diccionario es un espejo de KEYWORDS en srv-python/app/main.py. Si alli se
- * agregan palabras, agregalas aqui tambien para que el modo degradado siga
- * dando resultados equivalentes. El orden de iteracion importa: gana la primera
- * categoria que haga match, igual que en Python.
+ * El diccionario es espejo de KEYWORDS en srv-python/app/reglas.py; las
+ * palabras nuevas hay que anadirlas en ambos. El orden de iteracion importa:
+ * gana la primera categoria que haga match, igual que en Python.
  */
 @Component
 public class FallbackClassifier {
 
-    /** Confianza que reportamos en modo degradado cuando hay match por keyword. */
+    /** Confianza que se reporta cuando una keyword acierta. */
     public static final double CONFIANZA_KEYWORD = 0.90;
 
-    /** Confianza cuando ninguna keyword coincide y cae en "otras". */
+    /** Confianza cuando ninguna coincide y cae en "otras". */
     public static final double CONFIANZA_SIN_MATCH = 0.40;
 
     private static final Map<FinancialCategory, List<String>> KEYWORDS = new LinkedHashMap<>();

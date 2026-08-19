@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="oscuro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinanceAI · Análisis Financiero Inteligente</title>
+  <meta name="description" content="Panel de salud financiera con clasificación automática de gastos e IA explicable.">
+  <meta name="theme-color" content="#07090f">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◐</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============================================================ ICONOS
+     Sprite SVG en línea. Sin CDN ni fuente de iconos: la página funciona
+     sin red y no hay una petición extra que pueda fallar en la demo. -->
+<svg class="sprite" aria-hidden="true">
+  <defs>
+    <symbol id="i-alimentacion" viewBox="0 0 24 24">
+      <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+      <path d="M2 3h2.4l2.6 12.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 8H6"/>
+    </symbol>
+    <symbol id="i-transporte" viewBox="0 0 24 24">
+      <path d="M3 16v-4l2-5h14l2 5v4z"/>
+      <path d="M5 16v2a1 1 0 0 1-1 1H4M19 16v2a1 1 0 0 0 1 1h.5"/>
+      <path d="M6.5 12.5h.01M17.5 12.5h.01"/>
+    </symbol>
+    <symbol id="i-salud" viewBox="0 0 24 24">
+      <path d="M12 20.5S3.5 15 3.5 9.6A4.5 4.5 0 0 1 12 7.1a4.5 4.5 0 0 1 8.5 2.5c0 5.4-8.5 10.9-8.5 10.9z"/>
+    </symbol>
+    <symbol id="i-vivienda" viewBox="0 0 24 24">
+      <path d="M3 10.5 12 3l9 7.5"/>
+      <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/>
+      <path d="M9.5 21v-6h5v6"/>
+    </symbol>
+    <symbol id="i-educacion" viewBox="0 0 24 24">
+      <path d="M12 4 2 9l10 5 10-5z"/>
+      <path d="M6 11.5V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5"/>
+    </symbol>
+    <symbol id="i-ocio" viewBox="0 0 24 24">
+      <path d="M7 10.5h3M8.5 9v3"/>
+      <circle cx="15.4" cy="10" r=".9"/><circle cx="17.6" cy="12.4" r=".9"/>
+      <path d="M17.7 6H6.3a3.3 3.3 0 0 0-3.2 2.6l-1 5A3.3 3.3 0 0 0 5.3 18c1 0 1.9-.5 2.5-1.3L9 15h6l1.2 1.7c.6.8 1.5 1.3 2.5 1.3a3.3 3.3 0 0 0 3.2-4.4l-1-5A3.3 3.3 0 0 0 17.7 6z"/>
+    </symbol>
+    <symbol id="i-servicios" viewBox="0 0 24 24">
+      <path d="M13 2.5 4.5 13.5H11l-1 8 8.5-11.5H12z"/>
+    </symbol>
+    <symbol id="i-otras" viewBox="0 0 24 24">
+      <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
+    </symbol>
+
+    <symbol id="i-logo" viewBox="0 0 24 24">
+      <path d="M3 7a2 2 0 0 1 2-2h12.5a1.5 1.5 0 0 1 0 3H5"/>
+      <path d="M3 7v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2H5"/>
+      <circle cx="16.5" cy="14" r="1.3"/>
+    </symbol>
+    <symbol id="i-chispa" viewBox="0 0 24 24">
+      <path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/>
+      <path d="m18.6 15.4.7 2.1 2.1.7-2.1.7-.7 2.1-.7-2.1-2.1-.7 2.1-.7z"/>
+    </symbol>
+    <symbol id="i-tendencia" viewBox="0 0 24 24">
+      <path d="m3 16 5-5 4 4 8-8"/><path d="M15 7h5v5"/>
+    </symbol>
+    <symbol id="i-escaner" viewBox="0 0 24 24">
+      <path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8M21 16v2.5a2.5 2.5 0 0 1-2.5 2.5H16M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16"/>
+      <path d="M7 12h10"/>
+    </symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-subir" viewBox="0 0 24 24">
+      <path d="M12 16V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/>
+      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+    </symbol>
+    <symbol id="i-bajar" viewBox="0 0 24 24">
+      <path d="M12 4v12"/><path d="m7.5 11.5 4.5 4.5 4.5-4.5"/>
+      <path d="M4 18v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/>
+    </symbol>
+    <symbol id="i-imprimir" viewBox="0 0 24 24">
+      <path d="M7 8V3h10v5"/>
+      <path d="M7 18H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/>
+      <path d="M7 14h10v7H7z"/>
+    </symbol>
+    <symbol id="i-alerta" viewBox="0 0 24 24">
+      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+      <path d="M12 9v4.5M12 17.2h.01"/>
+    </symbol>
+    <symbol id="i-sol" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+    </symbol>
+    <symbol id="i-luna" viewBox="0 0 24 24">
+      <path d="M21 13.2A8.5 8.5 0 0 1 10.8 3 8.5 8.5 0 1 0 21 13.2z"/>
+    </symbol>
+    <symbol id="i-papelera" viewBox="0 0 24 24">
+      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      <path d="M6 7v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- Fondo animado: tres manchas desenfocadas que se desplazan lentamente y dan
+     profundidad al cristal de las tarjetas. -->
+<div class="aurora" aria-hidden="true">
+  <span class="mancha mancha-1"></span>
+  <span class="mancha mancha-2"></span>
+  <span class="mancha mancha-3"></span>
+  <span class="malla"></span>
+</div>
+
+<header class="cabecera">
+  <div class="contenedor cabecera-fila">
+    <a class="marca" href="#">
+      <span class="marca-orbe"><svg class="ic"><use href="#i-logo"/></svg></span>
+      <span class="marca-texto">
+        <strong>Finance<em>AI</em></strong>
+        <small>G9 LATAM · Equipo 44</small>
+      </span>
+    </a>
+
+    <div class="cabecera-acciones">
+      <div class="estado" id="estado-sistema" title="Estado del modelo">
+        <span class="latido" id="estado-punto"><i></i></span>
+        <span id="estado-texto">Conectando…</span>
+      </div>
+      <button class="boton-icono" id="btn-tema" title="Cambiar tema" aria-label="Cambiar tema">
+        <svg class="ic ic-sol"><use href="#i-sol"/></svg>
+        <svg class="ic ic-luna"><use href="#i-luna"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="contenedor">
+  <nav class="pestanas" role="tablist">
+    <span class="pestana-indicador" id="pestana-indicador"></span>
+    <button class="pestana activa" role="tab" data-panel="panel-analisis">
+      <svg class="ic"><use href="#i-chispa"/></svg><span>Análisis</span>
+    </button>
+    <button class="pestana" role="tab" data-panel="panel-clasificador">
+      <svg class="ic"><use href="#i-escaner"/></svg><span>Clasificador</span>
+    </button>
+    <button class="pestana" role="tab" data-panel="panel-historial">
+      <svg class="ic"><use href="#i-tendencia"/></svg><span>Evolución</span>
+    </button>
+  </nav>
+</div>
+
+<main class="contenedor">
+
+  <!-- ======================================================== ANÁLISIS -->
+  <section id="panel-analisis" class="panel activo" role="tabpanel">
+    <div class="rejilla">
+
+      <form class="vidrio formulario surge" id="formulario">
+        <h2 class="titulo-tarjeta"><svg class="ic"><use href="#i-logo"/></svg> Tus datos</h2>
+
+        <div class="ejemplos">
+          <span class="etiqueta-mini">Probar con un ejemplo</span>
+          <div class="chips">
+            <button type="button" class="chip c-verde" data-ejemplo="saludable">Saludable</button>
+            <button type="button" class="chip c-ambar" data-ejemplo="observacion">Observación</button>
+            <button type="button" class="chip c-rojo" data-ejemplo="riesgo">Riesgo</button>
+          </div>
+        </div>
+
+        <label class="campo">
+          <span class="campo-titulo">Ingreso mensual</span>
+          <div class="entrada-adorno">
+            <em>$</em>
+            <input type="number" id="ingreso" min="1" step="0.01" value="4500" required>
+          </div>
+        </label>
+
+        <div class="campo">
+          <span class="campo-titulo">
+            Nivel de endeudamiento
+            <b class="valor-vivo" id="deuda-salida">25%</b>
+          </span>
+          <input type="range" id="deuda" min="0" max="100" step="1" value="25" class="deslizador">
+        </div>
+
+        <div class="campo">
+          <span class="campo-titulo">Frecuencia de ahorro</span>
+          <div class="segmentado" id="ahorro-grupo" role="radiogroup">
+            <span class="segmento-pildora" id="ahorro-pildora"></span>
+            <button type="button" class="segmento" data-valor="Alta">Alta</button>
+            <button type="button" class="segmento activo" data-valor="Media">Media</button>
+            <button type="button" class="segmento" data-valor="Baja">Baja</button>
+            <button type="button" class="segmento" data-valor="Nula">Nula</button>
+          </div>
+        </div>
+
+        <div class="campo">
+          <div class="fila-titulo">
+            <span class="campo-titulo">Transacciones <b class="contador" id="contador-tx">0</b></span>
+            <div class="acciones-mini">
+              <button type="button" class="boton-mini" id="btn-agregar">
+                <svg class="ic"><use href="#i-mas"/></svg> Añadir
+              </button>
+              <button type="button" class="boton-mini" id="btn-csv">
+                <svg class="ic"><use href="#i-subir"/></svg> CSV
+              </button>
+            </div>
+          </div>
+          <div id="transacciones" class="transacciones"></div>
+          <input type="file" id="archivo-csv" accept=".csv,text/csv" hidden>
+          <p class="ayuda" id="ayuda-csv">CSV con columnas <code>descripcion,valor</code>.</p>
+        </div>
+
+        <button type="submit" class="boton-principal" id="btn-analizar">
+          <span class="boton-texto"><svg class="ic"><use href="#i-chispa"/></svg> Analizar mis finanzas</span>
+          <span class="cargador"></span>
+        </button>
+      </form>
+
+      <!-- Estado inicial: ocupa la columna derecha hasta el primer análisis. -->
+      <div class="vidrio bienvenida surge" id="bienvenida">
+        <span class="bienvenida-orbe"><svg class="ic"><use href="#i-chispa"/></svg></span>
+        <h2>Tu diagnóstico aparecerá aquí</h2>
+        <p>Carga uno de los ejemplos o introduce tus propios movimientos y pulsa
+           <strong>Analizar</strong>. El modelo categoriza cada transacción, evalúa tu salud
+           financiera y explica en qué se basó.</p>
+        <ul class="bienvenida-puntos">
+          <li><span class="marca-cat" style="background:var(--c-alimentacion)"><svg class="ic"><use href="#i-alimentacion"/></svg></span>
+              <div><strong>Categorización automática</strong><small>Ocho categorías, incluso con descripciones sucias del banco</small></div></li>
+          <li><span class="marca-cat" style="background:var(--c-vivienda)"><svg class="ic"><use href="#i-escaner"/></svg></span>
+              <div><strong>Perfil explicable</strong><small>Los tres factores que más pesaron en la decisión</small></div></li>
+          <li><span class="marca-cat" style="background:var(--c-salud)"><svg class="ic"><use href="#i-tendencia"/></svg></span>
+              <div><strong>Recomendaciones accionables</strong><small>Comparadas contra el patrón de un perfil saludable</small></div></li>
+        </ul>
+      </div>
+
+      <div class="resultado" id="resultado" hidden>
+
+        <div class="aviso" id="aviso-degradado" hidden>
+          <svg class="ic"><use href="#i-alerta"/></svg>
+          <span><strong>Resultado aproximado.</strong> El servicio de modelos no respondió;
+            el análisis se calculó con reglas locales.</span>
+        </div>
+
+        <div class="vidrio tarjeta-perfil surge" id="tarjeta-perfil">
+          <span class="resplandor" aria-hidden="true"></span>
+          <div class="perfil-cabecera">
+            <div class="perfil-id">
+              <p class="etiqueta-mini">Tu perfil financiero</p>
+              <h2 id="perfil-nombre">—</h2>
+              <p class="perfil-pie" id="perfil-pie"></p>
+            </div>
+            <div class="medidor" id="medidor"></div>
+          </div>
+          <div class="indicadores" id="indicadores"></div>
+          <div class="acciones-informe">
+            <button type="button" class="boton-mini" id="btn-exportar">
+              <svg class="ic"><use href="#i-bajar"/></svg> Descargar informe
+            </button>
+            <button type="button" class="boton-mini" id="btn-imprimir">
+              <svg class="ic"><use href="#i-imprimir"/></svg> Imprimir / PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="vidrio surge">
+          <h3 class="titulo-tarjeta"><svg class="ic"><use href="#i-tendencia"/></svg> ¿A dónde va tu dinero?</h3>
+          <div class="grafico-fila">
+            <div class="dona-envoltura" id="dona"></div>
+            <ul class="leyenda" id="leyenda"></ul>
+          </div>
+        </div>
+
+        <div class="vidrio surge">
+          <h3 class="titulo-tarjeta"><svg class="ic"><use href="#i-chispa"/></svg> Recomendaciones</h3>
+          <ul class="recomendaciones" id="recomendaciones"></ul>
+        </div>
+
+        <div class="vidrio surge">
+          <h3 class="titulo-tarjeta"><svg class="ic"><use href="#i-escaner"/></svg> ¿Por qué este diagnóstico?</h3>
+          <p class="ayuda">
+            Los tres factores que más pesaron en la decisión del modelo. Las flechas indican
+            hacia dónde empuja cada uno <strong>frente al usuario promedio</strong>, no en
+            términos absolutos: un endeudamiento del 35% puede aparecer como <em>↓ riesgo</em>
+            si la media está por encima.
+          </p>
+          <ul class="factores" id="factores"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================== CLASIFICADOR -->
+  <section id="panel-clasificador" class="panel" role="tabpanel">
+    <div class="vidrio surge">
+      <h2 class="titulo-tarjeta"><svg class="ic"><use href="#i-escaner"/></svg> Clasificador de transacciones</h2>
+      <p class="ayuda">
+        Una descripción por línea, opcionalmente con el monto tras una coma. No hace falta
+        ingreso ni nivel de deuda: este endpoint solo categoriza.
+      </p>
+      <textarea id="texto-clasificar" rows="8" spellcheck="false">Supermercado Exito, 420
+TRF/POS Gasolinera Terpel REF88213, 300
+Netflix Streaming, 40
+### farmacia cruz verde, 85
+Arriendo Apartamento, 900
+zxqw plfj mmnb, 25</textarea>
+      <button class="boton-principal" id="btn-clasificar">
+        <span class="boton-texto"><svg class="ic"><use href="#i-escaner"/></svg> Clasificar</span>
+        <span class="cargador"></span>
+      </button>
+      <div id="resultado-clasificador"></div>
+    </div>
+  </section>
+
+  <!-- ======================================================= EVOLUCIÓN -->
+  <section id="panel-historial" class="panel" role="tabpanel">
+    <div class="vidrio surge">
+      <div class="fila-titulo">
+        <h2 class="titulo-tarjeta"><svg class="ic"><use href="#i-tendencia"/></svg> Tu evolución financiera</h2>
+        <button class="boton-mini" id="btn-limpiar-historial">
+          <svg class="ic"><use href="#i-papelera"/></svg> Borrar
+        </button>
+      </div>
+      <p class="ayuda">
+        Los análisis se guardan en este navegador. El backend además los archiva en
+        OCI Object Storage cuando está configurado.
+      </p>
+      <div id="grafico-historial"></div>
+      <div id="tabla-historial"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="contenedor pie">
+  <p>Hackathon ONE · G9 LATAM Equipo 44</p>
+  <p class="ayuda"><span id="pie-api"></span> · <a href="http://localhost:8080/swagger-ui.html" target="_blank" rel="noopener">Documentación de la API</a></p>
+</footer>
+
+<div class="tostadas" id="tostadas" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

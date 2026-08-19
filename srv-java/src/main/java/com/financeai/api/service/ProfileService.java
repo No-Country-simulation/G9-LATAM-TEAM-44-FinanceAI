@@ -6,6 +6,7 @@ import com.financeai.api.integration.PythonModelClient;
 import com.financeai.api.integration.dto.FactorMl;
 import com.financeai.api.integration.dto.PerfilRequest;
 import com.financeai.api.integration.dto.PerfilResponse;
+import com.financeai.api.model.FinancialProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,20 +23,14 @@ import java.util.Set;
  * Camino feliz: srv-python /perfil (modelo calibrado + factores explicativos).
  * Camino degradado: los mismos umbrales, calculados localmente.
  *
- * Los umbrales locales y los del stub de Python son identicos a proposito, asi
- * el reemplazo por el modelo real es un cambio de comportamiento controlado y
- * no una sorpresa el dia de la demo.
+ * Los umbrales del respaldo son identicos a los de _perfil_con_reglas en
+ * srv-python, para que el diagnostico no cambie segun quien lo calcule.
  */
 @Service
 public class ProfileService {
 
     private static final Logger log = LoggerFactory.getLogger(ProfileService.class);
 
-    private static final String SALUDABLE = "Saludable";
-    private static final String EN_OBSERVACION = "En observación";
-    private static final String EN_RIESGO = "En riesgo";
-
-    private static final Set<String> PERFILES_VALIDOS = Set.of(SALUDABLE, EN_OBSERVACION, EN_RIESGO);
     private static final Set<String> AHORRO_SUFICIENTE = Set.of("alta", "media");
 
     private final PythonModelClient modelClient;
@@ -56,8 +51,11 @@ public class ProfileService {
 
         if (respuesta.isPresent() && esValida(respuesta.get())) {
             PerfilResponse perfil = respuesta.get();
+            // Se reemite la forma canonica: si el modelo responde
+            // "En observacion" sin tilde, la API sigue devolviendo la version
+            // con tilde y el cliente no ve dos escrituras de lo mismo.
             return new ProfileResult(
-                    perfil.perfilFinanciero(),
+                    FinancialProfile.desdeValor(perfil.perfilFinanciero()).getValor(),
                     perfil.probabilidad(),
                     aFactoresDTO(perfil.factores()),
                     false
@@ -72,8 +70,7 @@ public class ProfileService {
 
     /** El perfil debe ser una de las tres etiquetas canonicas y traer probabilidad en [0,1]. */
     private boolean esValida(PerfilResponse perfil) {
-        return perfil.perfilFinanciero() != null
-                && PERFILES_VALIDOS.contains(perfil.perfilFinanciero())
+        return FinancialProfile.esValido(perfil.perfilFinanciero())
                 && perfil.probabilidad() != null
                 && perfil.probabilidad() >= 0
                 && perfil.probabilidad() <= 1;
@@ -97,16 +94,16 @@ public class ProfileService {
         double ratio = ingreso == 0 ? 1.0 : totalGastos / ingreso;
         int deuda = request.nivelEndeudamiento() == null ? 0 : request.nivelEndeudamiento();
 
-        String perfil;
+        FinancialProfile perfil;
         double probabilidad;
         if (deuda >= 50 || ratio >= 1.0) {
-            perfil = EN_RIESGO;
+            perfil = FinancialProfile.EN_RIESGO;
             probabilidad = 0.75;
         } else if (deuda >= 30 || ratio >= 0.8) {
-            perfil = EN_OBSERVACION;
+            perfil = FinancialProfile.EN_OBSERVACION;
             probabilidad = 0.82;
         } else {
-            perfil = SALUDABLE;
+            perfil = FinancialProfile.SALUDABLE;
             probabilidad = 0.90;
         }
 
@@ -122,7 +119,7 @@ public class ProfileService {
                         ahorraSuficiente ? "baja_riesgo" : "sube_riesgo")
         );
 
-        return new ProfileResult(perfil, probabilidad, factores, true);
+        return new ProfileResult(perfil.getValor(), probabilidad, factores, true);
     }
 
     private double redondear(double valor) {
