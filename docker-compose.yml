@@ -33,11 +33,6 @@ services:
       OCI_REGION: ${OCI_REGION:-}
       OCI_PREFIJO: ${OCI_PREFIJO:-}
       OCI_PAR_URL: ${OCI_PAR_URL:-}
-    volumes:
-      # Artefactos versionados en el repositorio, en solo lectura. Si se
-      # configura OCI Object Storage, el servicio los descarga de ahi y este
-      # volumen queda como respaldo.
-      - ./ciencia-datos/artefactos:/srv/artefactos:ro
 
   api:
     build: ./srv-java

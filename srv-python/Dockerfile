@@ -21,10 +21,13 @@ COPY srv-python/app ./app
 # contenedor que en local.
 COPY ciencia-datos/features.py ciencia-datos/oci_storage.py ./app/ciencia_datos/
 
-# Los artefactos NO se copian a la imagen: se descargan de OCI Object Storage
-# al arrancar. Asi se publica un modelo nuevo sin reconstruir ni redesplegar.
-# Si OCI no esta configurado, monta ciencia-datos/artefactos como volumen:
-#   -v ./ciencia-datos/artefactos:/srv/artefactos
+# Los artefactos entrenados van dentro de la imagen (unos 3 MB) para que el
+# servicio funcione sin depender de un volumen ni de credenciales.
+#
+# Esto no anula el uso de Object Storage: modelos.py resuelve en el orden
+# OCI -> local -> reglas, asi que con OCI_PAR_URL configurado sigue ganando la
+# version del bucket y estos quedan como respaldo.
+COPY ciencia-datos/artefactos/ /srv/artefactos/
 ENV RUTA_ARTEFACTOS=/srv/artefactos
 
 EXPOSE 8000
