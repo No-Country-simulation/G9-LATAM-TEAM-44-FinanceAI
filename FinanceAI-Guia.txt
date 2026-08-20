@@ -1,0 +1,186 @@
+FinanceAI
+Guía para entender la aplicación
+Documento explicativo en lenguaje sencillo · Hackathon ONE · Equipo 44, G9 LATAM · Versión 1.0
+1. Qué es FinanceAI
+FinanceAI es una aplicación que lee el listado de gastos de una persona y le explica, en pocos segundos, tres
+cosas: en qué se le va el dinero, cómo está su salud financiera y qué puede hacer para mejorarla.
+La idea de fondo es sencilla. Mucha gente tiene acceso a sus movimientos bancarios, pero ver una lista de
+cien líneas con fechas y montos no ayuda a decidir nada. FinanceAI convierte esa lista en un diagnóstico
+claro y en dos o tres consejos concretos.
+En una frase: le das tus gastos del mes y tu ingreso, y te devuelve un diagnóstico de tu situación financiera
+con recomendaciones para mejorarla.
+2. Qué problema resuelve
+Organizar las finanzas personales a mano tiene tres obstáculos que la aplicación elimina:
+Clasificar los gastos es tedioso. Nadie quiere etiquetar cien transacciones una por una para saber
+cuánto gastó en comida. La aplicación lo hace sola.
+Los nombres de los comercios son confusos. En un extracto bancario real una compra aparece
+como TRF/POS SUPERMERCADO JUMBO REF993021, no como "supermercado". La aplicación entiende esos
+nombres aunque vengan con códigos, errores de escritura o texto de más.
+Saber si vas bien o mal no es evidente. Gastar 1.500 al mes puede ser excelente o preocupante
+según cuánto ganes y cuánto debas. La aplicación compara tu situación con la de perfiles sanos y te dice
+dónde estás.
+3. Cómo funciona, paso a paso
+El proceso completo tiene cinco pasos y ocurre en menos de un segundo.
+Paso Qué ocurre
+1 Entregas tus datos. Tu ingreso mensual, cuánto de ese ingreso se te va en deudas, con qué frecuencia
+ahorras y la lista de gastos del periodo.
+2 Cada gasto se clasifica. El sistema lee la descripción de cada transacción y decide a qué categoría
+pertenece: alimentación, transporte, salud, vivienda, educación, ocio, servicios u otros.
+3 Se suma por categoría. Así se ve de un vistazo cuánto pesa cada tipo de gasto sobre el total.
+
+4 Se evalúa tu perfil financiero. Con esos totales, tu ingreso, tu deuda y tu hábito de ahorro, el sistema
+decide si estás en situación saludable, en observación o en riesgo.
+5 Se generan recomendaciones. Entre una y cuatro sugerencias concretas, ordenadas de mayor a menor
+impacto.
+4. Las ocho categorías de gasto
+Todo gasto se asigna a una de estas ocho categorías. No hay más, y ninguna transacción se queda sin
+clasificar.
+Categoría Qué incluye Ejemplos
+Alimentación Compra de comida y restaurantes Supermercados, panaderías,
+comida a domicilio, cafeterías
+Transporte Todo lo relacionado con moverse Gasolina, taxis y apps de viaje,
+metro, peajes, taller mecánico
+Salud Atención médica y medicamentos Farmacias, consultas,
+laboratorios, dentista, óptica
+Vivienda El techo y su mantenimiento Alquiler, hipoteca,
+administración, ferretería,
+reparaciones
+Educación Formación propia o de la familia Matrículas, cursos online,
+librerías, útiles escolares
+Ocio Entretenimiento y tiempo libre Cine, videojuegos, bares,
+gimnasio, viajes, plataformas de
+streaming
+Servicios Suministros y servicios del hogar Luz, agua, gas, internet,
+telefonía, software
+Otros Lo que no encaja en las anteriores Retiros de cajero, transferencias,
+comisiones bancarias, ropa,
+mascotas
+Sobre el streaming: Netflix, Spotify o Disney+ se cuentan como ocio y no como servicios, porque son
+entretenimiento aunque se paguen como suscripción mensual.
+5. Los tres perfiles financieros
+El diagnóstico siempre es uno de estos tres. No son notas ni calificaciones: describen una situación en un
+momento concreto, y pueden cambiar de un mes a otro.
+
+Saludable
+Gastas bastante menos de lo que ingresas, tu nivel de deuda es bajo y ahorras con regularidad. Tienes
+margen para imprevistos. El objetivo aquí no es corregir nada, sino mantener el hábito y empezar a
+construir un fondo de emergencia.
+En observación
+Todavía no hay un problema, pero el margen se está estrechando: gastas una parte alta de tu ingreso, o
+arrastras una deuda que empieza a pesar. Es el momento de ajustar, porque hacerlo ahora cuesta
+mucho menos que hacerlo más tarde.
+En riesgo
+Hay señales que conviene atender pronto: los gastos se acercan o superan al ingreso, el nivel de deuda
+es alto, o no hay hábito de ahorro. No significa que la situación sea irreversible, sino que necesita
+decisiones concretas este mes.
+6. El porcentaje de confianza
+Junto al perfil, la aplicación muestra un porcentaje. Ese número no es una nota de tu salud financiera:
+indica cuánta seguridad tiene el sistema en el diagnóstico que acaba de dar.
+Un 95% significa que tu situación encaja claramente en ese perfil. Un 65% significa que estás en una zona
+intermedia, cerca de la frontera entre dos perfiles. Los casos que caen en "En observación" suelen tener el
+porcentaje más bajo, precisamente porque es la banda del medio y es la más difícil de distinguir.
+7. Los factores explicativos
+La aplicación no se limita a dar un veredicto: muestra los tres elementos que más pesaron en la decisión, con
+una flecha que indica si empujan hacia el riesgo o lo alejan.
+Hay un detalle importante para no malinterpretarlos. Esas flechas comparan tu situación con la de un
+usuario promedio, no con un ideal. Por eso un nivel de endeudamiento del 35% puede aparecer con la
+flecha hacia abajo, es decir, reduciendo el riesgo: no quiere decir que 35% sea poco, sino que está por debajo
+de la media de las personas con las que se compara.
+8. Las recomendaciones
+La aplicación devuelve entre una y cuatro recomendaciones, siempre ordenadas de mayor a menor impacto.
+El orden es intencionado: primero lo estructural, después el detalle.
+1. Gastar más de lo que se ingresa. Si ocurre, es siempre lo primero.
+2. Nivel de deuda alto. Cuando supera el 40% del ingreso.
+3. Falta de hábito de ahorro. Cuando se ahorra poco o nada.
+
+4. Categorías desviadas. Un tipo de gasto que pesa mucho más de lo normal.
+Las recomendaciones incluyen números para que se puedan verificar. En vez de decir "gasta menos en ocio",
+la aplicación dice: "tu gasto en ocio representa el 21% del total, 2,8 veces el patrón de un perfil saludable".
+Ese patrón sale de analizar el comportamiento de los usuarios con perfil saludable dentro del conjunto de
+datos.
+Si no se detecta ningún problema, la aplicación no se inventa uno: devuelve un mensaje de refuerzo
+sugiriendo destinar el excedente a un fondo de emergencia de entre tres y seis meses de gastos.
+9. Preguntas frecuentes
+¿Necesito conectar mi cuenta bancaria?
+No. La aplicación no se conecta a ningún banco. Los datos se introducen a mano o se importan desde un
+archivo CSV que tú mismo preparas.
+¿Qué pasa si la descripción de un gasto está mal escrita o llena de códigos?
+Se clasifica igual. El sistema está preparado para nombres de comercio deformados. Por ejemplo, reconoce
+Gasolinera Pemx como transporte aunque el nombre correcto sea Pemex, y limpia prefijos como TRF/POS o
+números de referencia antes de analizar el texto.
+¿Y si compro en un comercio que la aplicación no conoce?
+Si el sistema no está razonablemente seguro, coloca el gasto en la categoría "Otros" en lugar de adivinar. Es
+una decisión deliberada: en un informe financiero, un gasto sin clasificar molesta menos que uno mal
+atribuido, porque el primero se detecta a simple vista y el segundo distorsiona el análisis sin que nadie lo
+note.
+¿Qué significa el aviso de "resultado aproximado"?
+La aplicación tiene dos motores. El principal usa modelos entrenados; si por algún motivo no está
+disponible, entra un sistema de respaldo basado en reglas. El resultado sigue siendo válido y útil, pero algo
+menos preciso, y por eso se avisa en pantalla. Lo importante es que la aplicación nunca se queda sin
+responder.
+¿Mis datos se guardan en algún sitio?
+Cada análisis se archiva para poder seguir la evolución en el tiempo, pero solo se guardan el perfil resultante,
+los totales por categoría y los indicadores generales. Las descripciones de las transacciones no se
+almacenan. Para estudiar cómo evoluciona una situación financiera no hacen falta, y guardarlas convertiría
+el archivo en un registro de hábitos de consumo identificables.
+¿Puedo usarla varios meses y comparar?
+Sí. La aplicación guarda el historial de análisis y muestra una gráfica de evolución con la proporción de
+ingreso que gastas en cada periodo, junto a una línea de referencia que marca el 100% del ingreso.
+
+¿El diagnóstico es un consejo financiero profesional?
+No. Es una herramienta de orientación y educación financiera. No sustituye a un asesor, no conoce tu
+situación completa (patrimonio, contratos, cargas familiares, planes a futuro) y no debe usarse como única
+base para decisiones importantes como pedir un crédito o invertir.
+¿Puedo cargar mis gastos desde un archivo?
+Sí. La aplicación acepta archivos CSV con dos columnas: la descripción del gasto y su monto. También se
+puede exportar el informe resultante en formato JSON o imprimirlo en PDF.
+¿Por qué el mismo gasto puede caer en categorías distintas según quién lo mire?
+Porque algunas fronteras son opinables. Un café puede verse como alimentación o como ocio, y una
+suscripción a un periódico como educación o como servicios. La aplicación aplica un criterio único y
+consistente para que las comparaciones entre meses tengan sentido, aunque en algún caso concreto se pueda
+discrepar.
+¿Cuánto tarda en darme el resultado?
+Alrededor de veinte milisegundos. En la práctica, el resultado aparece en cuanto pulsas el botón.
+10. Qué no hace la aplicación
+Conviene tener claro el alcance, para no esperar de la herramienta algo que no ofrece.
+No se conecta a bancos ni importa movimientos automáticamente.
+No gestiona presupuestos, metas de ahorro ni recordatorios de pago.
+No predice el futuro: analiza el periodo que se le entrega, no proyecta el siguiente.
+No compara tu situación con la de otras personas reales, sino con un conjunto de datos construido para
+el proyecto.
+No sustituye asesoría financiera profesional.
+11. Glosario
+Término Qué significa
+Ingreso mensual El dinero que entra cada mes, ya libre de descuentos.
+Nivel de
+endeudamiento
+Qué porcentaje de tu ingreso está comprometido en pagar deudas. Si ganas 3.000 y
+pagas 900 en cuotas, tu nivel de endeudamiento es del 30%.
+Frecuencia de
+ahorro
+Con qué regularidad apartas dinero: alta, media, baja o nula. Mide el hábito, no el
+monto.
+Tasa de gasto Qué porcentaje de tu ingreso se va en gastos. Por encima del 100% significa que gastas
+más de lo que ingresas.
+Gasto discrecional El que se puede recortar a corto plazo sin consecuencias graves: ocio, compras varias. Se
+opone al gasto esencial, como vivienda o alimentación.
+
+Perfil financiero El diagnóstico general: saludable, en observación o en riesgo.
+Confianza Cuánta seguridad tiene el sistema en la clasificación o el diagnóstico que ha dado.
+Modo degradado Situación en la que la aplicación responde con su sistema de respaldo porque el motor
+principal no está disponible.
+12. Ficha técnica resumida
+Para quien tenga curiosidad por lo que hay debajo, sin entrar en detalle:
+Aspecto Detalle
+Qué analiza Descripción y monto de cada gasto, ingreso mensual, nivel de deuda y frecuencia de
+ahorro
+Qué devuelve Categoría de cada gasto, totales por categoría, perfil financiero con su confianza,
+factores explicativos y recomendaciones
+Categorías Ocho, fijas
+Perfiles Tres: saludable, en observación, en riesgo
+Tiempo de respuesta Alrededor de 20 milisegundos por análisis
+Datos de
+entrenamiento
+Conjunto simulado de 400 usuarios a lo largo de 6 meses, unas 64.700 transacciones
+Disponibilidad Si el motor principal falla, un sistema de respaldo mantiene el servicio y lo avisa en
+pantalla
