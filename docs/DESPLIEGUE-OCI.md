@@ -163,7 +163,7 @@ docker compose up -d --build
 | La build de Java se queda colgada o muere | Falta memoria. Ver más abajo |
 | `ml-status` dice `disponible: false` | El ml-service no arrancó. Mira sus logs: `docker logs financeai-ml` |
 | `modelo.origen: "reglas"` | No encontró los artefactos. Van dentro de la imagen, así que reconstruye sin caché: *Pull and redeploy* con *Re-pull image* marcado |
-| El frontend carga pero no analiza | Abre la consola del navegador. Si hay error de CORS, revisa que estés entrando por el frontend y no directamente a la API |
+| El frontend carga pero al pulsar un botón sale `Error 403` | La API rechazaba el `Origin` que el navegador envía en los POST. Resuelto: nginx lo elimina antes de reenviar. Si reaparece, reconstruye la imagen `web` |
 | No responde desde fuera | Falta abrir el puerto en la Security List de OCI **y** en el firewall de la instancia. Son dos cosas distintas |
 
 ### Si la instancia tiene poca memoria
