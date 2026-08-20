@@ -7,9 +7,8 @@ import java.time.Duration;
 /**
  * Configuracion del servicio de AI (srv-python).
  *
- * Se enlaza con el prefijo {@code ml.service} de application.properties.
- * Todos los valores tienen defaults sensatos para que la app arranque aunque
- * el archivo de propiedades no los declare.
+ * Se enlaza con el prefijo {@code ml.service} de application.properties. Todos
+ * los valores tienen default para que la app arranque aunque no se declaren.
  */
 @ConfigurationProperties(prefix = "ml.service")
 public record MlServiceProperties(
@@ -33,8 +32,7 @@ public record MlServiceProperties(
         if (readTimeout == null) {
             readTimeout = Duration.ofSeconds(2);
         }
-        // Por debajo de este umbral la categoria devuelta por el modelo se
-        // degrada a "otras": preferimos no clasificar antes que clasificar mal.
+        // Por debajo de este umbral, la categoria del modelo pasa a "otras".
         if (confianzaMinima == null || confianzaMinima < 0 || confianzaMinima > 1) {
             confianzaMinima = 0.5;
         }

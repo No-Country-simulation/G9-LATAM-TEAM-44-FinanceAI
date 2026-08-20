@@ -1,12 +1,21 @@
 # FinanceAI · ml-service — dependencias de ejecucion
 #
-# Solo lo necesario para levantar el contrato. Las librerias de entrenamiento
-# (pandas, scikit-learn, jupyter) viven en ciencia-datos/requirements.txt y NO
-# se instalan aqui: la imagen del servicio debe quedar liviana.
+# Solo lo necesario para SERVIR: cargar los artefactos e inferir. Las librerias
+# de entrenamiento y analisis (jupyter, matplotlib, openpyxl) viven en
+# ciencia-datos/requirements.txt y no se instalan aqui.
 #
-# Cuando entren los modelos reales, agregar aqui unicamente lo que se necesita
-# para CARGARLOS e inferir (p. ej. scikit-learn + joblib, u onnxruntime).
+# scikit-learn debe coincidir en version mayor.menor con la usada al entrenar
+# (ver "scikit_learn" en artefactos/metadatos.json). joblib no garantiza la
+# compatibilidad de un pipeline serializado entre versiones distintas.
 
 fastapi>=0.115,<1.0
 uvicorn[standard]>=0.32,<1.0
 pydantic>=2.9,<3.0
+
+scikit-learn>=1.9,<1.10
+joblib>=1.4,<2.0
+numpy>=2.0,<3.0
+
+# SDK de OCI para descargar los modelos de Object Storage. Es opcional: sin el,
+# oci_storage.py cae a la URL pre-autenticada (PAR) o a los artefactos locales.
+oci>=2.126,<3.0
