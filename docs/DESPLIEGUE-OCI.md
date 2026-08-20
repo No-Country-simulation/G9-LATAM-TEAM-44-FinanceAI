@@ -162,7 +162,7 @@ docker compose up -d --build
 | El stack no arranca, error de puerto en uso | Otro contenedor ocupa 8080 u 8081. Cámbialos con `PUERTO_API` / `PUERTO_WEB` |
 | La build de Java se queda colgada o muere | Falta memoria. Ver más abajo |
 | `ml-status` dice `disponible: false` | El ml-service no arrancó. Mira sus logs: `docker logs financeai-ml` |
-| `modelo.origen: "reglas"` | No encuentra los artefactos. Comprueba que `ciencia-datos/artefactos/` se clonó con el repo |
+| `modelo.origen: "reglas"` | No encontró los artefactos. Van dentro de la imagen, así que reconstruye sin caché: *Pull and redeploy* con *Re-pull image* marcado |
 | El frontend carga pero no analiza | Abre la consola del navegador. Si hay error de CORS, revisa que estés entrando por el frontend y no directamente a la API |
 | No responde desde fuera | Falta abrir el puerto en la Security List de OCI **y** en el firewall de la instancia. Son dos cosas distintas |
 
@@ -193,6 +193,22 @@ scp target/*.jar usuario@servidor:/ruta/
 
 Si vas por esta vía, el `Dockerfile` de `srv-java` necesita un ajuste para partir del jar ya
 construido en lugar de compilarlo. Dilo y lo preparo.
+
+---
+
+## Nota sobre los volúmenes en stacks de Git
+
+Los modelos entrenados viajan **dentro de la imagen** del ml-service, no montados como
+volumen.
+
+El motivo es concreto: Portainer clona el repositorio en su propio contenedor
+(`/data/compose/<id>`), pero los bind mounts los resuelve el daemon de Docker en el **host**.
+Una ruta relativa como `./ciencia-datos/artefactos` apunta entonces a un directorio que no
+existe en el host, Docker lo crea vacío y el servicio arranca sin modelos, con
+`origen: "reglas"`.
+
+Con los artefactos dentro de la imagen esto no puede pasar. Si configuras Object Storage,
+`OCI_PAR_URL` sigue teniendo prioridad y los de la imagen quedan como respaldo.
 
 ---
 

@@ -12,8 +12,6 @@ ciencia-datos/datos/
 ciencia-datos/notebook.ipynb
 .ipynb_checkpoints/
 
-# Artefactos de modelo: se descargan de OCI o se montan como volumen.
-ciencia-datos/artefactos/
 
 # Compilados de Java.
 srv-java/target/
