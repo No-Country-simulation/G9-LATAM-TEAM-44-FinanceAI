@@ -1,10 +1,20 @@
 package com.financeai.api.controller;
 
+import com.financeai.api.dto.ClassificationRequestDTO;
+import com.financeai.api.dto.ClassificationResponseDTO;
+import com.financeai.api.dto.ErrorResponseDTO;
 import com.financeai.api.dto.FinancialAnalysisRequestDTO;
 import com.financeai.api.dto.FinancialAnalysisResponseDTO;
+import com.financeai.api.integration.OCIStorageService;
 import com.financeai.api.integration.PythonModelClient;
+import com.financeai.api.service.ClassificationResult;
+import com.financeai.api.service.ClassificationService;
 import com.financeai.api.service.FinancialAnalysisService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +33,18 @@ import java.util.Map;
 public class FinancialController {
 
     private final FinancialAnalysisService analysisService;
+    private final ClassificationService classificationService;
     private final PythonModelClient modelClient;
+    private final OCIStorageService ociStorageService;
 
     public FinancialController(FinancialAnalysisService analysisService,
-                               PythonModelClient modelClient) {
+                               ClassificationService classificationService,
+                               PythonModelClient modelClient,
+                               OCIStorageService ociStorageService) {
         this.analysisService = analysisService;
+        this.classificationService = classificationService;
         this.modelClient = modelClient;
+        this.ociStorageService = ociStorageService;
     }
 
     @GetMapping("/health")
@@ -38,13 +54,14 @@ public class FinancialController {
     }
 
     @GetMapping("/version")
+    @Operation(summary = "Version del MVP")
     public ResponseEntity<Map<String, String>> version() {
         return ResponseEntity.ok(Map.of("version", "1.0.0-MVP"));
     }
 
     /**
-     * Diagnostico de la integracion con srv-python. Separado de /health a
-     * proposito: /health es liveness y no debe hacer llamadas de red.
+     * Diagnostico de la integracion con srv-python. Va aparte de /health
+     * porque ese es liveness y no debe hacer llamadas de red.
      */
     @GetMapping("/ml-status")
     @Operation(summary = "Verifica si el servicio de AI (srv-python) esta accesible")
@@ -55,14 +72,57 @@ public class FinancialController {
         cuerpo.put("ml_service_url", modelClient.urlConfigurada());
         cuerpo.put("disponible", disponible);
         cuerpo.put("modo", disponible ? "modelo" : "degradado (reglas locales)");
+        cuerpo.put("modelo", modelClient.infoModelo().orElse(Map.of()));
+        cuerpo.put("almacenamiento", ociStorageService.estado());
         return ResponseEntity.ok(cuerpo);
     }
 
     @PostMapping("/analisis-financiero")
-    @Operation(summary = "Clasifica las transacciones, evalua el perfil y genera recomendaciones")
+    @Operation(
+            summary = "Analisis financiero completo",
+            description = "Clasifica las transacciones, evalua el perfil financiero y genera "
+                    + "recomendaciones personalizadas. Si el ml-service no responde, el "
+                    + "resultado se calcula con reglas locales y se marca modo_degradado=true.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Analisis generado"),
+            @ApiResponse(responseCode = "400", description = "Error de validacion",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+    })
     public ResponseEntity<FinancialAnalysisResponseDTO> analizarFinanzas(
             @Valid @RequestBody FinancialAnalysisRequestDTO request) {
 
         return ResponseEntity.ok(analysisService.analyze(request));
+    }
+
+    /**
+     * Clasificacion aislada, para consumidores que solo quieren categorizar un
+     * extracto y no tienen por que aportar ingreso ni endeudamiento.
+     */
+    @PostMapping("/clasificar-transacciones")
+    @Operation(
+            summary = "Clasificacion de transacciones",
+            description = "Categoriza un lote de transacciones y devuelve el detalle por "
+                    + "transaccion junto al agregado por categoria. No requiere datos "
+                    + "financieros del usuario.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Transacciones clasificadas"),
+            @ApiResponse(responseCode = "400", description = "Error de validacion",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+    })
+    public ResponseEntity<ClassificationResponseDTO> clasificarTransacciones(
+            @Valid @RequestBody ClassificationRequestDTO request) {
+
+        ClassificationResult resultado = classificationService.classify(request.transacciones());
+
+        return ResponseEntity.ok(new ClassificationResponseDTO(
+                resultado.detalle(),
+                resultado.resumenGastos(),
+                redondear(resultado.totalGastos()),
+                resultado.modoDegradado()
+        ));
+    }
+
+    private double redondear(double valor) {
+        return Math.round(valor * 100.0) / 100.0;
     }
 }

@@ -13,10 +13,9 @@ import java.util.List;
 /**
  * Peticion de analisis financiero.
  *
- * IMPORTANTE: estas restricciones estan alineadas con el contrato de srv-python
- * (app/main.py). El objetivo es que lo que Python rechazaria con 422 lo rechace
- * antes esta API con un 400 y un mensaje util. Si cambias un limite aqui,
- * cambialo alla tambien.
+ * Las restricciones estan alineadas con el contrato de srv-python (app/main.py)
+ * para que lo que alli seria un 422 opaco se rechace aqui con un 400 y un
+ * mensaje por campo. Si cambia un limite, hay que cambiarlo en los dos sitios.
  */
 public record FinancialAnalysisRequestDTO(
 

@@ -127,7 +127,7 @@ class ClassificationServiceTest {
     }
 
     @Test
-    @DisplayName("El respaldo local usa las mismas keywords que el stub de Python")
+    @DisplayName("El respaldo local usa las mismas keywords que reglas.py en srv-python")
     void respaldoEspejaLasKeywordsDePython() {
         FallbackClassifier fallback = new FallbackClassifier();
 
@@ -165,7 +165,59 @@ class ClassificationServiceTest {
         ClassificationResult resultado = service.classify(List.of());
 
         verify(modelClient, never()).clasificar(anyList());
+        assertThat(resultado.detalle()).isEmpty();
         assertThat(resultado.resumenGastos()).isEmpty();
         assertThat(resultado.modoDegradado()).isFalse();
+    }
+
+    @Test
+    @DisplayName("El detalle conserva el orden y la descripcion original de la peticion")
+    void elDetalleRespetaLaEntrada() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
+                new TransaccionClasificadaMl("eco distinto", 1.0, "alimentacion", 0.95),
+                new TransaccionClasificadaMl("otro eco", 2.0, "transporte", 0.88)))));
+
+        ClassificationResult resultado = service.classify(List.of(
+                new TransactionDTO("Supermercado Exito", 420.0),
+                new TransactionDTO("Gasolinera Terpel", 300.0)));
+
+        assertThat(resultado.detalle()).hasSize(2);
+        // Descripcion y monto salen de la peticion, no del eco del modelo.
+        assertThat(resultado.detalle().get(0).descripcion()).isEqualTo("Supermercado Exito");
+        assertThat(resultado.detalle().get(0).valor()).isEqualTo(420.0);
+        assertThat(resultado.detalle().get(0).categoria()).isEqualTo("alimentacion");
+        assertThat(resultado.detalle().get(1).categoria()).isEqualTo("transporte");
+    }
+
+    @Test
+    @DisplayName("En modo degradado el detalle tambien viene completo y con confianza declarada")
+    void elDetalleExisteTambienDegradado() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.empty());
+
+        ClassificationResult resultado = service.classify(List.of(
+                new TransactionDTO("Farmacia San Pablo", 80.0),
+                new TransactionDTO("Compra desconocida XYZ", 20.0)));
+
+        assertThat(resultado.modoDegradado()).isTrue();
+        assertThat(resultado.detalle()).hasSize(2);
+        assertThat(resultado.detalle().get(0).categoria()).isEqualTo("salud");
+        assertThat(resultado.detalle().get(0).confianza())
+                .isEqualTo(FallbackClassifier.CONFIANZA_KEYWORD);
+        assertThat(resultado.detalle().get(1).categoria()).isEqualTo("otras");
+        assertThat(resultado.detalle().get(1).confianza())
+                .isEqualTo(FallbackClassifier.CONFIANZA_SIN_MATCH);
+    }
+
+    @Test
+    @DisplayName("El total de gastos coincide con la suma del resumen")
+    void elTotalCuadraConElResumen() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.empty());
+
+        ClassificationResult resultado = service.classify(List.of(
+                new TransactionDTO("Supermercado Exito", 420.0),
+                new TransactionDTO("Gasolinera Terpel", 300.0),
+                new TransactionDTO("Netflix", 40.0)));
+
+        assertThat(resultado.totalGastos()).isEqualTo(760.0);
     }
 }

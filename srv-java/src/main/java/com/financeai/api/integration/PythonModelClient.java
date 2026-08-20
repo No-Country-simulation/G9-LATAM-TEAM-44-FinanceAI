@@ -14,18 +14,18 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
- * Cliente HTTP hacia srv-python (el servicio de AI).
+ * Cliente HTTP hacia srv-python.
  *
- * Contrato de esta clase: NUNCA lanza por fallo de red o error del servicio.
- * Devuelve {@link Optional#empty()} y quien llama decide como degradar. Esa
- * decision es deliberada: una caida del ml-service no debe convertirse en un
- * 5xx para el usuario final.
+ * No lanza por fallo de red ni por error del servicio: devuelve
+ * {@link Optional#empty()} y quien llama decide como degradar, para que una
+ * caida del ml-service no acabe en un 5xx.
  *
- * Las llamadas son POR LOTE (una peticion por analisis, no una por transaccion):
- * con 200 transacciones la version anterior habria hecho 200 round-trips.
+ * Las llamadas van por lote, una peticion por analisis y no una por
+ * transaccion.
  */
 @Component
 public class PythonModelClient {
@@ -101,6 +101,25 @@ public class PythonModelClient {
             return true;
         } catch (RestClientException e) {
             return false;
+        }
+    }
+
+    /**
+     * GET /modelo/info — procedencia y metricas del modelo cargado.
+     *
+     * Solo lo usa el endpoint de diagnostico, para saber que modelo esta
+     * sirviendo sin entrar en el contenedor.
+     */
+    @SuppressWarnings("unchecked")
+    public Optional<Map<String, Object>> infoModelo() {
+        if (!properties.enabled()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.ofNullable(
+                    restClient.get().uri("/modelo/info").retrieve().body(Map.class));
+        } catch (RestClientException e) {
+            return Optional.empty();
         }
     }
 

@@ -5,9 +5,9 @@ import java.util.Locale;
 /**
  * Categorias canonicas del sistema.
  *
- * El valor en minuscula es el contrato compartido con srv-python (enum Categoria
- * en app/main.py) y con el JSON de respuesta. Nunca uses strings sueltos: pasa
- * siempre por {@link #getValor()} o {@link #desdeValor(String)}.
+ * El valor en minuscula es el que comparten srv-python (enum Categoria en
+ * app/main.py) y el JSON de respuesta. Usa {@link #getValor()} o
+ * {@link #desdeValor(String)} en vez de strings sueltos.
  */
 public enum FinancialCategory {
 
@@ -32,8 +32,8 @@ public enum FinancialCategory {
 
     /**
      * Convierte el valor recibido del modelo a una categoria canonica.
-     * Si llega null, vacio o algo desconocido, degrada a {@link #OTRAS} en vez
-     * de reventar: el backend nunca debe caerse por un valor inesperado del ML.
+     * Null, vacio o desconocido degradan a {@link #OTRAS}: el backend no se cae
+     * por un valor inesperado del ML.
      */
     public static FinancialCategory desdeValor(String valor) {
         if (valor == null || valor.isBlank()) {
