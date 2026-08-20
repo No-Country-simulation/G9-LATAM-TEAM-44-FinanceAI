@@ -59,12 +59,15 @@ En Linux/macOS, las mismas rutas con `/`, `.venv/bin/python` y `./mvnw`.
 ### Docker
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
-Aviso: los `Dockerfile` y el `docker-compose.yml` están escritos pero nunca se han
-construido, porque la máquina de desarrollo no tenía Docker. Pruébalo antes de depender de
-ello. La ruta de las tres terminales sí está comprobada.
+El ml-service no publica puerto: solo se llega a él desde la red interna del stack.
+
+Para desplegar en un servidor con Portainer, ver [docs/DESPLIEGUE-OCI.md](docs/DESPLIEGUE-OCI.md).
+
+Aviso: las imágenes nunca se han construido en la máquina de desarrollo, que no tenía Docker.
+La ruta de las tres terminales sí está comprobada de punta a punta.
 
 El frontend detecta solo a qué backend hablar: primero prueba el mismo origen (detrás del
 proxy de nginx) y si no responde, `http://localhost:8080`.
@@ -103,7 +106,8 @@ resolver, de modo que los gráficos ya pintados siguen el cambio de tema; y
 
 - [Ejemplos de uso](docs/EJEMPLOS.md) — seis casos ejecutados contra la API
 - [Referencia de endpoints](srv-java/docs/API-ENDPOINTS.md)
-- [Integración con OCI](docs/OCI.md) — bucket, credenciales y despliegue
+- [Integración con OCI](docs/OCI.md) — bucket, credenciales y modelos
+- [Despliegue en OCI Compute](docs/DESPLIEGUE-OCI.md) — Portainer, puertos y dominio
 - [Arquitectura](docs/ARQUITECTURA.md) — decisiones y sus contrapartidas
 - [Notebook](ciencia-datos/notebook.ipynb) — EDA, entrenamiento, métricas y serialización
 
@@ -154,7 +158,7 @@ Object Storage.
 | Servicio | Uso |
 |---|---|
 | Object Storage | Guarda los modelos (el notebook los sube, el ml-service los descarga al arrancar) y archiva cada análisis |
-| Compute | Aloja los tres contenedores con `docker compose` |
+| Compute | Aloja los tres contenedores con `docker compose`. Ver [DESPLIEGUE-OCI.md](docs/DESPLIEGUE-OCI.md) |
 
 La imagen del ml-service no lleva los modelos dentro, los baja al iniciar. Publicar un modelo
 reentrenado es subir un objeto y reiniciar el contenedor.
