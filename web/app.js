@@ -186,11 +186,22 @@ function tostada(mensaje) {
 const Api = {
   base: null,
 
+  /** Candidatas en orden: mismo origen, y el puerto 8080 del mismo host. */
+  candidatas() {
+    const protocolo = location.protocol === 'https:' ? 'https:' : 'http:';
+    // Sin hostname (al abrir el archivo con file://) se asume desarrollo local.
+    const host = location.hostname || 'localhost';
+    return ['/api/v1', `${protocolo}//${host}:8080/api/v1`];
+  },
+
   async resolver() {
-    const candidatas = ['/api/v1', 'http://localhost:8080/api/v1'];
+    const candidatas = this.candidatas();
     for (const candidata of candidatas) {
       try {
-        const r = await fetch(`${candidata}/health`, { signal: AbortSignal.timeout(2500) });
+        // 8 segundos, no 2,5: en una instancia pequena la primera peticion a
+        // Spring Boot puede tardar varios segundos y con un margen corto el
+        // sondeo fallaba y caia al respaldo.
+        const r = await fetch(`${candidata}/health`, { signal: AbortSignal.timeout(8000) });
         if (r.ok) { this.base = candidata; return candidata; }
       } catch { /* se prueba la siguiente */ }
     }
