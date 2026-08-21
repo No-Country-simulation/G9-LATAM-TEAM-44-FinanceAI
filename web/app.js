@@ -15,6 +15,26 @@ const CATEGORIAS = [
   'educacion', 'ocio', 'servicios', 'otras',
 ];
 
+const MONEDAS = {
+  ARS: { locale: 'es-AR', simbolo: '$' },
+  BOB: { locale: 'es-BO', simbolo: 'Bs.' },
+  BRL: { locale: 'pt-BR', simbolo: 'R$' },
+  CLP: { locale: 'es-CL', simbolo: '$' },
+  COP: { locale: 'es-CO', simbolo: '$' },
+  CRC: { locale: 'es-CR', simbolo: '₡' },
+  DOP: { locale: 'es-DO', simbolo: 'RD$' },
+  GTQ: { locale: 'es-GT', simbolo: 'Q' },
+  HNL: { locale: 'es-HN', simbolo: 'L' },
+  MXN: { locale: 'es-MX', simbolo: '$' },
+  NIO: { locale: 'es-NI', simbolo: 'C$' },
+  PAB: { locale: 'es-PA', simbolo: 'B/.' },
+  PEN: { locale: 'es-PE', simbolo: 'S/' },
+  PYG: { locale: 'es-PY', simbolo: '₲' },
+  USD: { locale: 'en-US', simbolo: '$' },
+  UYU: { locale: 'es-UY', simbolo: '$U' },
+  VES: { locale: 'es-VE', simbolo: 'Bs.' },
+};
+
 /* El valor canónico va sin tildes (es el que usan la API y el modelo). Aquí se
    traduce para pantalla. */
 const NOMBRE_CATEGORIA = {
@@ -118,6 +138,57 @@ const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 const dinero = new Intl.NumberFormat('es', { maximumFractionDigits: 0 });
 const decimal = new Intl.NumberFormat('es', { maximumFractionDigits: 2 });
+
+function monedaSeleccionada() {
+  return $('#moneda')?.value || 'COP';
+}
+
+function dineroMoneda(valor, moneda = monedaSeleccionada()) {
+  const configuracion = MONEDAS[moneda] || MONEDAS.COP;
+  return new Intl.NumberFormat(configuracion.locale, {
+    style: 'currency', currency: moneda, currencyDisplay: 'symbol', maximumFractionDigits: 2,
+  }).format(valor);
+}
+
+function actualizarSimboloMoneda() {
+  const configuracion = MONEDAS[monedaSeleccionada()] || MONEDAS.COP;
+  $('#simbolo-moneda').textContent = configuracion.simbolo;
+}
+
+function leerMonto(valor) {
+  const texto = String(valor ?? '').trim().replace(/[^\d,.-]/g, '');
+  if (!texto) return NaN;
+
+  const ultimoPunto = texto.lastIndexOf('.');
+  const ultimaComa = texto.lastIndexOf(',');
+  const separadorDecimal = ultimoPunto > ultimaComa ? '.' : ',';
+  const tieneAmbos = ultimoPunto >= 0 && ultimaComa >= 0;
+  const partes = texto.split(separadorDecimal);
+  const ultimaParte = partes.at(-1) || '';
+  const pareceDecimal = !tieneAmbos && ultimaParte.length > 0 && ultimaParte.length <= 2;
+
+  if (tieneAmbos || pareceDecimal) {
+    const entero = partes.slice(0, -1).join('').replace(/\D/g, '');
+    const decimal = ultimaParte.replace(/\D/g, '');
+    return Number(`${entero || '0'}.${decimal}`);
+  }
+
+  return Number(texto.replace(/\D/g, ''));
+}
+
+function formatearMonto(valor, moneda = monedaSeleccionada()) {
+  if (!Number.isFinite(valor)) return '';
+  const configuracion = MONEDAS[moneda] || MONEDAS.COP;
+  return new Intl.NumberFormat(configuracion.locale, {
+    maximumFractionDigits: 2,
+  }).format(valor);
+}
+
+function actualizarCampoIngreso(formatear = true) {
+  const campo = $('#ingreso');
+  const valor = leerMonto(campo.value);
+  campo.value = formatear ? formatearMonto(valor) : (Number.isFinite(valor) ? String(valor) : '');
+}
 
 const sinMovimiento = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -232,6 +303,48 @@ const Api = {
   },
 };
 
+const ChatApi = {
+  endpoint: '/n8n/webhook/chat-support',
+
+  limpiarRespuesta(texto) {
+    return String(texto)
+      .replace(/^\s*#+\s*/gm, '')
+      .replace(/^\s*\*\s+/gm, '- ')
+      .replace(/\*/g, '')
+      .trim();
+  },
+
+  async preguntar(pregunta, informe) {
+    const contexto = informe ? {
+      perfil_financiero: informe.resultado.perfil_financiero,
+      probabilidad: informe.resultado.probabilidad,
+      resumen_gastos: informe.resultado.resumen_gastos,
+      recomendaciones: informe.resultado.recomendaciones,
+      factores: informe.resultado.factores,
+      ingreso_mensual: informe.entrada.ingreso_mensual,
+      nivel_endeudamiento: informe.entrada.nivel_endeudamiento,
+      frecuencia_ahorro: informe.entrada.frecuencia_ahorro,
+      moneda: informe.entrada.moneda,
+      modo_degradado: informe.resultado.modo_degradado,
+    } : null;
+
+    const mensaje = contexto
+      ? `${pregunta}\n\nCONTEXTO FINANCIERO DEL USUARIO (úsalo para personalizar la respuesta):\n${JSON.stringify(contexto)}`
+      : pregunta;
+
+    const respuesta = await fetch(this.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatInput: mensaje }),
+      signal: AbortSignal.timeout(90000),
+    });
+    const datos = await respuesta.json().catch(() => null);
+    if (!respuesta.ok) throw new Error(datos?.message || `El chat no está disponible (${respuesta.status}).`);
+    const texto = datos?.respuesta || datos?.output || 'No pude generar una respuesta en este momento.';
+    return this.limpiarRespuesta(texto);
+  },
+};
+
 // ------------------------------------------------------------ estado sistema
 
 async function actualizarEstado() {
@@ -317,7 +430,8 @@ function leerTransacciones() {
 
 function cargarEjemplo(nombre) {
   const ejemplo = EJEMPLOS[nombre];
-  $('#ingreso').value = ejemplo.ingreso;
+  $('#ingreso').value = formatearMonto(ejemplo.ingreso);
+  actualizarSimboloMoneda();
   ponerDeuda(ejemplo.deuda);
   ponerAhorro(ejemplo.ahorro);
   $('#transacciones').replaceChildren();
@@ -443,7 +557,7 @@ function dibujarMedidor(probabilidad, color) {
   return lienzo;
 }
 
-function dibujarDona(resumen) {
+function dibujarDona(resumen, moneda) {
   const TAMANO = 210;
   const RADIO_EXTERIOR = 98;
   const RADIO_INTERIOR = 62;
@@ -497,7 +611,7 @@ function dibujarDona(resumen) {
 
       const titulo = svg('title');
       titulo.textContent = `${NOMBRE_CATEGORIA[categoria] || categoria}: `
-        + `${dinero.format(valor)} (${Math.round(valor / total * 100)}%)`;
+        + `${dineroMoneda(valor, moneda)} (${Math.round(valor / total * 100)}%)`;
       sector.append(titulo);
 
       lienzo.append(sector);
@@ -519,7 +633,7 @@ function dibujarDona(resumen) {
     class: 'dona-total',
   });
   lienzo.append(monto);
-  animarNumero(monto, total, (v) => dinero.format(v), 1000);
+  animarNumero(monto, total, (v) => dineroMoneda(v, moneda), 1000);
 
   return lienzo;
 }
@@ -635,14 +749,15 @@ function mostrarResultado(datos, entrada) {
     dibujarMedidor(datos.probabilidad || 0, COLOR_PERFIL[perfil] || 'var(--texto-tenue)'));
 
   const resumen = datos.resumen_gastos || {};
+  const moneda = entrada.moneda || monedaSeleccionada();
   const totalGastos = Object.values(resumen).reduce((s, v) => s + v, 0);
   const tasaGasto = entrada.ingreso_mensual ? totalGastos / entrada.ingreso_mensual : 0;
   const disponible = entrada.ingreso_mensual - totalGastos;
 
   const indicadores = [
-    ['Ingreso mensual', entrada.ingreso_mensual, (v) => dinero.format(v)],
-    ['Gasto total', totalGastos, (v) => dinero.format(v)],
-    ['Queda disponible', disponible, (v) => dinero.format(v)],
+    ['Ingreso mensual', entrada.ingreso_mensual, (v) => dineroMoneda(v, moneda)],
+    ['Gasto total', totalGastos, (v) => dineroMoneda(v, moneda)],
+    ['Queda disponible', disponible, (v) => dineroMoneda(v, moneda)],
     ['Gastas de tu ingreso', tasaGasto * 100, (v) => `${Math.round(v)}%`],
     ['Endeudamiento', entrada.nivel_endeudamiento, (v) => `${Math.round(v)}%`],
   ];
@@ -656,7 +771,7 @@ function mostrarResultado(datos, entrada) {
   }));
 
   // Dona y leyenda
-  $('#dona').replaceChildren(dibujarDona(resumen));
+  $('#dona').replaceChildren(dibujarDona(resumen, moneda));
 
   const entradas = CATEGORIAS
     .map((c) => [c, resumen[c] || 0])
@@ -668,7 +783,7 @@ function mostrarResultado(datos, entrada) {
     marca.style.background = colorCategoria(categoria);
 
     const monto = crear('span', { class: 'monto' });
-    animarNumero(monto, valor, (v) => dinero.format(v), 700);
+    animarNumero(monto, valor, (v) => dineroMoneda(v, moneda), 700);
 
     const fila = crear('li', {}, [
       marca,
@@ -722,8 +837,37 @@ function mostrarResultado(datos, entrada) {
     gasto: totalGastos,
     tasaGasto,
     deuda: entrada.nivel_endeudamiento,
+    moneda,
     degradado: !!datos.modo_degradado,
   });
+}
+
+function agregarMensajeChat(texto, tipo) {
+  const mensaje = crear('div', { class: `chat-mensaje ${tipo}`, text: texto });
+  $('#chat-mensajes').append(mensaje);
+  mensaje.scrollIntoView({ behavior: sinMovimiento() ? 'auto' : 'smooth', block: 'nearest' });
+}
+
+async function enviarPreguntaChat(evento) {
+  evento.preventDefault();
+  const entrada = $('#chat-pregunta');
+  const boton = $('#btn-chat');
+  const pregunta = entrada.value.trim();
+  if (!pregunta) return;
+
+  agregarMensajeChat(pregunta, 'usuario');
+  entrada.value = '';
+  boton.classList.add('cargando');
+  boton.disabled = true;
+  try {
+    agregarMensajeChat(await ChatApi.preguntar(pregunta, ultimoInforme), 'asistente');
+  } catch (error) {
+    agregarMensajeChat(`No pude responder ahora. ${error.message}`, 'error');
+  } finally {
+    boton.classList.remove('cargando');
+    boton.disabled = false;
+    entrada.focus();
+  }
 }
 
 // ---------------------------------------------------------------- exportación
@@ -800,8 +944,8 @@ function renderHistorial() {
     const fila = crear('tr', {}, [
       crear('td', { text: new Date(r.fecha).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' }) }),
       crear('td', {}, [insignia]),
-      crear('td', { class: 'num', text: dinero.format(r.ingreso) }),
-      crear('td', { class: 'num', text: dinero.format(r.gasto) }),
+      crear('td', { class: 'num', text: dineroMoneda(r.ingreso, r.moneda) }),
+      crear('td', { class: 'num', text: dineroMoneda(r.gasto, r.moneda) }),
       crear('td', { class: 'num', text: `${Math.round(r.tasaGasto * 100)}%` }),
       crear('td', { class: 'num', text: `${r.deuda}%` }),
     ]);
@@ -875,7 +1019,7 @@ async function clasificar() {
         crear('td', { text: t.descripcion }),
         crear('td', {}, [insignia]),
         crear('td', {}, [medida]),
-        crear('td', { class: 'num', text: dinero.format(t.valor) }),
+        crear('td', { class: 'num', text: dineroMoneda(t.valor) }),
       ]);
       fila.style.animationDelay = `${i * 45}ms`;
       cuerpo.append(fila);
@@ -912,17 +1056,18 @@ async function enviarAnalisis(evento) {
   }
 
   const peticion = {
-    ingreso_mensual: parseFloat($('#ingreso').value),
+    ingreso_mensual: leerMonto($('#ingreso').value),
     nivel_endeudamiento: parseInt($('#deuda').value, 10),
     frecuencia_ahorro: ahorroSeleccionado(),
     transacciones,
   };
+  const entrada = { ...peticion, moneda: monedaSeleccionada() };
 
   boton.classList.add('cargando');
   boton.disabled = true;
   try {
     const datos = await Api.post('/analisis-financiero', peticion);
-    mostrarResultado(datos, peticion);
+    mostrarResultado(datos, entrada);
   } catch (e) {
     tostada(e.message);
   } finally {
@@ -968,6 +1113,12 @@ function inicializar() {
   });
 
   $('#deuda').addEventListener('input', (e) => ponerDeuda(e.target.value));
+  $('#moneda').addEventListener('change', () => {
+    actualizarSimboloMoneda();
+    actualizarCampoIngreso();
+  });
+  $('#ingreso').addEventListener('focus', () => actualizarCampoIngreso(false));
+  $('#ingreso').addEventListener('blur', () => actualizarCampoIngreso());
 
   $$('#ahorro-grupo .segmento').forEach((segmento) => {
     segmento.addEventListener('click', () => ponerAhorro(segmento.dataset.valor));
@@ -994,6 +1145,7 @@ function inicializar() {
   $('#btn-clasificar').addEventListener('click', clasificar);
   $('#btn-exportar').addEventListener('click', exportarInforme);
   $('#btn-imprimir').addEventListener('click', () => window.print());
+  $('#chat-form').addEventListener('submit', enviarPreguntaChat);
 
   $('#btn-limpiar-historial').addEventListener('click', () => {
     localStorage.removeItem(CLAVE_HISTORIAL);
@@ -1001,6 +1153,8 @@ function inicializar() {
   });
 
   cargarEjemplo('saludable');
+  actualizarSimboloMoneda();
+  actualizarCampoIngreso();
   renderHistorial();
   moverIndicadorPestana($('.pestana.activa'));
   window.addEventListener('resize', () => moverIndicadorPestana($('.pestana.activa')));

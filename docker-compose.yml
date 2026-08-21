@@ -63,3 +63,29 @@ services:
       - "${PUERTO_WEB:-8081}:80"
     depends_on:
       - api
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: financeai-n8n
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/workflows/start.sh"]
+    ports:
+      - "${PUERTO_N8N:-5678}:5678"
+    environment:
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-http://localhost:5678/}
+      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE:-false}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "false"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - "./n8n-orquestacion/Google Gemini AI Agent Chat - FinanceAI.json:/workflows/financeai-chat.json:ro"
+      - "./n8n-orquestacion/start.sh:/workflows/start.sh:ro"
+    depends_on:
+      - api
+
+volumes:
+  n8n_data:

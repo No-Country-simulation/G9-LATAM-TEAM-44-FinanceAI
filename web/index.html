@@ -165,9 +165,30 @@
 
         <label class="campo">
           <span class="campo-titulo">Ingreso mensual</span>
-          <div class="entrada-adorno">
-            <em>$</em>
-            <input type="number" id="ingreso" min="1" step="0.01" value="4500" required>
+          <div class="entrada-moneda">
+            <select id="moneda" aria-label="Moneda del análisis">
+              <option value="COP">COP · Peso colombiano</option>
+              <option value="MXN">MXN · Peso mexicano</option>
+              <option value="BRL">BRL · Real brasileño</option>
+              <option value="ARS">ARS · Peso argentino</option>
+              <option value="CLP">CLP · Peso chileno</option>
+              <option value="PEN">PEN · Sol peruano</option>
+              <option value="BOB">BOB · Boliviano</option>
+              <option value="PYG">PYG · Guaraní paraguayo</option>
+              <option value="UYU">UYU · Peso uruguayo</option>
+              <option value="PAB">PAB · Balboa panameño</option>
+              <option value="CRC">CRC · Colón costarricense</option>
+              <option value="GTQ">GTQ · Quetzal guatemalteco</option>
+              <option value="HNL">HNL · Lempira hondureño</option>
+              <option value="NIO">NIO · Córdoba nicaragüense</option>
+              <option value="DOP">DOP · Peso dominicano</option>
+              <option value="VES">VES · Bolívar venezolano</option>
+              <option value="USD">USD · Dólar estadounidense</option>
+            </select>
+            <div class="entrada-adorno">
+              <em id="simbolo-moneda">$</em>
+              <input type="text" id="ingreso" inputmode="decimal" autocomplete="off" value="4500" required>
+            </div>
           </div>
         </label>
 
@@ -284,6 +305,28 @@
         </div>
       </div>
     </div>
+
+    <section class="vidrio chat-panel surge" id="chat-panel" aria-labelledby="chat-titulo">
+      <div class="chat-cabecera">
+        <div>
+          <p class="etiqueta-mini">Chat de soporte</p>
+          <h2 class="titulo-tarjeta" id="chat-titulo"><svg class="ic"><use href="#i-chispa"/></svg> Pregúntale a FinanceAI</h2>
+        </div>
+        <span class="chat-estado"><i></i> Gemini conectado</span>
+      </div>
+      <div class="chat-mensajes" id="chat-mensajes" aria-live="polite">
+        <div class="chat-mensaje asistente">Puedo resolver dudas sobre FinanceAI y explicarte tu diagnóstico cuando termines un análisis.</div>
+      </div>
+      <form class="chat-form" id="chat-form">
+        <label class="sr-only" for="chat-pregunta">Tu pregunta</label>
+        <input id="chat-pregunta" type="text" maxlength="600" autocomplete="off" placeholder="Ej.: ¿Cómo puedo reducir mi gasto más alto?" required>
+        <button class="boton-principal chat-enviar" type="submit" id="btn-chat">
+          <span class="boton-texto"><svg class="ic"><use href="#i-chispa"/></svg> Enviar</span>
+          <span class="cargador"></span>
+        </button>
+      </form>
+      <p class="ayuda chat-nota">Orientación educativa, no asesoría financiera profesional.</p>
+    </section>
   </section>
 
   <!-- ==================================================== CLASIFICADOR -->
