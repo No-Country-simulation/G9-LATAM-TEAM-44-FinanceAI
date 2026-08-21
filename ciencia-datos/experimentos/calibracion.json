@@ -1,0 +1,170 @@
+{
+  "oof_predicciones_csv": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\FinanceAI-05-calibracion\\ciencia-datos\\experimentos\\oof_predicciones_cv.csv",
+  "filas_oof": 58894,
+  "accuracy_global_ood": 0.4264271402859374,
+  "categorias": [
+    "alimentacion",
+    "transporte",
+    "salud",
+    "vivienda",
+    "educacion",
+    "ocio",
+    "servicios",
+    "otras"
+  ],
+  "coverage_vs_accuracy": [
+    {
+      "umbral": 0.0,
+      "coverage": 1.0,
+      "filas_aceptadas": 58894,
+      "accuracy_aceptadas": 0.4264271402859374
+    },
+    {
+      "umbral": 0.3,
+      "coverage": 0.9660916222365606,
+      "filas_aceptadas": 56897,
+      "accuracy_aceptadas": 0.43707049580821483
+    },
+    {
+      "umbral": 0.5,
+      "coverage": 0.8181987978401875,
+      "filas_aceptadas": 48187,
+      "accuracy_aceptadas": 0.45240417540000416
+    },
+    {
+      "umbral": 0.6,
+      "coverage": 0.6731755357082215,
+      "filas_aceptadas": 39646,
+      "accuracy_aceptadas": 0.49301316652373506
+    },
+    {
+      "umbral": 0.7,
+      "coverage": 0.5888375725880395,
+      "filas_aceptadas": 34679,
+      "accuracy_aceptadas": 0.5015715562732489
+    },
+    {
+      "umbral": 0.8,
+      "coverage": 0.5426529018236154,
+      "filas_aceptadas": 31959,
+      "accuracy_aceptadas": 0.5223254795206358
+    },
+    {
+      "umbral": 0.9,
+      "coverage": 0.4636465514313852,
+      "filas_aceptadas": 27306,
+      "accuracy_aceptadas": 0.5669816157621036
+    }
+  ],
+  "curva_calibracion": {
+    "n_bins": 10,
+    "bins": [
+      {
+        "bin": 0,
+        "rango": [
+          0.0,
+          0.1
+        ],
+        "soporte": 0,
+        "confianza_media": null,
+        "accuracy_observada": null
+      },
+      {
+        "bin": 1,
+        "rango": [
+          0.1,
+          0.2
+        ],
+        "soporte": 2,
+        "confianza_media": 0.19422289606824095,
+        "accuracy_observada": 0.5
+      },
+      {
+        "bin": 2,
+        "rango": [
+          0.2,
+          0.30000000000000004
+        ],
+        "soporte": 1995,
+        "confianza_media": 0.2667542042239248,
+        "accuracy_observada": 0.12280701754385964
+      },
+      {
+        "bin": 3,
+        "rango": [
+          0.30000000000000004,
+          0.4
+        ],
+        "soporte": 3533,
+        "confianza_media": 0.35363154414594383,
+        "accuracy_observada": 0.3266345881686952
+      },
+      {
+        "bin": 4,
+        "rango": [
+          0.4,
+          0.5
+        ],
+        "soporte": 5177,
+        "confianza_media": 0.4502118726509266,
+        "accuracy_observada": 0.36971218852617344
+      },
+      {
+        "bin": 5,
+        "rango": [
+          0.5,
+          0.6000000000000001
+        ],
+        "soporte": 8541,
+        "confianza_media": 0.5508093426144346,
+        "accuracy_observada": 0.2639035241774968
+      },
+      {
+        "bin": 6,
+        "rango": [
+          0.6000000000000001,
+          0.7000000000000001
+        ],
+        "soporte": 4967,
+        "confianza_media": 0.6562380114233183,
+        "accuracy_observada": 0.4332595127843769
+      },
+      {
+        "bin": 7,
+        "rango": [
+          0.7000000000000001,
+          0.8
+        ],
+        "soporte": 2720,
+        "confianza_media": 0.7464645165667539,
+        "accuracy_observada": 0.2577205882352941
+      },
+      {
+        "bin": 8,
+        "rango": [
+          0.8,
+          0.9
+        ],
+        "soporte": 4653,
+        "confianza_media": 0.8520890933880407,
+        "accuracy_observada": 0.2602621964324092
+      },
+      {
+        "bin": 9,
+        "rango": [
+          0.9,
+          1.0
+        ],
+        "soporte": 27306,
+        "confianza_media": 0.9771923540112448,
+        "accuracy_observada": 0.5669816157621036
+      }
+    ]
+  },
+  "expected_calibration_error": 0.33351917945890486,
+  "brier_score_multiclase": 0.1152393999304468,
+  "graficas": {
+    "reliability": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\FinanceAI-05-calibracion\\ciencia-datos\\experimentos\\calibracion_reliability.png",
+    "coverage_accuracy": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\FinanceAI-05-calibracion\\ciencia-datos\\experimentos\\calibracion_coverage_accuracy.png"
+  }
+}
