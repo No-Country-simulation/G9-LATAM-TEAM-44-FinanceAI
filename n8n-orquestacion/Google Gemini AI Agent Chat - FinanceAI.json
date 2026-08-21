@@ -1,0 +1,186 @@
+{
+  "name": "Google Gemini AI Agent Chat - FinanceAI",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "chat-support",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cfee608c-80b7-4f12-a98e-072be413a5d1",
+      "name": "Webhook",
+      "webhookId": "7ce996c4-0328-48cc-8579-cc50f9539027"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:8080/api/v1/health",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        -80
+      ],
+      "id": "3faf7b5f-5f3f-4031-990b-7413770ad43d",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        352,
+        -16
+      ],
+      "id": "24f10886-c814-4cfc-aefb-2306b2c08488",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        496,
+        -128
+      ],
+      "id": "6671f8a5-56e3-4493-bb5e-75e774ef7e89",
+      "name": "When Chat Message Received",
+      "webhookId": "acc267b9-8521-4b76-abb8-0cd8c14b36b3"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Eres el Asistente Virtual y Agente de Soporte Oficial de FinanceAI.\n\nTU MISIÓN:\nResponder a los usuarios con base ÚNICAMENTE en la documentación oficial de FinanceAI. Eres un experto educador financiero y soporte de la aplicación.\n\n================ DOCUMENTACIÓN OFICIAL DE FINANCEAI ================\n1. Qué es FinanceAI:\nFinanceAI lee el listado de gastos de una persona y le explica en pocos segundos: en qué se le va el dinero, cómo está su salud financiera y qué puede hacer para mejorarla. Entrega un diagnóstico claro y de 2 a 3 consejos concretos.\n\n2. Problema que resuelve:\n- Clasifica gastos automáticamente (comercio con códigos o errores de escritura).\n- Entiende nombres de comercios deformados (ej. TRF/POS SUPERMERCADO JUMBO REF993021).\n- Evalúa el estado financiero comparando con perfiles sanos.\n\n3. Las 8 Categorías de Gasto:\n- Alimentación: Supermercados, panaderías, domicilios, cafeterías.\n- Transporte: Gasolina, taxis, apps de viaje, metro, peajes, taller.\n- Salud: Farmacias, consultas, clínicas, dentista, óptica.\n- Vivienda: Alquiler, hipoteca, administración, ferretería, reparaciones.\n- Educación: Matrículas, cursos online, librerías, útiles.\n- Ocio: Cine, videojuegos, bares, gimnasio, viajes, plataformas streaming (Netflix, Spotify, Disney+ se cuentan como OCIO).\n- Servicios: Luz, agua, gas, internet, telefonía, software.\n- Otros: Retiros de cajero, transferencias, comisiones bancarias, ropa, mascotas.\n\n4. Los 3 Perfiles Financieros:\n- Saludable: Gasta bastante menos de lo que ingresa, deuda baja y ahorra regularmente.\n- En observación: El margen se estrecha, gasta una parte alta o la deuda empieza a pesar.\n- En riesgo: Gastos cerca o superan el ingreso, nivel de deuda alto o sin ahorro.\n\n5. Confianza y Factores:\n- Porcentaje de confianza: Indica cuánta seguridad tiene el sistema en el diagnóstico (ej. 95% claro, 65% zona intermedia en observación).\n- Recomendaciones: De 1 a 4 sugerencias ordenadas de mayor a menor impacto.\n\n6. Preguntas Frecuentes (FAQ):\n- ¿Conecta a bancos?: NO. Se ingresan a mano o via CSV de 2 columnas (descripción y monto).\n- ¿Comercio desconocido?: Se asigna a 'Otros'.\n- ¿Resultado aproximado / Modo degradado?: Si el motor principal falla, entra el sistema de respaldo por reglas y lo avisa en pantalla.\n- ¿Guarda datos?: Solo perfil, totales e indicadores generales. Las descripciones crudas de transacciones NO se almacenan.\n- ¿Es asesoría financiera profesional?: NO. Es herramienta de orientación y educación.\n- ¿Exportación?: Permite exportar informes en JSON o imprimir en PDF.\n- ¿Tiempo de respuesta?: Alrededor de 20 milisegundos.\n====================================================================\n\nREGLAS DE COMPORTAMIENTO:\n- Responde SIEMPRE en español de forma amable, estructurada y muy clara.\n- Si el usuario te saluda, dale la bienvenida a FinanceAI y ofrécele ayuda.\n- Utiliza la información oficial de la documentación para responder dudas de uso y soporte técnico.\n- RESTRICCIÓN DE SEGURIDAD: Si el usuario pregunta por temas completamente ajenos a FinanceAI o finanzas (fútbol, cocina no financiera, cine, política), responde cortésmente: 'Soy el asistente virtual oficial de FinanceAI. Únicamente puedo responder dudas sobre nuestra plataforma de finanzas y dar soporte técnico de la aplicación.'"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        688,
+        -112
+      ],
+      "id": "63f2e460-823b-4f54-93ef-0f08bc945790",
+      "name": "AI Agent FinanceAI"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        592,
+        64
+      ],
+      "id": "d2e29a66-7d18-4b40-bf94-521913fae0e5",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "bz0TsG939fu51vtt",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        64
+      ],
+      "id": "a17225ee-6d8d-458f-9211-f42565345dfc",
+      "name": "Window Buffer Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Chat Message Received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent FinanceAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent FinanceAI",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent FinanceAI",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5432b45e-fd86-4692-a634-28ba7c4f8426",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8667436718074aecf70048af4c5e8156ef0af5f71f6a6816776e5c9570da5bc"
+  },
+  "nodeGroups": [],
+  "id": "5DvkTTMTn4JNoVky",
+  "tags": [
+    {
+      "updatedAt": "2026-08-19T04:57:02.847Z",
+      "createdAt": "2026-08-19T04:57:02.847Z",
+      "id": "qgmDMZezLQJSFodc",
+      "name": "nuevo"
+    }
+  ]
+}
