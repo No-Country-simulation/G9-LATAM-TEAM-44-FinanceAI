@@ -161,7 +161,11 @@
       }
     },
     {
-      "parameters": {},
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.sessionId || 'financeai-anonimo' }}",
+        "contextWindowLength": 5
+      },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
@@ -242,6 +246,17 @@
           {
             "node": "AI Agent FinanceAI",
             "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent FinanceAI",
+            "type": "ai_memory",
             "index": 0
           }
         ]
