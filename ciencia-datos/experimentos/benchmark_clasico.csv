@@ -1,0 +1,6 @@
+modelo,accuracy,f1_macro,f1_weighted,balanced_accuracy
+actual (palabra+caracter TFIDF) + LinearSVC calibrado,0.4276 +/- 0.0733,0.4007 +/- 0.0709,0.4060 +/- 0.0867,0.4362 +/- 0.0567
+solo caracter TFIDF (char_wb 3-5) + LinearSVC calibrado,0.4280 +/- 0.0827,0.3934 +/- 0.0626,0.4049 +/- 0.0777,0.4266 +/- 0.0665
+palabra+caracter TFIDF + Naive Bayes (mejor de MultinomialNB/ComplementNB),0.4143 +/- 0.0590,0.3813 +/- 0.0304,0.3803 +/- 0.0451,0.4199 +/- 0.0478
+palabra+caracter TFIDF + LogisticRegression,0.4150 +/- 0.0982,0.3745 +/- 0.0867,0.3796 +/- 0.1082,0.4191 +/- 0.0726
+"solo palabra TFIDF (1,2-gram) + LinearSVC calibrado",0.2576 +/- 0.0452,0.2558 +/- 0.0515,0.2464 +/- 0.0600,0.2802 +/- 0.0294
