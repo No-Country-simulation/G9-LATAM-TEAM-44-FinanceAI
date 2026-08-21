@@ -1,0 +1,325 @@
+{
+  "fuente_oof": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\FinanceAI-03-matriz-de-confusion-ood\\ciencia-datos\\experimentos\\oof_predicciones_cv.csv",
+  "filas_totales": 58894,
+  "categorias": [
+    "alimentacion",
+    "transporte",
+    "salud",
+    "vivienda",
+    "educacion",
+    "ocio",
+    "servicios",
+    "otras"
+  ],
+  "accuracy_global": 0.4264271402859374,
+  "matriz": [
+    [
+      3449,
+      200,
+      4,
+      228,
+      125,
+      638,
+      179,
+      898
+    ],
+    [
+      1209,
+      2833,
+      6,
+      532,
+      236,
+      342,
+      293,
+      496
+    ],
+    [
+      276,
+      41,
+      3806,
+      2363,
+      315,
+      314,
+      4,
+      914
+    ],
+    [
+      1233,
+      383,
+      749,
+      3537,
+      1,
+      405,
+      753,
+      2023
+    ],
+    [
+      912,
+      509,
+      478,
+      4,
+      1801,
+      1464,
+      1,
+      791
+    ],
+    [
+      1925,
+      310,
+      238,
+      482,
+      1329,
+      4366,
+      230,
+      300
+    ],
+    [
+      1629,
+      1492,
+      15,
+      542,
+      464,
+      714,
+      4345,
+      28
+    ],
+    [
+      2293,
+      1048,
+      257,
+      273,
+      279,
+      601,
+      12,
+      977
+    ]
+  ],
+  "totales_por_fila": [
+    5721,
+    5947,
+    8033,
+    9084,
+    5960,
+    9180,
+    9229,
+    5740
+  ],
+  "top_confusiones": [
+    {
+      "real": "otras",
+      "predicha": "alimentacion",
+      "casos": 2293,
+      "proporcion_de_la_fila": 0.3994773519163763,
+      "total_fila_real": 5740,
+      "comercios_dominantes": [
+        {
+          "comercio": "Comision Bancaria",
+          "casos_en_celda": 305,
+          "filas_totales_del_comercio_en_oof": 307,
+          "proporcion_del_comercio": 0.993485342019544
+        },
+        {
+          "comercio": "Compra Marketplace",
+          "casos_en_celda": 304,
+          "filas_totales_del_comercio_en_oof": 307,
+          "proporcion_del_comercio": 0.990228013029316
+        },
+        {
+          "comercio": "Lavanderia Express",
+          "casos_en_celda": 301,
+          "filas_totales_del_comercio_en_oof": 301,
+          "proporcion_del_comercio": 1.0
+        }
+      ]
+    },
+    {
+      "real": "salud",
+      "predicha": "vivienda",
+      "casos": 2363,
+      "proporcion_de_la_fila": 0.2941615834681937,
+      "total_fila_real": 8033,
+      "comercios_dominantes": [
+        {
+          "comercio": "EPS Cuota Moderadora",
+          "casos_en_celda": 1838,
+          "filas_totales_del_comercio_en_oof": 2653,
+          "proporcion_del_comercio": 0.6928006030908406
+        },
+        {
+          "comercio": "Medicamentos Recetados",
+          "casos_en_celda": 319,
+          "filas_totales_del_comercio_en_oof": 338,
+          "proporcion_del_comercio": 0.9437869822485208
+        },
+        {
+          "comercio": "Optica Vision Center",
+          "casos_en_celda": 206,
+          "filas_totales_del_comercio_en_oof": 292,
+          "proporcion_del_comercio": 0.7054794520547946
+        }
+      ]
+    },
+    {
+      "real": "educacion",
+      "predicha": "ocio",
+      "casos": 1464,
+      "proporcion_de_la_fila": 0.24563758389261744,
+      "total_fila_real": 5960,
+      "comercios_dominantes": [
+        {
+          "comercio": "Suscripcion Platzi",
+          "casos_en_celda": 513,
+          "filas_totales_del_comercio_en_oof": 514,
+          "proporcion_del_comercio": 0.9980544747081712
+        },
+        {
+          "comercio": "Curso Udemy Online",
+          "casos_en_celda": 452,
+          "filas_totales_del_comercio_en_oof": 482,
+          "proporcion_del_comercio": 0.9377593360995851
+        },
+        {
+          "comercio": "Pension Colegio",
+          "casos_en_celda": 392,
+          "filas_totales_del_comercio_en_oof": 464,
+          "proporcion_del_comercio": 0.8448275862068966
+        }
+      ]
+    },
+    {
+      "real": "vivienda",
+      "predicha": "otras",
+      "casos": 2023,
+      "proporcion_de_la_fila": 0.22269925143108762,
+      "total_fila_real": 9084,
+      "comercios_dominantes": [
+        {
+          "comercio": "Cuota Hipoteca Vivienda",
+          "casos_en_celda": 1432,
+          "filas_totales_del_comercio_en_oof": 1491,
+          "proporcion_del_comercio": 0.960429242119383
+        },
+        {
+          "comercio": "Reparacion Plomeria",
+          "casos_en_celda": 367,
+          "filas_totales_del_comercio_en_oof": 394,
+          "proporcion_del_comercio": 0.9314720812182741
+        },
+        {
+          "comercio": "Administracion Edificio",
+          "casos_en_celda": 174,
+          "filas_totales_del_comercio_en_oof": 1464,
+          "proporcion_del_comercio": 0.11885245901639344
+        }
+      ]
+    },
+    {
+      "real": "ocio",
+      "predicha": "alimentacion",
+      "casos": 1925,
+      "proporcion_de_la_fila": 0.20969498910675383,
+      "total_fila_real": 9180,
+      "comercios_dominantes": [
+        {
+          "comercio": "Gimnasio SmartFit",
+          "casos_en_celda": 828,
+          "filas_totales_del_comercio_en_oof": 1061,
+          "proporcion_del_comercio": 0.7803958529688972
+        },
+        {
+          "comercio": "Restaurante Gourmet",
+          "casos_en_celda": 239,
+          "filas_totales_del_comercio_en_oof": 239,
+          "proporcion_del_comercio": 1.0
+        },
+        {
+          "comercio": "Bar El Callejon",
+          "casos_en_celda": 233,
+          "filas_totales_del_comercio_en_oof": 248,
+          "proporcion_del_comercio": 0.9395161290322581
+        }
+      ]
+    },
+    {
+      "real": "transporte",
+      "predicha": "alimentacion",
+      "casos": 1209,
+      "proporcion_de_la_fila": 0.20329577938456364,
+      "total_fila_real": 5947,
+      "comercios_dominantes": [
+        {
+          "comercio": "Shell Combustible",
+          "casos_en_celda": 243,
+          "filas_totales_del_comercio_en_oof": 249,
+          "proporcion_del_comercio": 0.9759036144578314
+        },
+        {
+          "comercio": "Taxi Amarillo",
+          "casos_en_celda": 233,
+          "filas_totales_del_comercio_en_oof": 254,
+          "proporcion_del_comercio": 0.9173228346456693
+        },
+        {
+          "comercio": "DiDi Ride",
+          "casos_en_celda": 233,
+          "filas_totales_del_comercio_en_oof": 251,
+          "proporcion_del_comercio": 0.9282868525896414
+        }
+      ]
+    },
+    {
+      "real": "otras",
+      "predicha": "transporte",
+      "casos": 1048,
+      "proporcion_de_la_fila": 0.18257839721254354,
+      "total_fila_real": 5740,
+      "comercios_dominantes": [
+        {
+          "comercio": "Transferencia a Terceros",
+          "casos_en_celda": 294,
+          "filas_totales_del_comercio_en_oof": 300,
+          "proporcion_del_comercio": 0.98
+        },
+        {
+          "comercio": "Retiro Cajero Automatico",
+          "casos_en_celda": 270,
+          "filas_totales_del_comercio_en_oof": 270,
+          "proporcion_del_comercio": 1.0
+        },
+        {
+          "comercio": "Impuesto Retencion",
+          "casos_en_celda": 258,
+          "filas_totales_del_comercio_en_oof": 315,
+          "proporcion_del_comercio": 0.819047619047619
+        }
+      ]
+    },
+    {
+      "real": "servicios",
+      "predicha": "alimentacion",
+      "casos": 1629,
+      "proporcion_de_la_fila": 0.176508830859248,
+      "total_fila_real": 9229,
+      "comercios_dominantes": [
+        {
+          "comercio": "Gas Natural Domiciliario",
+          "casos_en_celda": 1080,
+          "filas_totales_del_comercio_en_oof": 1080,
+          "proporcion_del_comercio": 1.0
+        },
+        {
+          "comercio": "Almacenamiento iCloud",
+          "casos_en_celda": 410,
+          "filas_totales_del_comercio_en_oof": 410,
+          "proporcion_del_comercio": 1.0
+        },
+        {
+          "comercio": "Claro Telefonia Movil",
+          "casos_en_celda": 74,
+          "filas_totales_del_comercio_en_oof": 1035,
+          "proporcion_del_comercio": 0.07149758454106281
+        }
+      ]
+    }
+  ]
+}
