@@ -163,7 +163,7 @@
     {
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $('Webhook').item.json.body.sessionId || 'financeai-anonimo' }}",
+        "sessionKey": "={{ $json.body?.sessionId || $json.sessionId || 'financeai-anonimo' }}",
         "contextWindowLength": 5
       },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
