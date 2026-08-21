@@ -69,6 +69,21 @@ class RegistroModelos:
         return float(self.metadatos.get("umbral_confianza", 0.5))
 
     @property
+    def umbral_confianza_alta(self) -> float:
+        """Corte para el estado 'aceptado' (Fase 12, estrategia de abstencion).
+
+        Tomado de ciencia-datos/experimentos/calibracion.json
+        (coverage_vs_accuracy, Fase 5): en umbral=0.8 la accuracy de las
+        predicciones aceptadas es 0.5223254795206358 (31959/58894 filas,
+        coverage=0.5426529018236154) frente a un accuracy_global_ood de
+        0.4264271402859374 -- +9.59 puntos absolutos (+22.5% relativo). Ver
+        docs/API-ENDPOINTS.md para la tabla completa y la justificacion de
+        por que no se usa 0.9 (coverage cae a 0.46) ni un valor menor a 0.8
+        (la mejora sobre el promedio se diluye).
+        """
+        return float(self.metadatos.get("umbral_confianza_alta", 0.8))
+
+    @property
     def referencia_saludable(self) -> dict:
         return self.metadatos.get("referencia_saludable", {})
 
@@ -88,6 +103,7 @@ class RegistroModelos:
             "clasificador_cargado": self.clasificador is not None,
             "perfil_cargado": self.perfil is not None,
             "umbral_confianza": self.umbral_confianza,
+            "umbral_confianza_alta": self.umbral_confianza_alta,
             "categorias": list(features.CATEGORIAS),
             "perfiles": list(features.PERFILES),
             "metricas": self.metadatos.get("metricas", {}),
