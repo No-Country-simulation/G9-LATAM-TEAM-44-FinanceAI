@@ -15,7 +15,7 @@ import sys
 from contextlib import asynccontextmanager
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel, Field, field_validator
@@ -58,6 +58,10 @@ app = FastAPI(
 # el modelo entrenado no discrepen.
 Categoria = Enum("Categoria", {c: c for c in features.CATEGORIAS}, type=str)
 
+#: Estado explicito de confianza (Fase 12, estrategia de abstencion). Ver
+#: `_estado_confianza` para los cortes y su justificacion con calibracion.json.
+EstadoConfianza = Literal["aceptado", "requiere_revision", "otras"]
+
 
 # ---------------------------------------------------------------- esquemas
 class Transaccion(BaseModel):
@@ -74,6 +78,15 @@ class TransaccionClasificada(Transaccion):
     categoria: Categoria
     confianza: float = Field(ge=0, le=1, examples=[0.97])
     origen: str = Field(examples=["modelo"], description="modelo | reglas")
+    estado_confianza: EstadoConfianza = Field(
+        examples=["aceptado"],
+        description=(
+            "aceptado (confianza >= umbral_confianza_alta, 0.8 por defecto) | "
+            "requiere_revision (umbral_confianza <= confianza < umbral_confianza_alta) | "
+            "otras (confianza < umbral_confianza, 0.5 por defecto; mismo corte que ya "
+            "degrada la categoria a 'otras', sin cambios de comportamiento)"
+        ),
+    )
 
 
 class ClasificarResponse(BaseModel):
@@ -140,6 +153,8 @@ def clasificar(peticion: ClasificarRequest) -> ClasificarResponse:
     # Solo se incluyen las categorias con gasto, igual que en el ejemplo del
     # reto y que en la respuesta del backend Java.
     resumen: dict[str, float] = {}
+    umbral_revision = registro.umbral_confianza
+    umbral_aceptado = registro.umbral_confianza_alta
 
     for transaccion, (categoria, confianza, origen) in zip(peticion.transacciones, resultados):
         clasificadas.append(TransaccionClasificada(
@@ -148,6 +163,7 @@ def clasificar(peticion: ClasificarRequest) -> ClasificarResponse:
             categoria=categoria,
             confianza=round(confianza, 4),
             origen=origen,
+            estado_confianza=_estado_confianza(confianza, umbral_revision, umbral_aceptado),
         ))
         resumen[categoria] = resumen.get(categoria, 0.0) + transaccion.valor
 
@@ -175,6 +191,34 @@ def perfil(peticion: PerfilRequest) -> PerfilResponse:
 
 
 # ----------------------------------------------------------------- interno
+def _estado_confianza(confianza: float, umbral_revision: float, umbral_aceptado: float) -> str:
+    """Estado explicito de confianza (Fase 12, estrategia de abstencion).
+
+    Cortes tomados de ciencia-datos/experimentos/calibracion.json (Fase 5,
+    tabla coverage_vs_accuracy sobre 58894 filas OOD, accuracy_global_ood =
+    0.4264271402859374):
+
+      - "aceptado": confianza >= umbral_aceptado (0.8 por defecto).
+        accuracy_aceptadas en umbral=0.8 es 0.5223254795206358
+        (31959 filas, coverage=0.5426529018236154): +9.59 puntos absolutos
+        sobre el global (+22.5% relativo). En umbral=0.9 la accuracy sube a
+        0.5669816157621036 pero el coverage cae a 0.4636465514313852; 0.8 es
+        el mejor punto que sigue aceptando mas de la mitad del trafico.
+      - "requiere_revision": umbral_revision <= confianza < umbral_aceptado.
+        En el propio umbral_revision (0.5, el mismo que ya usa el fallback a
+        'otras') la accuracy_aceptadas es 0.45240417540000416
+        (48187 filas, coverage=0.8181987978401875): mejor que el azar entre 8
+        categorias pero no lo bastante fiable para aceptar sin marcar.
+      - "otras": confianza < umbral_revision. Sin cambios de comportamiento:
+        la categoria ya se degradaba a 'otras' en este rango.
+    """
+    if confianza >= umbral_aceptado:
+        return "aceptado"
+    if confianza >= umbral_revision:
+        return "requiere_revision"
+    return "otras"
+
+
 def _clasificar_lote(descripciones: list[str]) -> list[tuple[str, float, str]]:
     """Devuelve (categoria, confianza, origen) por descripcion.
 

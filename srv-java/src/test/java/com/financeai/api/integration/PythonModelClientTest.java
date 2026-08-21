@@ -44,7 +44,7 @@ class PythonModelClientTest {
         builder = RestClient.builder().baseUrl("http://ml-service:8000");
         server = MockRestServiceServer.bindTo(builder).build();
         MlServiceProperties properties =
-                new MlServiceProperties("http://ml-service:8000", true, null, null, 0.5);
+                new MlServiceProperties("http://ml-service:8000", true, null, null, 0.5, 0.8);
         client = new PythonModelClient(builder.build(), properties);
     }
 
@@ -128,7 +128,7 @@ class PythonModelClientTest {
     @DisplayName("Con ml.service.enabled=false ni siquiera intenta la llamada")
     void deshabilitadoNoLlama() {
         MlServiceProperties apagado =
-                new MlServiceProperties("http://ml-service:8000", false, null, null, 0.5);
+                new MlServiceProperties("http://ml-service:8000", false, null, null, 0.5, 0.8);
         PythonModelClient sinMl = new PythonModelClient(builder.build(), apagado);
 
         assertThat(sinMl.clasificar(List.of(new TransaccionMl("Supermercado", 420.0)))).isEmpty();

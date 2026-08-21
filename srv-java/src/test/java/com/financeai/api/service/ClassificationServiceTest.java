@@ -32,7 +32,7 @@ class ClassificationServiceTest {
     void setUp() {
         modelClient = mock(PythonModelClient.class);
         MlServiceProperties properties =
-                new MlServiceProperties("http://localhost:8000", true, null, null, 0.5);
+                new MlServiceProperties("http://localhost:8000", true, null, null, 0.5, 0.8);
         service = new ClassificationService(modelClient, new FallbackClassifier(), properties);
     }
 
@@ -45,9 +45,9 @@ class ClassificationServiceTest {
                 new TransactionDTO("Netflix", 40.0));
 
         when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
-                new TransaccionClasificadaMl("Supermercado", 420.0, "alimentacion", 0.9),
-                new TransaccionClasificadaMl("Gasolina", 300.0, "transporte", 0.9),
-                new TransaccionClasificadaMl("Netflix", 40.0, "ocio", 0.9)))));
+                new TransaccionClasificadaMl("Supermercado", 420.0, "alimentacion", 0.9, null),
+                new TransaccionClasificadaMl("Gasolina", 300.0, "transporte", 0.9, null),
+                new TransaccionClasificadaMl("Netflix", 40.0, "ocio", 0.9, null)))));
 
         ClassificationResult resultado = service.classify(transacciones);
 
@@ -63,13 +63,70 @@ class ClassificationServiceTest {
     @DisplayName("Una categoria por debajo del umbral de confianza degrada a 'otras'")
     void aplicaElUmbralDeConfianza() {
         when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
-                new TransaccionClasificadaMl("Compra rara XYZ", 15.0, "alimentacion", 0.20)))));
+                new TransaccionClasificadaMl("Compra rara XYZ", 15.0, "alimentacion", 0.20, null)))));
 
         ClassificationResult resultado = service.classify(
                 List.of(new TransactionDTO("Compra rara XYZ", 15.0)));
 
         assertThat(resultado.resumenGastos()).containsExactly(
                 java.util.Map.entry("otras", 15.0));
+    }
+
+    // ------------------------------------------- estado_confianza (Fase 12)
+
+    @Test
+    @DisplayName("Confianza >= confianzaAlta (0.8) queda en estado 'aceptado'")
+    void confianzaAltaQuedaAceptado() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
+                new TransaccionClasificadaMl("Supermercado Exito", 420.0, "alimentacion", 0.95, null)))));
+
+        ClassificationResult resultado = service.classify(
+                List.of(new TransactionDTO("Supermercado Exito", 420.0)));
+
+        assertThat(resultado.detalle().get(0).estadoConfianza()).isEqualTo("aceptado");
+    }
+
+    @Test
+    @DisplayName("Confianza entre confianzaMinima y confianzaAlta queda 'requiere_revision'")
+    void confianzaMediaQuedaRequiereRevision() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
+                new TransaccionClasificadaMl("Compra ambigua", 60.0, "ocio", 0.65, null)))));
+
+        ClassificationResult resultado = service.classify(
+                List.of(new TransactionDTO("Compra ambigua", 60.0)));
+
+        // La categoria original se conserva: 'estado_confianza' no la reemplaza.
+        assertThat(resultado.detalle().get(0).categoria()).isEqualTo("ocio");
+        assertThat(resultado.detalle().get(0).estadoConfianza()).isEqualTo("requiere_revision");
+    }
+
+    @Test
+    @DisplayName("Confianza < confianzaMinima degrada a categoria 'otras' y estado 'otras'")
+    void confianzaBajaQuedaEnEstadoOtras() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
+                new TransaccionClasificadaMl("Compra rara XYZ", 15.0, "alimentacion", 0.20, null)))));
+
+        ClassificationResult resultado = service.classify(
+                List.of(new TransactionDTO("Compra rara XYZ", 15.0)));
+
+        assertThat(resultado.detalle().get(0).categoria()).isEqualTo("otras");
+        assertThat(resultado.detalle().get(0).estadoConfianza()).isEqualTo("otras");
+    }
+
+    @Test
+    @DisplayName("En modo degradado, la confianza del respaldo (0.90/0.40) tambien resuelve estado_confianza")
+    void estadoConfianzaSeCalculaTambienEnModoDegradado() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.empty());
+
+        ClassificationResult resultado = service.classify(List.of(
+                new TransactionDTO("Farmacia San Pablo", 80.0),
+                new TransactionDTO("Compra desconocida XYZ", 20.0)));
+
+        assertThat(resultado.modoDegradado()).isTrue();
+        // CONFIANZA_KEYWORD=0.90 >= confianzaAlta=0.8
+        assertThat(resultado.detalle().get(0).estadoConfianza()).isEqualTo("aceptado");
+        // CONFIANZA_SIN_MATCH=0.40 < confianzaMinima=0.5
+        assertThat(resultado.detalle().get(1).estadoConfianza()).isEqualTo("otras");
     }
 
     @Test
@@ -91,7 +148,7 @@ class ClassificationServiceTest {
     @DisplayName("Una respuesta con distinta cantidad de items se descarta (no se puede emparejar)")
     void descartaRespuestasIncoherentes() {
         when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
-                new TransaccionClasificadaMl("Supermercado", 420.0, "alimentacion", 0.9)))));
+                new TransaccionClasificadaMl("Supermercado", 420.0, "alimentacion", 0.9, null)))));
 
         ClassificationResult resultado = service.classify(List.of(
                 new TransactionDTO("Supermercado", 420.0),
@@ -106,7 +163,7 @@ class ClassificationServiceTest {
     void confiaEnElMontoDelBackend() {
         when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
                 // el modelo devuelve un valor manipulado: debe ignorarse
-                new TransaccionClasificadaMl("Supermercado", 999999.0, "alimentacion", 0.9)))));
+                new TransaccionClasificadaMl("Supermercado", 999999.0, "alimentacion", 0.9, null)))));
 
         ClassificationResult resultado = service.classify(
                 List.of(new TransactionDTO("Supermercado", 420.0)));
@@ -118,7 +175,7 @@ class ClassificationServiceTest {
     @DisplayName("Una categoria desconocida del modelo degrada a 'otras' sin reventar")
     void categoriaDesconocidaDegrada() {
         when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
-                new TransaccionClasificadaMl("Algo", 50.0, "criptomonedas", 0.95)))));
+                new TransaccionClasificadaMl("Algo", 50.0, "criptomonedas", 0.95, null)))));
 
         ClassificationResult resultado = service.classify(
                 List.of(new TransactionDTO("Algo", 50.0)));
@@ -174,8 +231,8 @@ class ClassificationServiceTest {
     @DisplayName("El detalle conserva el orden y la descripcion original de la peticion")
     void elDetalleRespetaLaEntrada() {
         when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
-                new TransaccionClasificadaMl("eco distinto", 1.0, "alimentacion", 0.95),
-                new TransaccionClasificadaMl("otro eco", 2.0, "transporte", 0.88)))));
+                new TransaccionClasificadaMl("eco distinto", 1.0, "alimentacion", 0.95, null),
+                new TransaccionClasificadaMl("otro eco", 2.0, "transporte", 0.88, null)))));
 
         ClassificationResult resultado = service.classify(List.of(
                 new TransactionDTO("Supermercado Exito", 420.0),

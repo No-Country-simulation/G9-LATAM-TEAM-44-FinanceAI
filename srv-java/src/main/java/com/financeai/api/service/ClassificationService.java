@@ -88,10 +88,12 @@ public class ClassificationService {
 
             FinancialCategory categoria = resolverCategoria(clasificada);
             double confianza = clasificada.confianza() == null ? 0.0 : clasificada.confianza();
+            String estadoConfianza = resolverEstadoConfianza(confianza);
 
             resumen.merge(categoria.getValor(), original.valor(), Double::sum);
             detalle.add(new ClassifiedTransactionDTO(
-                    original.descripcion(), original.valor(), categoria.getValor(), confianza));
+                    original.descripcion(), original.valor(), categoria.getValor(), confianza,
+                    estadoConfianza));
         }
         return new ClassificationResult(detalle, resumen, false);
     }
@@ -108,6 +110,41 @@ public class ClassificationService {
         return FinancialCategory.desdeValor(clasificada.categoria());
     }
 
+    /**
+     * Estado explicito de confianza (Fase 12, estrategia de abstencion).
+     *
+     * Se recalcula aqui en vez de reenviar el {@code estado_confianza} que ya
+     * trae srv-python porque este metodo tambien cubre el camino degradado
+     * ({@link #construirConRespaldo}), donde ese campo no existe. Espejo de
+     * {@code _estado_confianza} en srv-python/app/main.py.
+     *
+     * Cortes tomados de ciencia-datos/experimentos/calibracion.json (Fase 5,
+     * tabla coverage_vs_accuracy sobre 58894 filas OOD; accuracy_global_ood =
+     * 0.4264271402859374):
+     *
+     * <ul>
+     *   <li>"aceptado": confianza &gt;= confianzaAlta (0.8 por defecto).
+     *       accuracy_aceptadas en umbral=0.8 es 0.5223254795206358
+     *       (31959 filas, coverage=0.5426529018236154): +9.59 puntos
+     *       absolutos sobre el global (+22.5% relativo).</li>
+     *   <li>"requiere_revision": confianzaMinima &lt;= confianza &lt; confianzaAlta.
+     *       En confianzaMinima=0.5 (el mismo umbral que ya usa
+     *       {@link #resolverCategoria}) accuracy_aceptadas es
+     *       0.45240417540000416 (48187 filas, coverage=0.8181987978401875).</li>
+     *   <li>"otras": confianza &lt; confianzaMinima. Sin cambios de
+     *       comportamiento: ya degradaba la categoria a "otras".</li>
+     * </ul>
+     */
+    private String resolverEstadoConfianza(double confianza) {
+        if (confianza >= properties.confianzaAlta()) {
+            return "aceptado";
+        }
+        if (confianza >= properties.confianzaMinima()) {
+            return "requiere_revision";
+        }
+        return "otras";
+    }
+
     private ClassificationResult construirConRespaldo(List<TransactionDTO> transactions) {
         Map<String, Double> resumen = resumenVacio();
         List<ClassifiedTransactionDTO> detalle = new ArrayList<>(transactions.size());
@@ -117,10 +154,12 @@ public class ClassificationService {
             double confianza = categoria == FinancialCategory.OTRAS
                     ? FallbackClassifier.CONFIANZA_SIN_MATCH
                     : FallbackClassifier.CONFIANZA_KEYWORD;
+            String estadoConfianza = resolverEstadoConfianza(confianza);
 
             resumen.merge(categoria.getValor(), transaccion.valor(), Double::sum);
             detalle.add(new ClassifiedTransactionDTO(
-                    transaccion.descripcion(), transaccion.valor(), categoria.getValor(), confianza));
+                    transaccion.descripcion(), transaccion.valor(), categoria.getValor(), confianza,
+                    estadoConfianza));
         }
         return new ClassificationResult(detalle, resumen, true);
     }

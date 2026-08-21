@@ -155,8 +155,8 @@ class FinancialControllerTest {
     void clasificaTransacciones() throws Exception {
         when(classificationService.classify(any())).thenReturn(new ClassificationResult(
                 List.of(
-                        new ClassifiedTransactionDTO("Supermercado Exito", 420.0, "alimentacion", 0.99),
-                        new ClassifiedTransactionDTO("Gasolinera Terpel", 300.0, "transporte", 0.97)),
+                        new ClassifiedTransactionDTO("Supermercado Exito", 420.0, "alimentacion", 0.99, "aceptado"),
+                        new ClassifiedTransactionDTO("Gasolinera Terpel", 300.0, "transporte", 0.97, "aceptado")),
                 Map.of("alimentacion", 420.0, "transporte", 300.0),
                 false));
 
@@ -185,7 +185,7 @@ class FinancialControllerTest {
     @DisplayName("Clasificar no exige ingreso ni endeudamiento: no los necesita")
     void clasificarNoPideDatosFinancieros() throws Exception {
         when(classificationService.classify(any())).thenReturn(new ClassificationResult(
-                List.of(new ClassifiedTransactionDTO("Netflix", 40.0, "ocio", 0.95)),
+                List.of(new ClassifiedTransactionDTO("Netflix", 40.0, "ocio", 0.95, "aceptado")),
                 Map.of("ocio", 40.0),
                 false));
 
