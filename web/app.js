@@ -130,6 +130,7 @@ const EJEMPLOS = {
 
 const CLAVE_HISTORIAL = 'financeai.historial';
 const CLAVE_TEMA = 'financeai.tema';
+const CLAVE_SESION = 'financeai.sesion';
 
 // ------------------------------------------------------------------ helpers
 
@@ -306,6 +307,28 @@ const Api = {
 const ChatApi = {
   endpoint: '/n8n/webhook/chat-support',
 
+  /**
+   * Identificador de conversacion, estable en este navegador.
+   *
+   * n8n lo necesita para la memoria del agente: al entrar por el webhook no
+   * existe el sessionId que aporta el nodo de chat, y sin el la memoria falla.
+   * Guardarlo aqui hace ademas que cada visitante tenga su propio hilo en vez
+   * de compartir uno global.
+   */
+  sesion() {
+    try {
+      let id = localStorage.getItem(CLAVE_SESION);
+      if (!id) {
+        id = 'web-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem(CLAVE_SESION, id);
+      }
+      return id;
+    } catch {
+      // Modo privado o almacenamiento bloqueado: sesion de un solo uso.
+      return 'web-efimera';
+    }
+  },
+
   limpiarRespuesta(texto) {
     return String(texto)
       .replace(/^\s*#+\s*/gm, '')
@@ -335,7 +358,7 @@ const ChatApi = {
     const respuesta = await fetch(this.endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chatInput: mensaje }),
+      body: JSON.stringify({ chatInput: mensaje, sessionId: this.sesion() }),
       signal: AbortSignal.timeout(90000),
     });
     const datos = await respuesta.json().catch(() => null);
