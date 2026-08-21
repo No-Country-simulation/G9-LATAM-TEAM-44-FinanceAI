@@ -12,10 +12,10 @@ entrenamiento/semilla (semilla 42).
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | actual (palabra+caracter TFIDF) + LinearSVC calibrado | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram)+caracter(char_wb 3-5) | particion aleatoria 75/25 (44,170 train / 14,724 test), sin agrupar por comercio | no (holdout unico) | 0.999932 | 0.999929 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: baseline_v1.json -> particion_aleatoria. Metrica inflada por memorizacion de comercio: el mismo comercio aparece en train y test, así que el modelo memoriza el texto del comercio en vez de aprender a generalizar. No representativa del desempeño real. |
 | actual (palabra+caracter TFIDF) + LinearSVC calibrado | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram)+caracter(char_wb 3-5) | holdout unico por comercio (44,275 train / 14,619 test; 159 comercios totales, 40 reservados para test) | no (holdout unico) | 0.412477 | 0.418918 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: baseline_v1.json -> particion_por_comercio. Comercio no visto en test: cae de ~1.0 a ~0.41, confirmando que la Fase 1 (particion aleatoria) sobreestima el desempeño. |
-| actual (palabra+caracter TFIDF) + LinearSVC calibrado | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram)+caracter(char_wb 3-5) | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio, estratificado por categoria | si, 5-fold agrupado por comercio | 0.427622 +/- 0.073263 | 0.400717 +/- 0.070891 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: cv_agrupada_comercio.json -> resumen_metricas. f1_weighted = 0.405953 +/- 0.086696, balanced_accuracy = 0.436218 +/- 0.056681. Este es el candidato "actual" que se usa como control/base en los benchmarks de las Fases 9 y 10 (mismos numeros, confirma reproducibilidad del split). |
-| solo caracter TFIDF (char_wb 3-5) + LinearSVC calibrado | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF caracter(char_wb 3-5) unicamente | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio | si, 5-fold agrupado por comercio | 0.428038 +/- 0.082745 | 0.393365 +/- 0.062591 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: benchmark_clasico.csv/.md (Fase 9). f1_macro dentro de 1 desviacion estandar del pipeline actual (0.400717 +/- 0.070891); estadisticamente equivalente, no una mejora confiable. |
-| palabra+caracter TFIDF + Naive Bayes (ComplementNB, mejor de MultinomialNB/ComplementNB) | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram)+caracter(char_wb 3-5) | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio | si, 5-fold agrupado por comercio | 0.414252 +/- 0.058951 | 0.381264 +/- 0.030401 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: benchmark_clasico.csv/.md (Fase 9). ComplementNB (f1_macro=0.381264+/-0.030401) elegido sobre MultinomialNB (f1_macro=0.3725+/-0.0547, segun benchmark_clasico.md) por ser el mas alto de los dos. Dentro de 1 desviacion estandar del pipeline actual, equivalente. |
-| palabra+caracter TFIDF + LogisticRegression | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram)+caracter(char_wb 3-5) | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio | si, 5-fold agrupado por comercio | 0.415045 +/- 0.098249 | 0.374548 +/- 0.086651 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: benchmark_clasico.csv/.md (Fase 9). Dentro de 1 desviacion estandar del pipeline actual, equivalente. |
+| actual (palabra+caracter TFIDF) + LinearSVC calibrado | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram)+caracter(char_wb 3-5) | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio, estratificado por categoria | si, 5-fold agrupado por comercio | 0.427622 +/- 0.073263 | 0.400717 +/- 0.070891 | 0.426427 | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: cv_agrupada_comercio.json -> resumen_metricas. f1_weighted = 0.405953 +/- 0.086696, balanced_accuracy = 0.436218 +/- 0.056681. Este es el candidato "actual" que se usa como control/base en los benchmarks de las Fases 9 y 10 (mismos numeros, confirma reproducibilidad del split). ood_accuracy = 0.4264271402859374 (redondeado a 0.426427) viene de `calibracion.json` -> `accuracy_global_ood` y de `matriz_confusion_ood.json` -> `accuracy_global` (mismo valor en ambos, calculado sobre las mismas 58,894 predicciones out-of-fold de este CV agrupado por comercio); tambien coincide con el recall "weighted" de `metricas_por_categoria.csv` (0.4264271402859374). Es la accuracy agregada agrupando todas las predicciones OOF de los 5 folds en un solo conjunto, a diferencia de la columna `accuracy` de esta fila que es el promedio simple de la accuracy de cada fold (0.427622); por eso los dos valores no son identicos aunque provienen del mismo experimento. |
+| solo caracter TFIDF (char_wb 3-5) + LinearSVC calibrado | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF caracter(char_wb 3-5) unicamente | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio | si, 5-fold agrupado por comercio | 0.4280 +/- 0.0827 | 0.3934 +/- 0.0626 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: benchmark_clasico.csv/.md (Fase 9), que solo reporta 4 decimales para este candidato. f1_macro dentro de 1 desviacion estandar del pipeline actual (0.400717 +/- 0.070891); estadisticamente equivalente, no una mejora confiable. |
+| palabra+caracter TFIDF + Naive Bayes (ComplementNB, mejor de MultinomialNB/ComplementNB) | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram)+caracter(char_wb 3-5) | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio | si, 5-fold agrupado por comercio | 0.4143 +/- 0.0590 | 0.3813 +/- 0.0304 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: benchmark_clasico.csv/.md (Fase 9), que solo reporta 4 decimales para este candidato. ComplementNB (f1_macro=0.3813+/-0.0304) elegido sobre MultinomialNB (f1_macro=0.3725+/-0.0547, segun benchmark_clasico.md) por ser el mas alto de los dos. Dentro de 1 desviacion estandar del pipeline actual, equivalente. |
+| palabra+caracter TFIDF + LogisticRegression | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram)+caracter(char_wb 3-5) | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio | si, 5-fold agrupado por comercio | 0.4150 +/- 0.0982 | 0.3745 +/- 0.0867 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: benchmark_clasico.csv/.md (Fase 9), que solo reporta 4 decimales para este candidato. Dentro de 1 desviacion estandar del pipeline actual, equivalente. |
 | solo palabra TFIDF (1,2-gram) + LinearSVC calibrado | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram) unicamente | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio | si, 5-fold agrupado por comercio | 0.257600 +/- 0.045200 | 0.255800 +/- 0.051500 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: benchmark_clasico.csv/.md (Fase 9). Unico candidato claramente peor (fuera del margen de 1 desviacion estandar): quitar el canal de caracteres empeora el desempeño de forma notable. |
 | solo texto (control, igual pipeline vigente/Fase 9) | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto: TFIDF palabra(1,2-gram)+caracter(char_wb 3-5), sin features adicionales | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio | si, 5-fold agrupado por comercio | 0.427600 +/- 0.073300 | 0.400700 +/- 0.070900 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: benchmark_con_features.md/.csv (Fase 10), fila de control. Reproduce (con redondeo a 4 decimales) el mismo resultado que cv_agrupada_comercio.json y la fila "actual" de la Fase 9, confirmando que el split de StratifiedGroupKFold se reprodujo igual. |
 | texto + monto (ColumnTransformer, StandardScaler) | transacciones.csv (58,894 filas entrenables, 159 comercios unicos) | texto (palabra+caracter TFIDF) + monto (escalado) | StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42) agrupado por comercio | si, 5-fold agrupado por comercio | 0.430100 +/- 0.077200 | 0.402000 +/- 0.073200 | N/D | pendiente (Foursquare gated, no disponible) | 2026-08-17T17:49:00 | Fuente: benchmark_con_features.md/.csv (Fase 10). delta f1_macro vs. control solo-texto = +0.0013, dentro de 1 desviacion estandar: no se distingue con confianza. |
@@ -27,24 +27,35 @@ entrenamiento/semilla (semilla 42).
 
 ## Notas generales
 
-- `ood_accuracy` se dejo en "N/D" para todas las filas de esta tabla porque
-  ninguna de las evaluaciones citadas (baseline_v1.json, cv_agrupada_comercio.json,
-  benchmark_clasico.csv, benchmark_con_features.md) reporta una metrica llamada
-  o equivalente a "ood_accuracy" propiamente dicha; la matriz de confusion OOD
-  de `matriz_confusion_ood.json/.md` (Fase 3) y las metricas por categoria de
-  `metricas_por_categoria.csv/.md` (Fase 4) son desagregaciones del mismo
-  holdout por comercio de `baseline_v1.json` y no una metrica escalar nueva,
-  por lo que no generan una fila adicional en este registro.
+- `ood_accuracy` = 0.426427 (0.4264271402859374 sin redondear) en la fila del
+  pipeline "actual" evaluado por CV agrupada por comercio: viene literalmente
+  del campo `accuracy_global_ood` de `calibracion.json` (Fase 5) y del campo
+  `accuracy_global` de `matriz_confusion_ood.json` (Fase 3) -- ambos archivos
+  reportan el mismo valor porque se calculan sobre las mismas 58,894
+  predicciones out-of-fold del CV agrupado por comercio de la Fase 2
+  (`oof_predicciones_cv.csv`). El mismo numero tambien aparece como el recall
+  "weighted" en `metricas_por_categoria.csv/.md` (Fase 4). Para el resto de
+  las filas (baseline_v1.json y los candidatos de benchmark_clasico.csv y
+  benchmark_con_features.md) se dejo "N/D" porque esos archivos no generaron
+  ni guardaron predicciones out-of-fold agregadas propias con las que calcular
+  un `accuracy_global_ood`/`accuracy_global` equivalente; solo el pipeline
+  "actual" de la Fase 2 tiene ese archivo OOF y los analisis posteriores
+  (Fases 3-5) que se calcularon sobre el.
 - `external_accuracy` = "pendiente (Foursquare gated, no disponible)" en todas
   las filas: no existe todavia un dataset externo real de comercios contra el
   cual evaluar (ver `ciencia-datos/experimentos/analisis_errores.md`, Fase 11,
   que documenta que el acceso a Foursquare en Hugging Face requiere una cuenta
   con acceso restringido/"gated" y quedo pendiente).
-- Todas las cifras de accuracy/f1_macro se copiaron literalmente (redondeadas
-  a 4-6 decimales cuando el archivo fuente traia mas precision) de:
-  `baseline_v1.json`, `cv_agrupada_comercio.json`, `benchmark_clasico.csv`,
-  `benchmark_clasico.md`, `benchmark_con_features.md`. No se reentreno ningun
-  modelo en esta fase (Fase 13).
+- Todas las cifras de accuracy/f1_macro/ood_accuracy se copiaron literalmente
+  de: `baseline_v1.json`, `cv_agrupada_comercio.json`, `benchmark_clasico.csv`,
+  `benchmark_clasico.md`, `benchmark_con_features.md`, `calibracion.json` y
+  `matriz_confusion_ood.json`. Cuando el archivo fuente traia mas de 4
+  decimales (JSON con precision de punto flotante completa) se copiaron 6
+  decimales; cuando el archivo fuente solo traia 4 decimales (las tablas de
+  `benchmark_clasico.csv/.md`, que reportan "media +/- desviacion" ya
+  redondeada a 4 decimales) se copiaron exactamente esos 4 decimales, sin
+  agregar digitos inventados. No se reentreno ningun modelo en esta fase
+  (Fase 13).
 - Conclusion consistente con las Fases 9-11: ningun candidato del benchmark
   clasico ni ninguna variante con features adicionales supera de forma
   estadisticamente defendible al pipeline vigente (palabra+caracter TFIDF +
