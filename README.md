@@ -37,6 +37,7 @@ iniciar.cmd          # Windows (o doble clic)
 | API · Swagger | http://localhost:8080/swagger-ui.html |
 | ml-service · docs | http://localhost:8000/docs |
 | Estado del modelo | http://localhost:8080/api/v1/ml-status |
+| n8n · editor | http://localhost:5678 |
 
 ### Tres terminales
 
@@ -61,6 +62,12 @@ En Linux/macOS, las mismas rutas con `/`, `.venv/bin/python` y `./mvnw`.
 ```bash
 docker compose up -d --build
 ```
+
+Compose levanta `web`, `api`, `ml-service` y n8n. El workflow `FinanceAI Support Chat`
+se conserva en un volumen persistente y se importa automáticamente en el primer arranque.
+Después de abrir n8n, crea la credencial `Google Gemini(PaLM) Api account` y asígnala al
+nodo **Google Gemini Chat Model**. El chat del frontend aparece debajo del análisis y llega
+a n8n por `/n8n/webhook/chat-support` a través del proxy de nginx.
 
 El ml-service no publica puerto: solo se llega a él desde la red interna del stack.
 

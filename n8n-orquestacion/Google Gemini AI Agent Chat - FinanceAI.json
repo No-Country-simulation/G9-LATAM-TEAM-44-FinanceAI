@@ -1,9 +1,11 @@
 {
-  "name": "Google Gemini AI Agent Chat - FinanceAI",
+  "name": "FinanceAI Support Chat",
   "nodes": [
     {
       "parameters": {
         "path": "chat-support",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -32,6 +34,8 @@
     },
     {
       "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
         "options": {}
       },
       "type": "n8n-nodes-base.respondToWebhook",
@@ -59,6 +63,8 @@
     },
     {
       "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body?.chatInput || $json.chatInput }}",
         "options": {
           "systemMessage": "Eres el Asistente Virtual y Agente de Soporte Oficial de FinanceAI.\n\nTU MISIÓN:\nResponder a los usuarios con base ÚNICAMENTE en la documentación oficial de FinanceAI. Eres un experto educador financiero y soporte de la aplicación.\n\n================ DOCUMENTACIÓN OFICIAL DE FINANCEAI ================\n1. Qué es FinanceAI:\nFinanceAI lee el listado de gastos de una persona y le explica en pocos segundos: en qué se le va el dinero, cómo está su salud financiera y qué puede hacer para mejorarla. Entrega un diagnóstico claro y de 2 a 3 consejos concretos.\n\n2. Problema que resuelve:\n- Clasifica gastos automáticamente (comercio con códigos o errores de escritura).\n- Entiende nombres de comercios deformados (ej. TRF/POS SUPERMERCADO JUMBO REF993021).\n- Evalúa el estado financiero comparando con perfiles sanos.\n\n3. Las 8 Categorías de Gasto:\n- Alimentación: Supermercados, panaderías, domicilios, cafeterías.\n- Transporte: Gasolina, taxis, apps de viaje, metro, peajes, taller.\n- Salud: Farmacias, consultas, clínicas, dentista, óptica.\n- Vivienda: Alquiler, hipoteca, administración, ferretería, reparaciones.\n- Educación: Matrículas, cursos online, librerías, útiles.\n- Ocio: Cine, videojuegos, bares, gimnasio, viajes, plataformas streaming (Netflix, Spotify, Disney+ se cuentan como OCIO).\n- Servicios: Luz, agua, gas, internet, telefonía, software.\n- Otros: Retiros de cajero, transferencias, comisiones bancarias, ropa, mascotas.\n\n4. Los 3 Perfiles Financieros:\n- Saludable: Gasta bastante menos de lo que ingresa, deuda baja y ahorra regularmente.\n- En observación: El margen se estrecha, gasta una parte alta o la deuda empieza a pesar.\n- En riesgo: Gastos cerca o superan el ingreso, nivel de deuda alto o sin ahorro.\n\n5. Confianza y Factores:\n- Porcentaje de confianza: Indica cuánta seguridad tiene el sistema en el diagnóstico (ej. 95% claro, 65% zona intermedia en observación).\n- Recomendaciones: De 1 a 4 sugerencias ordenadas de mayor a menor impacto.\n\n6. Preguntas Frecuentes (FAQ):\n- ¿Conecta a bancos?: NO. Se ingresan a mano o via CSV de 2 columnas (descripción y monto).\n- ¿Comercio desconocido?: Se asigna a 'Otros'.\n- ¿Resultado aproximado / Modo degradado?: Si el motor principal falla, entra el sistema de respaldo por reglas y lo avisa en pantalla.\n- ¿Guarda datos?: Solo perfil, totales e indicadores generales. Las descripciones crudas de transacciones NO se almacenan.\n- ¿Es asesoría financiera profesional?: NO. Es herramienta de orientación y educación.\n- ¿Exportación?: Permite exportar informes en JSON o imprimir en PDF.\n- ¿Tiempo de respuesta?: Alrededor de 20 milisegundos.\n====================================================================\n\nREGLAS DE COMPORTAMIENTO:\n- Responde SIEMPRE en español de forma amable, estructurada y muy clara.\n- Si el usuario te saluda, dale la bienvenida a FinanceAI y ofrécele ayuda.\n- Utiliza la información oficial de la documentación para responder dudas de uso y soporte técnico.\n- RESTRICCIÓN DE SEGURIDAD: Si el usuario pregunta por temas completamente ajenos a FinanceAI o finanzas (fútbol, cocina no financiera, cine, política), responde cortésmente: 'Soy el asistente virtual oficial de FinanceAI. Únicamente puedo responder dudas sobre nuestra plataforma de finanzas y dar soporte técnico de la aplicación.'"
         }
@@ -74,7 +80,69 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-3.5-flash-lite",
+        "jsCode": "const entrada = $json.body?.chatInput ?? $json.chatInput ?? '';\nconst texto = String(entrada).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\nconst temasFinanceAI = [\n  'financeai', 'finanza', 'finanzas', 'financiero', 'financiera', 'gasto', 'gastos',\n  'ingreso', 'ingresos', 'deuda', 'endeudamiento', 'ahorro', 'ahorrar', 'presupuesto',\n  'transaccion', 'transacciones', 'categoria', 'categorias', 'alimentacion', 'transporte',\n  'salud', 'vivienda', 'educacion', 'ocio', 'servicio', 'perfil', 'saludable',\n  'observacion', 'riesgo', 'recomendacion', 'diagnostico', 'modelo', 'csv', 'analisis',\n  'moneda', 'dolar', 'peso', 'sol', 'real', 'api', 'soporte', 'aplicacion', 'plataforma',\n  'reporte', 'informe', 'historial', 'clasificar', 'clasificacion', 'confianza', 'hola',\n  'buenos dias', 'buenas tardes', 'buenas noches', 'ayuda'\n];\nconst permitido = temasFinanceAI.some((tema) => texto.includes(tema));\nreturn [{\n  json: {\n    ...$json,\n    financeAiPermitido: permitido,\n    respuestaFueraAlcance: 'Soy el asistente virtual oficial de FinanceAI. Únicamente puedo responder dudas sobre nuestra plataforma de finanzas y dar soporte técnico de la aplicación.'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "e0b4d2f2-1f1f-4f20-9a5b-2d8f6f0f3f11",
+      "name": "Filtro de alcance FinanceAI"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c4b71d2e-86ae-4f11-9df6-2d5df8d7e3b2",
+              "leftValue": "={{ $json.financeAiPermitido }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        0
+      ],
+      "id": "b5c8f2a1-9d7e-4c63-8f42-7a1d6e3b2c90",
+      "name": "Consulta de FinanceAI"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { respuesta: $json.respuestaFueraAlcance } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        528,
+        112
+      ],
+      "id": "d8e7f6a5-b4c3-4d2e-9f81-0a7b6c5d4e32",
+      "name": "Respuesta fuera de alcance"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.6-flash",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
@@ -110,14 +178,43 @@
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "Filtro de alcance FinanceAI",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP Request": {
+    "Filtro de alcance FinanceAI": {
+      "main": [
+        [
+          {
+            "node": "Consulta de FinanceAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta de FinanceAI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent FinanceAI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta fuera de alcance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent FinanceAI": {
       "main": [
         [
           {
@@ -149,20 +246,9 @@
           }
         ]
       ]
-    },
-    "Window Buffer Memory": {
-      "ai_memory": [
-        [
-          {
-            "node": "AI Agent FinanceAI",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",

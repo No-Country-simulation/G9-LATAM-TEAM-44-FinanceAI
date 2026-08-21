@@ -98,6 +98,18 @@
    elemento sigue visible (le pasaba al aviso de modo degradado). */
 [hidden] { display: none !important; }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 html { scroll-behavior: smooth; }
 
 body {
@@ -119,6 +131,28 @@ a { color: var(--acento-2); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 .contenedor { max-width: 1220px; margin: 0 auto; padding: 0 22px; }
+
+.chat-panel { margin-top: 24px; padding: 24px; }
+.chat-cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+.chat-cabecera .titulo-tarjeta { margin-top: 4px; }
+.chat-estado { display: inline-flex; align-items: center; gap: 7px; color: var(--verde); font-size: 12px; white-space: nowrap; }
+.chat-estado i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 16%, transparent); }
+.chat-mensajes { display: grid; gap: 10px; max-height: 280px; overflow-y: auto; padding: 4px 2px 14px; }
+.chat-mensaje { max-width: min(760px, 88%); padding: 11px 14px; border: 1px solid var(--borde); border-radius: var(--radio-s); line-height: 1.5; white-space: pre-wrap; }
+.chat-mensaje.asistente { justify-self: start; background: var(--degradado-suave); }
+.chat-mensaje.usuario { justify-self: end; color: #fff; background: var(--acento); border-color: transparent; }
+.chat-mensaje.error { justify-self: start; color: var(--rojo); }
+.chat-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: stretch; }
+.chat-form input { min-width: 0; }
+.chat-enviar { width: auto; min-width: 112px; margin: 0; }
+.chat-nota { margin-top: 12px; }
+
+@media (max-width: 620px) {
+  .chat-panel { padding: 18px; }
+  .chat-cabecera { flex-direction: column; gap: 8px; }
+  .chat-form { grid-template-columns: 1fr; }
+  .chat-enviar { width: 100%; }
+}
 
 .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
@@ -507,6 +541,24 @@ textarea {
 }
 
 .entrada-adorno { position: relative; }
+.entrada-moneda { display: grid; grid-template-columns: minmax(150px, .9fr) minmax(0, 1.4fr); gap: 8px; }
+.entrada-moneda select {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 10px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-s);
+  background: var(--vidrio-alto);
+  color: var(--texto);
+  font: inherit;
+  font-size: .86rem;
+  color-scheme: dark;
+}
+.entrada-moneda select option { background: var(--lienzo-2); color: var(--texto); }
+.entrada-moneda select option:checked { background: var(--acento); color: #fff; }
+.entrada-moneda select:hover { border-color: var(--borde-vivo); background: var(--vidrio-alto); }
+.entrada-moneda select:focus { outline: none; border-color: var(--acento); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 22%, transparent); }
+[data-tema="claro"] .entrada-moneda select { color-scheme: light; }
 .entrada-adorno em {
   position: absolute;
   left: 13px; top: 50%;
