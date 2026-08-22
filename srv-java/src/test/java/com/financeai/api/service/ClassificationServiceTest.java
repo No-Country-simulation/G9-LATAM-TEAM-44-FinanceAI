@@ -5,6 +5,7 @@ import com.financeai.api.dto.TransactionDTO;
 import com.financeai.api.integration.FallbackClassifier;
 import com.financeai.api.integration.PythonModelClient;
 import com.financeai.api.integration.dto.ClasificarResponse;
+import com.financeai.api.integration.dto.TopCategoriaMl;
 import com.financeai.api.integration.dto.TransaccionClasificadaMl;
 import com.financeai.api.integration.dto.TransaccionMl;
 import org.junit.jupiter.api.BeforeEach;
@@ -276,5 +277,86 @@ class ClassificationServiceTest {
                 new TransactionDTO("Netflix", 40.0)));
 
         assertThat(resultado.totalGastos()).isEqualTo(760.0);
+    }
+
+    // ------------------------------------------------------------- top3 (Fase 16)
+
+    @Test
+    @DisplayName("top3 se traduce del ml-service manteniendo el orden descendente")
+    void top3SeTraduceDelModeloEnOrden() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
+                new TransaccionClasificadaMl("Supermercado Exito", 420.0, "alimentacion", 0.95, null,
+                        List.of(
+                                new TopCategoriaMl("alimentacion", 0.95),
+                                new TopCategoriaMl("otras", 0.03),
+                                new TopCategoriaMl("ocio", 0.02)))))));
+
+        ClassificationResult resultado = service.classify(
+                List.of(new TransactionDTO("Supermercado Exito", 420.0)));
+
+        List<com.financeai.api.dto.TopCategoryDTO> top3 = resultado.detalle().get(0).top3();
+        assertThat(top3).hasSize(3);
+        assertThat(top3.get(0).categoria()).isEqualTo("alimentacion");
+        assertThat(top3.get(0).confianza()).isEqualTo(0.95);
+        assertThat(top3.get(1).categoria()).isEqualTo("otras");
+        assertThat(top3.get(2).categoria()).isEqualTo("ocio");
+    }
+
+    @Test
+    @DisplayName("top3 nunca tiene mas de 3 elementos aunque el ml-service mande mas")
+    void top3RespetaElLimiteDeTres() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
+                new TransaccionClasificadaMl("Compra", 10.0, "alimentacion", 0.5, null,
+                        List.of(
+                                new TopCategoriaMl("alimentacion", 0.5),
+                                new TopCategoriaMl("otras", 0.3),
+                                new TopCategoriaMl("ocio", 0.1),
+                                new TopCategoriaMl("salud", 0.1)))))));
+
+        ClassificationResult resultado = service.classify(
+                List.of(new TransactionDTO("Compra", 10.0)));
+
+        assertThat(resultado.detalle().get(0).top3()).hasSizeLessThanOrEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("Si el ml-service no manda top3 (contrato anterior a la Fase 16), no revienta")
+    void top3AusenteEnLaRespuestaDelModeloNoRevienta() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
+                new TransaccionClasificadaMl("Supermercado", 420.0, "alimentacion", 0.9, null)))));
+
+        ClassificationResult resultado = service.classify(
+                List.of(new TransactionDTO("Supermercado", 420.0)));
+
+        assertThat(resultado.detalle().get(0).top3()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("En modo degradado, top3 trae un solo elemento con la categoria del respaldo")
+    void top3EnModoDegradadoTieneUnSoloElemento() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.empty());
+
+        ClassificationResult resultado = service.classify(List.of(
+                new TransactionDTO("Farmacia San Pablo", 80.0),
+                new TransactionDTO("Compra desconocida XYZ", 20.0)));
+
+        assertThat(resultado.detalle().get(0).top3()).hasSize(1);
+        assertThat(resultado.detalle().get(0).top3().get(0).categoria()).isEqualTo("salud");
+        assertThat(resultado.detalle().get(1).top3()).hasSize(1);
+        assertThat(resultado.detalle().get(1).top3().get(0).categoria()).isEqualTo("otras");
+    }
+
+    @Test
+    @DisplayName("top3 siempre incluye la categoria principal como primer elemento")
+    void top3IncluyeLaCategoriaPrincipalPrimero() {
+        when(modelClient.clasificar(anyList())).thenReturn(Optional.of(new ClasificarResponse(List.of(
+                new TransaccionClasificadaMl("Netflix", 40.0, "ocio", 0.88, null,
+                        List.of(new TopCategoriaMl("ocio", 0.88), new TopCategoriaMl("otras", 0.05)))))));
+
+        ClassificationResult resultado = service.classify(
+                List.of(new TransactionDTO("Netflix", 40.0)));
+
+        var detalle = resultado.detalle().get(0);
+        assertThat(detalle.top3().get(0).categoria()).isEqualTo(detalle.categoria());
     }
 }
