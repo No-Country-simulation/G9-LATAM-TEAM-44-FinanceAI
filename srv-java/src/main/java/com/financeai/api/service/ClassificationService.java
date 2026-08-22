@@ -2,10 +2,12 @@ package com.financeai.api.service;
 
 import com.financeai.api.config.MlServiceProperties;
 import com.financeai.api.dto.ClassifiedTransactionDTO;
+import com.financeai.api.dto.TopCategoryDTO;
 import com.financeai.api.dto.TransactionDTO;
 import com.financeai.api.integration.FallbackClassifier;
 import com.financeai.api.integration.PythonModelClient;
 import com.financeai.api.integration.dto.ClasificarResponse;
+import com.financeai.api.integration.dto.TopCategoriaMl;
 import com.financeai.api.integration.dto.TransaccionClasificadaMl;
 import com.financeai.api.integration.dto.TransaccionMl;
 import com.financeai.api.model.FinancialCategory;
@@ -93,9 +95,29 @@ public class ClassificationService {
             resumen.merge(categoria.getValor(), original.valor(), Double::sum);
             detalle.add(new ClassifiedTransactionDTO(
                     original.descripcion(), original.valor(), categoria.getValor(), confianza,
-                    estadoConfianza));
+                    estadoConfianza, top3DesdeModelo(clasificada)));
         }
         return new ClassificationResult(detalle, resumen, false);
+    }
+
+    /**
+     * Traduce el {@code top3} que manda srv-python (Fase 16) al DTO de salida.
+     * Si no llega (respuesta de un srv-python anterior a la Fase 16, o campo
+     * ausente/vacio), se responde con una lista vacia en vez de reventar. Se
+     * recorta a 3 elementos aunque srv-python mande mas, para no depender de
+     * que el otro lado respete el limite.
+     */
+    private List<TopCategoryDTO> top3DesdeModelo(TransaccionClasificadaMl clasificada) {
+        List<TopCategoriaMl> top3 = clasificada.top3();
+        if (top3 == null || top3.isEmpty()) {
+            return List.of();
+        }
+        return top3.stream()
+                .limit(3)
+                .map(c -> new TopCategoryDTO(
+                        FinancialCategory.desdeValor(c.categoria()).getValor(),
+                        c.confianza() == null ? 0.0 : c.confianza()))
+                .toList();
     }
 
     /**
@@ -155,11 +177,14 @@ public class ClassificationService {
                     ? FallbackClassifier.CONFIANZA_SIN_MATCH
                     : FallbackClassifier.CONFIANZA_KEYWORD;
             String estadoConfianza = resolverEstadoConfianza(confianza);
+            // Modo degradado (Fase 16): no hay distribucion de probabilidades
+            // que ofrecer, asi que top3 trae un solo elemento, el de la regla.
+            List<TopCategoryDTO> top3 = List.of(new TopCategoryDTO(categoria.getValor(), confianza));
 
             resumen.merge(categoria.getValor(), transaccion.valor(), Double::sum);
             detalle.add(new ClassifiedTransactionDTO(
                     transaccion.descripcion(), transaccion.valor(), categoria.getValor(), confianza,
-                    estadoConfianza));
+                    estadoConfianza, top3));
         }
         return new ClassificationResult(detalle, resumen, true);
     }

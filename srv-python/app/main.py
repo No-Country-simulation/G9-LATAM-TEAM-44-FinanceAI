@@ -15,9 +15,9 @@ import sys
 from contextlib import asynccontextmanager
 from enum import Enum
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, NamedTuple, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 _AQUI = Path(__file__).resolve().parent
@@ -74,6 +74,12 @@ class ClasificarRequest(BaseModel):
     transacciones: list[Transaccion] = Field(min_length=1, max_length=5000)
 
 
+class CategoriaTop(BaseModel):
+    """Una entrada del top3 (Fase 16): candidata y su confianza [0,1]."""
+    categoria: Categoria
+    confianza: float = Field(ge=0, le=1, examples=[0.97])
+
+
 class TransaccionClasificada(Transaccion):
     categoria: Categoria
     confianza: float = Field(ge=0, le=1, examples=[0.97])
@@ -85,6 +91,19 @@ class TransaccionClasificada(Transaccion):
             "requiere_revision (umbral_confianza <= confianza < umbral_confianza_alta) | "
             "otras (confianza < umbral_confianza, 0.5 por defecto; mismo corte que ya "
             "degrada la categoria a 'otras', sin cambios de comportamiento)"
+        ),
+    )
+    top3: list[CategoriaTop] = Field(
+        min_length=1, max_length=3,
+        examples=[[{"categoria": "alimentacion", "confianza": 0.97}]],
+        description=(
+            "Hasta 3 categorias mas probables segun predict_proba del "
+            "clasificador calibrado, ordenadas de forma descendente por "
+            "confianza. La primera entrada coincide siempre con `categoria` "
+            "(la decision final, ya aplicados el umbral y las reglas de "
+            "respaldo). En modo reglas o degradado (sin clasificador "
+            "cargado, o el propio respaldo por palabras clave) trae un solo "
+            "elemento, con la categoria de la keyword y su confianza fija."
         ),
     )
 
@@ -143,6 +162,23 @@ def modelo_info():
     return info
 
 
+@app.get("/modelo/metricas", tags=["diagnostico"])
+def modelo_metricas():
+    """Resumen condensado de las metricas de evaluacion del modelo (Fase 16).
+
+    Incluye baseline (particion aleatoria vs. comercio no visto), CV agrupada
+    por comercio, matriz de confusion OOD, metricas por categoria, calibracion
+    y benchmark contra modelos clasicos. Se genera sin conexion con
+    `ciencia-datos/scripts/generar_resumen_metricas.py` a partir de los
+    artefactos ya calculados en `ciencia-datos/experimentos/`; no reproduce
+    las 58,894 filas de las predicciones out-of-fold, solo sus agregados.
+    """
+    resumen = registro.metricas_resumen()
+    if resumen is None:
+        raise HTTPException(status_code=404, detail="metricas_resumen.json no disponible")
+    return resumen
+
+
 @app.post("/clasificar", response_model=ClasificarResponse, tags=["inferencia"])
 def clasificar(peticion: ClasificarRequest) -> ClasificarResponse:
     """Categoriza un lote de transacciones y devuelve el agregado por categoria."""
@@ -156,16 +192,22 @@ def clasificar(peticion: ClasificarRequest) -> ClasificarResponse:
     umbral_revision = registro.umbral_confianza
     umbral_aceptado = registro.umbral_confianza_alta
 
-    for transaccion, (categoria, confianza, origen) in zip(peticion.transacciones, resultados):
+    for transaccion, resultado in zip(peticion.transacciones, resultados):
         clasificadas.append(TransaccionClasificada(
             descripcion=transaccion.descripcion,
             valor=transaccion.valor,
-            categoria=categoria,
-            confianza=round(confianza, 4),
-            origen=origen,
-            estado_confianza=_estado_confianza(confianza, umbral_revision, umbral_aceptado),
+            categoria=resultado.categoria,
+            confianza=round(resultado.confianza, 4),
+            origen=resultado.origen,
+            estado_confianza=_estado_confianza(
+                resultado.confianza, umbral_revision, umbral_aceptado
+            ),
+            top3=[
+                CategoriaTop(categoria=categoria, confianza=round(confianza, 4))
+                for categoria, confianza in resultado.top3
+            ],
         ))
-        resumen[categoria] = resumen.get(categoria, 0.0) + transaccion.valor
+        resumen[resultado.categoria] = resumen.get(resultado.categoria, 0.0) + transaccion.valor
 
     return ClasificarResponse(
         transacciones_clasificadas=clasificadas,
@@ -219,14 +261,66 @@ def _estado_confianza(confianza: float, umbral_revision: float, umbral_aceptado:
     return "otras"
 
 
-def _clasificar_lote(descripciones: list[str]) -> list[tuple[str, float, str]]:
-    """Devuelve (categoria, confianza, origen) por descripcion.
+class ResultadoClasificacion(NamedTuple):
+    """Salida interna de `_clasificar_lote`, una por transaccion."""
+    categoria: str
+    confianza: float
+    origen: str
+    top3: list[tuple[str, float]]
+
+
+def _top3_desde_fila(
+    fila,
+    clases: list[str],
+    categoria_principal: str,
+    confianza_principal: float,
+    limite: int = 3,
+) -> list[tuple[str, float]]:
+    """Hasta `limite` (categoria, probabilidad) desde una fila de predict_proba.
+
+    Ordenadas de forma descendente por probabilidad, con `categoria_principal`
+    siempre de primera y con `confianza_principal` (que puede no coincidir con
+    la probabilidad cruda de esa categoria en `fila`: por ejemplo cuando el
+    umbral degrada la categoria a "otras" sin cambiar la confianza reportada,
+    ver `_clasificar_lote`). Asi el primer elemento del top3 coincide siempre
+    con la decision final que ya viaja en `categoria`/`confianza`.
+    """
+    pares = sorted(
+        ((features.normalizar_categoria(c), float(p)) for c, p in zip(clases, fila)),
+        key=lambda par: par[1],
+        reverse=True,
+    )
+    top3 = [(categoria_principal, confianza_principal)]
+    vistas = {categoria_principal}
+    for categoria, prob in pares:
+        if categoria in vistas:
+            continue
+        vistas.add(categoria)
+        top3.append((categoria, prob))
+        if len(top3) == limite:
+            break
+    return top3
+
+
+def _clasificar_lote_por_reglas(descripciones: list[str]) -> list[ResultadoClasificacion]:
+    """Camino sin modelo: todo por palabras clave. `top3` trae un solo elemento
+    (Fase 16), la propia categoria de la regla, ya que no hay distribucion de
+    probabilidades que ofrecer."""
+    salida: list[ResultadoClasificacion] = []
+    for d in descripciones:
+        categoria, confianza = clasificar_por_reglas(d)
+        salida.append(ResultadoClasificacion(categoria, confianza, "reglas", [(categoria, confianza)]))
+    return salida
+
+
+def _clasificar_lote(descripciones: list[str]) -> list[ResultadoClasificacion]:
+    """Devuelve (categoria, confianza, origen, top3) por descripcion.
 
     Un solo predict_proba para todo el lote; una llamada por transaccion
     multiplicaria por N el coste de vectorizar.
     """
     if registro.clasificador is None:
-        return [(*clasificar_por_reglas(d), "reglas") for d in descripciones]
+        return _clasificar_lote_por_reglas(descripciones)
 
     normalizadas = [features.normalizar_texto(d) for d in descripciones]
 
@@ -235,10 +329,10 @@ def _clasificar_lote(descripciones: list[str]) -> list[tuple[str, float, str]]:
         clases = list(registro.clasificador.classes_)
     except Exception:
         log.exception("Fallo la inferencia del clasificador; se responde con reglas.")
-        return [(*clasificar_por_reglas(d), "reglas") for d in descripciones]
+        return _clasificar_lote_por_reglas(descripciones)
 
     umbral = registro.umbral_confianza
-    salida: list[tuple[str, float, str]] = []
+    salida: list[ResultadoClasificacion] = []
 
     for original, normalizada, fila in zip(descripciones, normalizadas, probabilidades):
         indice = int(fila.argmax())
@@ -247,19 +341,24 @@ def _clasificar_lote(descripciones: list[str]) -> list[tuple[str, float, str]]:
 
         if not normalizada:
             # Descripcion vacia tras normalizar: no hay nada que clasificar.
-            salida.append(("otras", 0.0, "reglas"))
+            salida.append(ResultadoClasificacion("otras", 0.0, "reglas", [("otras", 0.0)]))
             continue
 
         if confianza < umbral:
             # El modelo duda. Antes de caer en "otras" se prueba con la regla.
             categoria_regla, confianza_regla = clasificar_por_reglas(original)
             if categoria_regla != "otras":
-                salida.append((categoria_regla, confianza_regla, "reglas"))
+                salida.append(ResultadoClasificacion(
+                    categoria_regla, confianza_regla, "reglas",
+                    [(categoria_regla, confianza_regla)],
+                ))
             else:
-                salida.append(("otras", confianza, "modelo"))
+                top3 = _top3_desde_fila(fila, clases, "otras", confianza)
+                salida.append(ResultadoClasificacion("otras", confianza, "modelo", top3))
             continue
 
-        salida.append((categoria, confianza, "modelo"))
+        top3 = _top3_desde_fila(fila, clases, categoria, confianza)
+        salida.append(ResultadoClasificacion(categoria, confianza, "modelo", top3))
 
     return salida
 
