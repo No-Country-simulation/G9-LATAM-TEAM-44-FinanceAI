@@ -319,7 +319,11 @@
           </summary>
           <div class="metricas-detalle-cuerpo">
             <p class="ayuda">No afecta a tu diagnóstico: es la evidencia de cuánto acierta el modelo que categoriza tus transacciones, y dónde se equivoca.</p>
-            <p class="vacio" id="metricas-estado"><span id="metricas-estado-texto">Cargando métricas del modelo…</span></p>
+            <!-- El texto de reposo no debe afirmar que algo esta cargando: si el JS
+                 no llega a ejecutarse (por ejemplo con un app.js cacheado tras un
+                 despliegue) un "Cargando..." fijo se ve igual que una carga eterna.
+                 cargarMetricas() lo sustituye en cuanto arranca de verdad. -->
+            <p class="vacio" id="metricas-estado"><span id="metricas-estado-texto">Las métricas se piden al desplegar este bloque. Si no aparecen, recarga la página.</span></p>
             <div id="metricas-cuerpo" hidden>
               <section class="metricas-bloque">
                 <h4 class="titulo-tarjeta">Baseline: partición aleatoria vs. comercio no visto</h4>
