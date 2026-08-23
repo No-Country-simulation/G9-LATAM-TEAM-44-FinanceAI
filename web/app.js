@@ -1332,9 +1332,10 @@ function renderMetricas(datos) {
 }
 
 /** Carga GET /metricas-modelo (Fase 16, proxy del backend Java hacia
- *  srv-python). Igual que /ml-status en otras pestañas: si el servicio no
- *  responde o devuelve un cuerpo vacío, se avisa sin romper el resto de la
- *  página. Se cachea en memoria porque el resumen no cambia entre pestañas. */
+ *  srv-python) para el bloque plegable que cuelga del perfil. Igual que
+ *  /ml-status: si el servicio no responde o devuelve un cuerpo vacío, se avisa
+ *  sin romper el resto de la página. Se cachea en memoria porque el resumen no
+ *  cambia durante la sesión y el bloque puede abrirse y cerrarse varias veces. */
 async function cargarMetricas() {
   const estado = $('#metricas-estado');
   const estadoTexto = $('#metricas-estado-texto');
@@ -1434,9 +1435,18 @@ function inicializar() {
       // El gráfico de evolución se remide al mostrarse: dibujado dentro de un
       // panel oculto, getTotalLength y offsetWidth devuelven 0.
       if (pestana.dataset.panel === 'panel-historial') renderHistorial();
-      if (pestana.dataset.panel === 'panel-metricas') cargarMetricas();
     });
   });
+
+  // Métricas del modelo: material de respaldo que vive plegado bajo el perfil.
+  // Se piden a la API la primera vez que alguien lo despliega, no al cargar la
+  // página: la mayoría nunca lo abre y no vale una petición de arranque.
+  const detalleMetricas = $('#metricas-detalle');
+  if (detalleMetricas) {
+    detalleMetricas.addEventListener('toggle', () => {
+      if (detalleMetricas.open) cargarMetricas();
+    });
+  }
 
   $('#deuda').addEventListener('input', (e) => ponerDeuda(e.target.value));
   $('#moneda').addEventListener('change', () => {
