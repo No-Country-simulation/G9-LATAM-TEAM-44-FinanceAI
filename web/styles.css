@@ -1139,6 +1139,46 @@ textarea {
 
 /* ----------------------------------------------------------------- métricas */
 
+/* Bloque plegable bajo el perfil: material de respaldo, no producto. Va cerrado
+   y mas compacto que las tarjetas del diagnostico para no competir con ellas. */
+.metricas-detalle { padding: 0; }
+.metricas-detalle::before { display: none; }
+.metricas-detalle > summary {
+  display: flex; align-items: center; gap: 9px;
+  padding: 13px 18px; cursor: pointer; list-style: none; user-select: none;
+  border-radius: var(--radio);
+}
+.metricas-detalle > summary::-webkit-details-marker { display: none; }
+.metricas-detalle > summary::marker { content: ""; }
+.metricas-detalle > summary:hover { background: color-mix(in srgb, var(--acento) 6%, transparent); }
+.metricas-detalle > summary:focus-visible { outline: 2px solid var(--acento-2); outline-offset: -2px; }
+.metricas-detalle > summary .ic { color: var(--texto-suave); }
+.metricas-detalle-titulo { font-size: .88rem; font-weight: 600; }
+.metricas-detalle-nota { font-size: .75rem; color: var(--texto-tenue); margin-left: auto; text-align: right; }
+
+/* El icono de tendencia apunta arriba; rotarlo lo vuelve un chevron que gira. */
+.metricas-chevron { flex: none; transform: rotate(90deg); transition: transform .22s ease; }
+.metricas-detalle[open] .metricas-chevron { transform: rotate(-90deg); }
+
+.metricas-detalle-cuerpo { padding: 2px 18px 18px; border-top: 1px solid var(--borde); }
+
+/* Secciones internas separadas por linea, no por tarjeta: evita tarjeta dentro
+   de tarjeta y ahorra el alto que sumarian cuatro .vidrio anidadas. */
+.metricas-bloque { padding-top: 16px; }
+.metricas-bloque + .metricas-bloque { border-top: 1px solid var(--borde); }
+.metricas-bloque .titulo-tarjeta { font-size: .86rem; margin-bottom: 8px; color: var(--texto-suave); }
+.metricas-detalle .metrica-tarjeta { padding: 12px 13px; }
+.metricas-detalle .matriz th, .metricas-detalle .matriz td { padding: 4px; }
+/* El aviso de carga/error solo ocupa una linea aqui: los 42px de .vacio dejarian
+   un hueco mayor que el propio bloque cerrado. */
+.metricas-detalle .vacio { padding: 16px 0; }
+
+@media (max-width: 620px) {
+  .metricas-detalle > summary { flex-wrap: wrap; padding: 13px 15px; }
+  .metricas-detalle-nota { margin-left: 0; flex-basis: 100%; text-align: left; }
+  .metricas-detalle-cuerpo { padding: 2px 15px 15px; }
+}
+
 .metricas-tarjetas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
