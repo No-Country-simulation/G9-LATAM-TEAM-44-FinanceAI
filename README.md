@@ -136,8 +136,12 @@ contra comercios que el modelo nunca vio, la accuracy baja a 0.41.
 
 De ahí salen tres decisiones de diseño:
 
-1. Umbral de confianza 0.5. Por debajo, la API devuelve `otras`. En un informe financiero un
-   gasto sin clasificar molesta menos que uno mal atribuido.
+1. Umbral de confianza 0.5 sobre `predict_proba`. Por debajo, la API devuelve `otras`. Ese
+   número no es una probabilidad real de acertar (el modelo no está calibrado sobre comercios
+   no vistos: ECE 0.3335 y Brier score 0.1152 evaluando out-of-fold, ver
+   `ciencia-datos/experimentos/calibracion.json`); se usa solo como score para decidir cuándo
+   abstenerse. En un informe financiero un gasto sin clasificar molesta menos que uno mal
+   atribuido.
 2. Clasificador de respaldo por palabras clave, que cubre los comercios frecuentes y entra
    también cuando el modelo duda.
 3. El catálogo de comercios hay que alimentarlo. La mejora viene de reentrenar con comercios

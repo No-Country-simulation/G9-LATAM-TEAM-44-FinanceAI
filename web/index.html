@@ -95,6 +95,9 @@
       <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
       <path d="M6 7v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"/>
     </symbol>
+    <symbol id="i-metricas" viewBox="0 0 24 24">
+      <path d="M4 21V10M10 21V6M16 21v-8M3 21h18"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -141,6 +144,9 @@
     </button>
     <button class="pestana" role="tab" data-panel="panel-historial">
       <svg class="ic"><use href="#i-tendencia"/></svg><span>Evolución</span>
+    </button>
+    <button class="pestana" role="tab" data-panel="panel-metricas">
+      <svg class="ic"><use href="#i-metricas"/></svg><span>Métricas</span>
     </button>
   </nav>
 </div>
@@ -348,6 +354,55 @@ zxqw plfj mmnb, 25</textarea>
         <span class="cargador"></span>
       </button>
       <div id="resultado-clasificador"></div>
+    </div>
+  </section>
+
+  <!-- ========================================================== MÉTRICAS -->
+  <section id="panel-metricas" class="panel" role="tabpanel">
+    <div class="vidrio surge" id="metricas-estado">
+      <p class="vacio" id="metricas-estado-texto">Cargando métricas del modelo…</p>
+    </div>
+
+    <div id="metricas-cuerpo" hidden>
+
+      <div class="vidrio surge">
+        <h2 class="titulo-tarjeta"><svg class="ic"><use href="#i-metricas"/></svg> Baseline: partición aleatoria vs. comercio no visto</h2>
+        <p class="ayuda">
+          La partición aleatoria sobrestima el desempeño real porque mezcla el mismo comercio
+          en entrenamiento y prueba. La validación agrupada por comercio (con su desviación
+          estándar) es la medida honesta de cómo se comporta el modelo con comercios que nunca vio.
+        </p>
+        <div class="metricas-tarjetas" id="metricas-baseline"></div>
+      </div>
+
+      <div class="vidrio surge">
+        <h2 class="titulo-tarjeta"><svg class="ic"><use href="#i-escaner"/></svg> Matriz de confusión (comercio no visto)</h2>
+        <p class="ayuda">Filas: categoría real. Columnas: categoría predicha. Color más intenso = más transacciones; el borde resalta la diagonal (aciertos).</p>
+        <div id="metricas-matriz"></div>
+      </div>
+
+      <div class="vidrio surge">
+        <h2 class="titulo-tarjeta"><svg class="ic"><use href="#i-chispa"/></svg> Benchmark de modelos clásicos</h2>
+        <p class="ayuda">Exactitud y F1 (media ± desviación estándar) de la validación cruzada agrupada por comercio, por variante de modelo o de características.</p>
+        <div id="metricas-benchmark"></div>
+      </div>
+
+      <div class="vidrio surge">
+        <h2 class="titulo-tarjeta"><svg class="ic"><use href="#i-tendencia"/></svg> Cobertura vs. exactitud</h2>
+        <p class="ayuda">
+          Al exigir más confianza el modelo se abstiene de más transacciones (menor cobertura)
+          pero acierta más en las que sí resuelve. Las líneas verticales marcan los umbrales que
+          usa el clasificador: desde <strong>0.5</strong> pasan a <em>requiere_revision</em> y
+          desde <strong>0.8</strong> a <em>aceptado</em>; por debajo de 0.5 la categoría se
+          reporta como <em>otras</em>.
+        </p>
+        <div id="metricas-cobertura"></div>
+        <div class="leyenda-lineas">
+          <span><i style="color:var(--acento-2)"></i> Cobertura</span>
+          <span><i style="color:#7c6cff"></i> Exactitud en lo aceptado</span>
+        </div>
+      </div>
+
     </div>
   </section>
 

@@ -123,6 +123,27 @@ public class PythonModelClient {
         }
     }
 
+    /**
+     * GET /modelo/metricas — resumen condensado de las metricas de evaluacion
+     * del modelo (Fase 16): baseline, CV agrupada por comercio, matriz de
+     * confusion OOD, metricas por categoria, calibracion y benchmark contra
+     * modelos clasicos. Mismo patron que {@link #infoModelo()}: si el
+     * ml-service no responde, se devuelve vacio y quien llama decide que
+     * mostrar.
+     */
+    @SuppressWarnings("unchecked")
+    public Optional<Map<String, Object>> metricasModelo() {
+        if (!properties.enabled()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.ofNullable(
+                    restClient.get().uri("/modelo/metricas").retrieve().body(Map.class));
+        } catch (RestClientException e) {
+            return Optional.empty();
+        }
+    }
+
     public String urlConfigurada() {
         return properties.url();
     }

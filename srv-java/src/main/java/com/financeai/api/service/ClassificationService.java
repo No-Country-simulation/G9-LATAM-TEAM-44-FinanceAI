@@ -2,10 +2,12 @@ package com.financeai.api.service;
 
 import com.financeai.api.config.MlServiceProperties;
 import com.financeai.api.dto.ClassifiedTransactionDTO;
+import com.financeai.api.dto.TopCategoryDTO;
 import com.financeai.api.dto.TransactionDTO;
 import com.financeai.api.integration.FallbackClassifier;
 import com.financeai.api.integration.PythonModelClient;
 import com.financeai.api.integration.dto.ClasificarResponse;
+import com.financeai.api.integration.dto.TopCategoriaMl;
 import com.financeai.api.integration.dto.TransaccionClasificadaMl;
 import com.financeai.api.integration.dto.TransaccionMl;
 import com.financeai.api.model.FinancialCategory;
@@ -88,12 +90,34 @@ public class ClassificationService {
 
             FinancialCategory categoria = resolverCategoria(clasificada);
             double confianza = clasificada.confianza() == null ? 0.0 : clasificada.confianza();
+            String estadoConfianza = resolverEstadoConfianza(confianza);
 
             resumen.merge(categoria.getValor(), original.valor(), Double::sum);
             detalle.add(new ClassifiedTransactionDTO(
-                    original.descripcion(), original.valor(), categoria.getValor(), confianza));
+                    original.descripcion(), original.valor(), categoria.getValor(), confianza,
+                    estadoConfianza, top3DesdeModelo(clasificada)));
         }
         return new ClassificationResult(detalle, resumen, false);
+    }
+
+    /**
+     * Traduce el {@code top3} que manda srv-python (Fase 16) al DTO de salida.
+     * Si no llega (respuesta de un srv-python anterior a la Fase 16, o campo
+     * ausente/vacio), se responde con una lista vacia en vez de reventar. Se
+     * recorta a 3 elementos aunque srv-python mande mas, para no depender de
+     * que el otro lado respete el limite.
+     */
+    private List<TopCategoryDTO> top3DesdeModelo(TransaccionClasificadaMl clasificada) {
+        List<TopCategoriaMl> top3 = clasificada.top3();
+        if (top3 == null || top3.isEmpty()) {
+            return List.of();
+        }
+        return top3.stream()
+                .limit(3)
+                .map(c -> new TopCategoryDTO(
+                        FinancialCategory.desdeValor(c.categoria()).getValor(),
+                        c.confianza() == null ? 0.0 : c.confianza()))
+                .toList();
     }
 
     /**
@@ -108,6 +132,41 @@ public class ClassificationService {
         return FinancialCategory.desdeValor(clasificada.categoria());
     }
 
+    /**
+     * Estado explicito de confianza (Fase 12, estrategia de abstencion).
+     *
+     * Se recalcula aqui en vez de reenviar el {@code estado_confianza} que ya
+     * trae srv-python porque este metodo tambien cubre el camino degradado
+     * ({@link #construirConRespaldo}), donde ese campo no existe. Espejo de
+     * {@code _estado_confianza} en srv-python/app/main.py.
+     *
+     * Cortes tomados de ciencia-datos/experimentos/calibracion.json (Fase 5,
+     * tabla coverage_vs_accuracy sobre 58894 filas OOD; accuracy_global_ood =
+     * 0.4264271402859374):
+     *
+     * <ul>
+     *   <li>"aceptado": confianza &gt;= confianzaAlta (0.8 por defecto).
+     *       accuracy_aceptadas en umbral=0.8 es 0.5223254795206358
+     *       (31959 filas, coverage=0.5426529018236154): +9.59 puntos
+     *       absolutos sobre el global (+22.5% relativo).</li>
+     *   <li>"requiere_revision": confianzaMinima &lt;= confianza &lt; confianzaAlta.
+     *       En confianzaMinima=0.5 (el mismo umbral que ya usa
+     *       {@link #resolverCategoria}) accuracy_aceptadas es
+     *       0.45240417540000416 (48187 filas, coverage=0.8181987978401875).</li>
+     *   <li>"otras": confianza &lt; confianzaMinima. Sin cambios de
+     *       comportamiento: ya degradaba la categoria a "otras".</li>
+     * </ul>
+     */
+    private String resolverEstadoConfianza(double confianza) {
+        if (confianza >= properties.confianzaAlta()) {
+            return "aceptado";
+        }
+        if (confianza >= properties.confianzaMinima()) {
+            return "requiere_revision";
+        }
+        return "otras";
+    }
+
     private ClassificationResult construirConRespaldo(List<TransactionDTO> transactions) {
         Map<String, Double> resumen = resumenVacio();
         List<ClassifiedTransactionDTO> detalle = new ArrayList<>(transactions.size());
@@ -117,10 +176,15 @@ public class ClassificationService {
             double confianza = categoria == FinancialCategory.OTRAS
                     ? FallbackClassifier.CONFIANZA_SIN_MATCH
                     : FallbackClassifier.CONFIANZA_KEYWORD;
+            String estadoConfianza = resolverEstadoConfianza(confianza);
+            // Modo degradado (Fase 16): no hay distribucion de probabilidades
+            // que ofrecer, asi que top3 trae un solo elemento, el de la regla.
+            List<TopCategoryDTO> top3 = List.of(new TopCategoryDTO(categoria.getValor(), confianza));
 
             resumen.merge(categoria.getValor(), transaccion.valor(), Double::sum);
             detalle.add(new ClassifiedTransactionDTO(
-                    transaccion.descripcion(), transaccion.valor(), categoria.getValor(), confianza));
+                    transaccion.descripcion(), transaccion.valor(), categoria.getValor(), confianza,
+                    estadoConfianza, top3));
         }
         return new ClassificationResult(detalle, resumen, true);
     }

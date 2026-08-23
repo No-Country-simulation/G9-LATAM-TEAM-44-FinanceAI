@@ -12,6 +12,7 @@ Todo el JSON va en **snake_case** (`spring.jackson.property-naming-strategy=SNAK
 | GET | `/api/v1/health` | Liveness (no consulta el ml-service) |
 | GET | `/api/v1/version` | Versión del MVP |
 | GET | `/api/v1/ml-status` | Estado del modelo y del almacenamiento |
+| GET | `/api/v1/metricas-modelo` | Resumen de métricas de evaluación del modelo (proxy a srv-python) |
 
 Tres ejemplos completos de uso: [docs/EJEMPLOS.md](../../docs/EJEMPLOS.md)
 
@@ -147,11 +148,16 @@ una transacción no requiere conocer la situación financiera de quien la hizo.
 ```json
 {
   "transacciones_clasificadas": [
-    { "descripcion": "Supermercado Exito",                 "valor": 420.0, "categoria": "alimentacion", "confianza": 0.9993 },
-    { "descripcion": "TRF/POS Gasolinera Terpel REF88213",  "valor": 300.0, "categoria": "transporte",   "confianza": 0.9994 },
-    { "descripcion": "Netflix Streaming",                   "valor": 40.0,  "categoria": "ocio",         "confianza": 0.9995 },
-    { "descripcion": "### farmacia cruz verde",             "valor": 85.0,  "categoria": "salud",        "confianza": 0.9996 },
-    { "descripcion": "zxqw plfj mmnb",                      "valor": 25.0,  "categoria": "otras",        "confianza": 0.3573 }
+    { "descripcion": "Supermercado Exito",                 "valor": 420.0, "categoria": "alimentacion", "confianza": 0.9993, "estado_confianza": "aceptado",
+      "top3": [ { "categoria": "alimentacion", "confianza": 0.9993 }, { "categoria": "otras", "confianza": 0.0004 }, { "categoria": "ocio", "confianza": 0.0002 } ] },
+    { "descripcion": "TRF/POS Gasolinera Terpel REF88213",  "valor": 300.0, "categoria": "transporte",   "confianza": 0.9994, "estado_confianza": "aceptado",
+      "top3": [ { "categoria": "transporte", "confianza": 0.9994 } ] },
+    { "descripcion": "Netflix Streaming",                   "valor": 40.0,  "categoria": "ocio",         "confianza": 0.9995, "estado_confianza": "aceptado",
+      "top3": [ { "categoria": "ocio", "confianza": 0.9995 } ] },
+    { "descripcion": "### farmacia cruz verde",             "valor": 85.0,  "categoria": "salud",        "confianza": 0.9996, "estado_confianza": "aceptado",
+      "top3": [ { "categoria": "salud", "confianza": 0.9996 } ] },
+    { "descripcion": "zxqw plfj mmnb",                      "valor": 25.0,  "categoria": "otras",        "confianza": 0.3573, "estado_confianza": "otras",
+      "top3": [ { "categoria": "otras", "confianza": 0.3573 }, { "categoria": "vivienda", "confianza": 0.1204 }, { "categoria": "servicios", "confianza": 0.0891 } ] }
   ],
   "resumen_gastos": {
     "alimentacion": 420.0, "transporte": 300.0, "ocio": 40.0, "salud": 85.0, "otras": 25.0
@@ -168,6 +174,61 @@ y cuánto aporta ese umbral.
 
 `descripcion` y `valor` se devuelven tal cual llegaron. El monto sale de la petición, no del
 eco del modelo.
+
+#### `estado_confianza` (Fase 12 — estrategia de abstención)
+
+Adicional a `categoria` y `confianza`, cada transacción trae un estado explícito que no
+reemplaza nada de lo anterior: `categoria` sigue siendo la que ya se devolvía (incluida su
+degradación a `otras` por debajo de `umbral_confianza`) y `confianza` no cambia de escala.
+
+Los cortes salen de la tabla real `coverage_vs_accuracy` de
+`ciencia-datos/experimentos/calibracion.json` (Fase 5 — calibración y umbral de confianza),
+calculada sobre 58 894 filas out-of-distribution con `accuracy_global_ood = 0.4264271402859374`:
+
+| umbral | coverage | filas_aceptadas | accuracy_aceptadas |
+|---|---|---|---|
+| 0.5 | 0.8181987978401875 | 48187 | 0.45240417540000416 |
+| 0.6 | 0.6731755357082215 | 39646 | 0.49301316652373506 |
+| 0.7 | 0.5888375725880395 | 34679 | 0.5015715562732489 |
+| **0.8** | **0.5426529018236154** | **31959** | **0.5223254795206358** |
+| 0.9 | 0.4636465514313852 | 27306 | 0.5669816157621036 |
+
+Con esa tabla:
+
+- **`aceptado`**: `confianza >= umbral_confianza_alta` (0.8 por defecto). En ese punto la
+  accuracy de lo aceptado es 0.5223254795206358, +9.59 puntos absolutos sobre el
+  0.4264271402859374 global (+22.5% relativo), reteniendo coverage=0.5426529018236154 (más de
+  la mitad del tráfico). En 0.9 la accuracy sube a 0.5669816157621036 pero el coverage cae a
+  0.4636465514313852: 0.8 es el mejor punto que sigue aceptando más de la mitad de las
+  transacciones sin marcarlas para revisión.
+- **`requiere_revision`**: `umbral_confianza <= confianza < umbral_confianza_alta` (0.5–0.8 por
+  defecto). En el propio `umbral_confianza` (0.5, el mismo que ya usa el fallback a `otras`,
+  sin cambios) la accuracy_aceptadas es 0.45240417540000416: mejor que el azar entre 8
+  categorías, pero no lo bastante fiable para aceptar sin marcar. La predicción se devuelve
+  igual (no se pierde información), solo va señalada.
+- **`otras`**: `confianza < umbral_confianza`. Comportamiento sin cambios: la categoría ya se
+  degradaba a `otras` en este rango; el ECE=0.3335 de la Fase 5 confirma que el modelo está mal
+  calibrado en OOD, así que por debajo de este punto no se puede confiar en el número crudo de
+  confianza.
+
+`umbral_confianza_alta` (0.8) se expone en `GET /modelo/info` (srv-python) junto al ya existente
+`umbral_confianza` (0.5), y en srv-java se configura con `ml.service.confianza-alta` (espejo de
+`ml.service.confianza-minima`). Ver `RegistroModelos.umbral_confianza_alta` en
+`srv-python/app/modelos.py` y `ClassificationService.resolverEstadoConfianza` en srv-java para
+la implementación y el detalle de las cifras.
+
+#### `top3` (Fase 16)
+
+Adicional a `categoria`, `confianza` y `estado_confianza`, cada transacción trae hasta 3
+categorías candidatas con su confianza, en orden descendente. `top3[0]` coincide siempre con
+`categoria` (la decisión final, ya aplicados el umbral y las reglas de respaldo): es aditivo, no
+reemplaza nada de lo anterior.
+
+Sale de `predict_proba` del clasificador calibrado en srv-python. En modo reglas o degradado
+(sin clasificador cargado, o el propio respaldo por palabras clave de srv-java) `top3` trae un
+solo elemento, porque no hay una distribución de probabilidades que ofrecer más allá de la
+categoría de la keyword. Ver `_top3_desde_fila` en `srv-python/app/main.py` y
+`ClassificationService.top3DesdeModelo` en srv-java.
 
 ### Categorías
 
@@ -195,6 +256,7 @@ llamadas de red: un ml-service lento haría fallar el health check de la propia 
     "clasificador_cargado": true,
     "perfil_cargado": true,
     "umbral_confianza": 0.5,
+    "umbral_confianza_alta": 0.8,
     "entrenado_en": "2026-08-17T17:49:00",
     "metricas": {
       "clasificador_particion_aleatoria":  { "accuracy": 0.9999, "f1_macro": 0.9999 },
@@ -217,6 +279,56 @@ llamadas de red: un ml-service lento haría fallar el health check de la propia 
 
 ---
 
+## GET /api/v1/metricas-modelo
+
+Resumen condensado de las métricas de evaluación del modelo (Fase 16): baseline (partición
+aleatoria vs. comercio no visto), CV agrupada por comercio, matriz de confusión OOD, métricas
+por categoría, calibración y benchmark contra modelos clásicos. Es un proxy hacia
+`GET /modelo/metricas` de srv-python, mismo patrón que `/ml-status` con `modelClient.infoModelo()`.
+Si srv-python no responde, se devuelve `{}` (200) en vez de propagar el error.
+
+```json
+{
+  "version_modelo": "1.0.0",
+  "fecha": "2026-08-17T17:49:00",
+  "baseline": {
+    "particion_aleatoria":  { "accuracy": 0.999932, "f1_macro": 0.999929 },
+    "comercio_no_visto":    { "accuracy": 0.412477, "f1_macro": 0.418918 }
+  },
+  "cv_agrupada": {
+    "accuracy":         { "media": 0.427622, "desviacion_estandar": 0.073263 },
+    "f1_macro":         { "media": 0.400717, "desviacion_estandar": 0.070891 },
+    "f1_weighted":      { "media": 0.405953, "desviacion_estandar": 0.086696 },
+    "balanced_accuracy":{ "media": 0.436218, "desviacion_estandar": 0.056681 }
+  },
+  "matriz_confusion": {
+    "categorias": ["alimentacion", "transporte", "salud", "vivienda", "educacion", "ocio", "servicios", "otras"],
+    "matriz": [ [3449, 200, 4, 228, 125, 638, 179, 898], "... 7 filas mas" ],
+    "accuracy_global": 0.426427
+  },
+  "metricas_por_categoria": [
+    { "categoria": "alimentacion", "precision": 0.2668, "recall": 0.6029, "f1_score": 0.3699, "soporte": 5721, "tasa_error": 0.3971 },
+    "... 7 categorias mas"
+  ],
+  "calibracion": {
+    "coverage_vs_accuracy": [ { "umbral": 0.8, "coverage": 0.5427, "filas_aceptadas": 31959, "accuracy_aceptadas": 0.5223 }, "... otros umbrales" ],
+    "expected_calibration_error": 0.3335,
+    "brier_score_multiclase": 0.1152
+  },
+  "benchmark": [
+    { "modelo": "actual (palabra+caracter TFIDF) + LinearSVC calibrado", "accuracy": "0.4276 +/- 0.0733", "f1_macro": "0.4007 +/- 0.0709", "f1_weighted": "0.4060 +/- 0.0867", "balanced_accuracy": "0.4362 +/- 0.0567" },
+    "... 11 filas mas"
+  ]
+}
+```
+
+Generado sin conexión por `ciencia-datos/scripts/generar_resumen_metricas.py` a partir de los
+artefactos ya calculados en `ciencia-datos/experimentos/`; no reproduce las 58 894 filas de las
+predicciones out-of-fold, solo sus agregados. El archivo condensado vive en
+`ciencia-datos/artefactos/metricas_resumen.json` (versionado en git, igual que los `.joblib`).
+
+---
+
 ## Endpoints internos del ml-service
 
 `srv-python` (`:8000`) **no se expone al navegador**. Se documenta aquí para depuración.
@@ -227,6 +339,7 @@ llamadas de red: un ml-service lento haría fallar el health check de la propia 
 | POST | `/perfil` | Recibe solo agregados. Nunca ve descripciones crudas |
 | GET | `/health` | Liveness |
 | GET | `/modelo/info` | Versión, procedencia, métricas y estado de OCI |
+| GET | `/modelo/metricas` | Resumen condensado de métricas de evaluación (Fase 16) |
 
 Documentación interactiva: `http://localhost:8000/docs`
 

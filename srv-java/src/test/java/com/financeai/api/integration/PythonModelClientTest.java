@@ -44,7 +44,7 @@ class PythonModelClientTest {
         builder = RestClient.builder().baseUrl("http://ml-service:8000");
         server = MockRestServiceServer.bindTo(builder).build();
         MlServiceProperties properties =
-                new MlServiceProperties("http://ml-service:8000", true, null, null, 0.5);
+                new MlServiceProperties("http://ml-service:8000", true, null, null, 0.5, 0.8);
         client = new PythonModelClient(builder.build(), properties);
     }
 
@@ -128,11 +128,51 @@ class PythonModelClientTest {
     @DisplayName("Con ml.service.enabled=false ni siquiera intenta la llamada")
     void deshabilitadoNoLlama() {
         MlServiceProperties apagado =
-                new MlServiceProperties("http://ml-service:8000", false, null, null, 0.5);
+                new MlServiceProperties("http://ml-service:8000", false, null, null, 0.5, 0.8);
         PythonModelClient sinMl = new PythonModelClient(builder.build(), apagado);
 
         assertThat(sinMl.clasificar(List.of(new TransaccionMl("Supermercado", 420.0)))).isEmpty();
         assertThat(sinMl.disponible()).isFalse();
+        server.verify(); // no se esperaba ninguna peticion
+    }
+
+    // --------------------------------------------------- /modelo/metricas (Fase 16)
+
+    @Test
+    @DisplayName("/modelo/metricas devuelve el resumen condensado que expone srv-python")
+    void metricasModeloRespetaElContrato() {
+        server.expect(requestTo("http://ml-service:8000/modelo/metricas"))
+                .andExpect(method(org.springframework.http.HttpMethod.GET))
+                .andRespond(withSuccess("""
+                        {"version_modelo":"1.0.0","fecha":"2026-08-17T17:49:00",
+                         "baseline":{"particion_aleatoria":{"accuracy":0.99,"f1_macro":0.99},
+                                     "comercio_no_visto":{"accuracy":0.41,"f1_macro":0.42}}}
+                        """, MediaType.APPLICATION_JSON));
+
+        Optional<Map<String, Object>> respuesta = client.metricasModelo();
+
+        assertThat(respuesta).isPresent();
+        assertThat(respuesta.get().get("version_modelo")).isEqualTo("1.0.0");
+        server.verify();
+    }
+
+    @Test
+    @DisplayName("Si srv-python no tiene /modelo/metricas (404), no propaga la excepcion")
+    void metricasModeloSinArtefactoNoRevienta() {
+        server.expect(requestTo("http://ml-service:8000/modelo/metricas"))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+        assertThat(client.metricasModelo()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Con ml.service.enabled=false, /modelo/metricas tampoco llama")
+    void metricasModeloDeshabilitadoNoLlama() {
+        MlServiceProperties apagado =
+                new MlServiceProperties("http://ml-service:8000", false, null, null, 0.5, 0.8);
+        PythonModelClient sinMl = new PythonModelClient(builder.build(), apagado);
+
+        assertThat(sinMl.metricasModelo()).isEmpty();
         server.verify(); // no se esperaba ninguna peticion
     }
 }
