@@ -77,6 +77,19 @@ public class FinancialController {
         return ResponseEntity.ok(cuerpo);
     }
 
+    /**
+     * Proxy hacia srv-python GET /modelo/metricas (Fase 16): resumen
+     * condensado de las metricas de evaluacion del modelo (baseline, CV
+     * agrupada, matriz de confusion OOD, metricas por categoria, calibracion
+     * y benchmark), para que el frontend no tenga que hablar directo con el
+     * ml-service. Mismo patron de proxy que {@link #mlStatus()}.
+     */
+    @GetMapping("/metricas-modelo")
+    @Operation(summary = "Resumen de metricas de evaluacion del modelo (proxy a srv-python)")
+    public ResponseEntity<Map<String, Object>> metricasModelo() {
+        return ResponseEntity.ok(modelClient.metricasModelo().orElse(Map.of()));
+    }
+
     @PostMapping("/analisis-financiero")
     @Operation(
             summary = "Analisis financiero completo",

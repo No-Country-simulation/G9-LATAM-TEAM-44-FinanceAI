@@ -18,11 +18,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -155,8 +157,8 @@ class FinancialControllerTest {
     void clasificaTransacciones() throws Exception {
         when(classificationService.classify(any())).thenReturn(new ClassificationResult(
                 List.of(
-                        new ClassifiedTransactionDTO("Supermercado Exito", 420.0, "alimentacion", 0.99),
-                        new ClassifiedTransactionDTO("Gasolinera Terpel", 300.0, "transporte", 0.97)),
+                        new ClassifiedTransactionDTO("Supermercado Exito", 420.0, "alimentacion", 0.99, "aceptado"),
+                        new ClassifiedTransactionDTO("Gasolinera Terpel", 300.0, "transporte", 0.97, "aceptado")),
                 Map.of("alimentacion", 420.0, "transporte", 300.0),
                 false));
 
@@ -185,7 +187,7 @@ class FinancialControllerTest {
     @DisplayName("Clasificar no exige ingreso ni endeudamiento: no los necesita")
     void clasificarNoPideDatosFinancieros() throws Exception {
         when(classificationService.classify(any())).thenReturn(new ClassificationResult(
-                List.of(new ClassifiedTransactionDTO("Netflix", 40.0, "ocio", 0.95)),
+                List.of(new ClassifiedTransactionDTO("Netflix", 40.0, "ocio", 0.95, "aceptado")),
                 Map.of("ocio", 40.0),
                 false));
 
@@ -216,5 +218,30 @@ class FinancialControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(classificationService, never()).classify(any());
+    }
+
+    // ---------------------------------------------------------- /metricas-modelo (Fase 16)
+
+    @Test
+    @DisplayName("Metricas-modelo hace de proxy hacia srv-python y devuelve su cuerpo")
+    void metricasModeloDelegaEnElModelClient() throws Exception {
+        when(modelClient.metricasModelo()).thenReturn(Optional.of(Map.of(
+                "version_modelo", "1.0.0",
+                "fecha", "2026-08-17T17:49:00")));
+
+        mockMvc.perform(get("/api/v1/metricas-modelo"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version_modelo").value("1.0.0"))
+                .andExpect(jsonPath("$.fecha").value("2026-08-17T17:49:00"));
+    }
+
+    @Test
+    @DisplayName("Metricas-modelo responde 200 con cuerpo vacio si srv-python no esta disponible")
+    void metricasModeloSinMlServiceNoRevienta() throws Exception {
+        when(modelClient.metricasModelo()).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/metricas-modelo"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
     }
 }

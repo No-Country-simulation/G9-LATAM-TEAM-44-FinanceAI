@@ -132,6 +132,27 @@ const CLAVE_HISTORIAL = 'financeai.historial';
 const CLAVE_TEMA = 'financeai.tema';
 const CLAVE_SESION = 'financeai.sesion';
 
+/* Estrategia de abstención (Fase 12): estado explícito que ya calcula
+   srv-python/srv-java a partir de la confianza de cada transacción. */
+const NOMBRE_ESTADO_CONFIANZA = {
+  aceptado: 'Aceptado',
+  requiere_revision: 'Requiere revisión',
+  otras: 'Confianza insuficiente',
+};
+
+const CLASE_ESTADO_CONFIANZA = {
+  aceptado: 'estado-aceptado',
+  requiere_revision: 'estado-revision',
+  otras: 'estado-insuficiente',
+};
+
+/* Umbrales por defecto de la estrategia de abstención (srv-python/app/modelos.py:
+   umbral_confianza=0.5, umbral_confianza_alta=0.8). No vienen en
+   /metricas-modelo, así que se documentan aquí para dibujar las líneas de
+   referencia de la curva de cobertura. */
+const UMBRAL_REQUIERE_REVISION = 0.5;
+const UMBRAL_ACEPTADO = 0.8;
+
 // ------------------------------------------------------------------ helpers
 
 const $ = (sel) => document.querySelector(sel);
@@ -1018,7 +1039,8 @@ async function clasificar() {
     const tabla = crear('table', { class: 'tabla' });
     tabla.append(crear('thead', {}, [crear('tr', {}, [
       crear('th', { text: 'Descripción' }), crear('th', { text: 'Categoría' }),
-      crear('th', { text: 'Confianza' }), crear('th', { text: 'Monto' }),
+      crear('th', { text: 'Estado' }), crear('th', { text: 'Confianza' }),
+      crear('th', { text: 'Top 3' }), crear('th', { text: 'Monto' }),
     ])]));
 
     const cuerpo = crear('tbody');
@@ -1031,6 +1053,12 @@ async function clasificar() {
       ]);
       insignia.style.background = colorCategoria(t.categoria);
 
+      // Estado de confianza explícito (Fase 12): aceptado | requiere_revision | otras.
+      const insigniaEstado = crear('span', {
+        class: `insignia-estado ${CLASE_ESTADO_CONFIANZA[t.estado_confianza] || ''}`,
+        text: NOMBRE_ESTADO_CONFIANZA[t.estado_confianza] || t.estado_confianza || '—',
+      });
+
       const relleno = crear('span', { class: 'relleno' });
       const medida = crear('span', { class: `medida-confianza ${confianza < 0.5 ? 'baja' : ''}` }, [
         crear('span', { class: 'pista' }, [relleno]),
@@ -1038,10 +1066,24 @@ async function clasificar() {
       ]);
       setTimeout(() => { relleno.style.width = `${confianza * 100}%`; }, 120 + i * 60);
 
+      // Top-3 categorías candidatas (Fase 16), con la confianza del modelo
+      // para cada una. En modo reglas/degradado trae un solo elemento.
+      const top3 = crear('div', { class: 'top3-lista' }, (t.top3 || []).map((candidato) => {
+        const chip = crear('span', { class: 'top3-chip' }, [
+          crear('span', { class: 'top3-punto' }),
+          crear('span', { text: NOMBRE_CATEGORIA[candidato.categoria] || candidato.categoria }),
+          crear('span', { class: 'top3-pct', text: `${Math.round((candidato.confianza || 0) * 100)}%` }),
+        ]);
+        chip.style.setProperty('--color-cat', colorCategoria(candidato.categoria));
+        return chip;
+      }));
+
       const fila = crear('tr', {}, [
         crear('td', { text: t.descripcion }),
         crear('td', {}, [insignia]),
+        crear('td', {}, [insigniaEstado]),
         crear('td', {}, [medida]),
+        crear('td', {}, [top3]),
         crear('td', { class: 'num', text: dineroMoneda(t.valor) }),
       ]);
       fila.style.animationDelay = `${i * 45}ms`;
@@ -1062,6 +1104,290 @@ async function clasificar() {
   } finally {
     boton.classList.remove('cargando');
     boton.disabled = false;
+  }
+}
+
+// ----------------------------------------------------------------- métricas
+
+/**
+ * Tarjetas de comparación baseline (Fase 1/2/16): partición aleatoria,
+ * comercio no visto y CV agrupada por comercio. Las tres miden lo mismo
+ * (accuracy y F1 macro) sobre particiones distintas, así que se muestran
+ * lado a lado en vez de en un gráfico.
+ */
+function renderBaselineComparativo(baseline, cvAgrupada) {
+  const tarjetas = [
+    {
+      titulo: 'Partición aleatoria',
+      nota: 'Optimista: mezcla el mismo comercio en entrenamiento y prueba.',
+      tono: 'ambar',
+      metricas: [
+        ['Accuracy', baseline.particion_aleatoria.accuracy],
+        ['F1 macro', baseline.particion_aleatoria.f1_macro],
+      ],
+    },
+    {
+      titulo: 'Comercio no visto',
+      nota: 'Realista: separa por comercio, sin fuga de información entre partes.',
+      tono: 'rojo',
+      metricas: [
+        ['Accuracy', baseline.comercio_no_visto.accuracy],
+        ['F1 macro', baseline.comercio_no_visto.f1_macro],
+      ],
+    },
+    {
+      titulo: 'CV agrupada por comercio',
+      nota: 'Media ± desviación estándar entre 5 particiones agrupadas por comercio.',
+      tono: 'verde',
+      metricas: [
+        ['Accuracy', cvAgrupada.accuracy.media, cvAgrupada.accuracy.desviacion_estandar],
+        ['F1 macro', cvAgrupada.f1_macro.media, cvAgrupada.f1_macro.desviacion_estandar],
+      ],
+    },
+  ];
+
+  return tarjetas.map((t, i) => {
+    const tarjeta = crear('div', { class: `metrica-tarjeta tono-${t.tono}` }, [
+      crear('h4', { text: t.titulo }),
+      crear('p', { class: 'ayuda', text: t.nota }),
+      ...t.metricas.map(([nombre, media, desviacion]) => crear('div', { class: 'metrica-fila' }, [
+        crear('span', { class: 'metrica-nombre', text: nombre }),
+        crear('span', {
+          class: 'metrica-valor',
+          text: `${(media * 100).toFixed(1)}%${desviacion != null ? ` ± ${(desviacion * 100).toFixed(1)}` : ''}`,
+        }),
+      ])),
+    ]);
+    tarjeta.style.animationDelay = `${i * 70}ms`;
+    return tarjeta;
+  });
+}
+
+/**
+ * Matriz de confusión 8x8 (Fase 4) como tabla con celdas teñidas: color de
+ * la categoría real (fila), más opaco cuantas más transacciones cayeron ahí.
+ * La diagonal (aciertos) se resalta con un anillo en vez de solo el color,
+ * para que se distinga incluso en modo claro/oscuro y para quien no perciba
+ * bien el color.
+ */
+function dibujarMatrizConfusion({ categorias, matriz }) {
+  const maximo = Math.max(1, ...matriz.flat());
+
+  const filaCabecera = crear('tr', {}, [crear('th', { class: 'matriz-esquina', text: 'Real \\ Predicho' })]);
+  categorias.forEach((c) => {
+    const celda = crear('th', { title: NOMBRE_CATEGORIA[c] || c });
+    const marca = crear('span', { class: 'matriz-col-icono' }, [icono(c)]);
+    marca.style.background = colorCategoria(c);
+    celda.append(marca);
+    filaCabecera.append(celda);
+  });
+
+  const cuerpo = crear('tbody');
+  categorias.forEach((categoriaReal, i) => {
+    const marca = crear('span', { class: 'marca-cat matriz-marca-mini' }, [icono(categoriaReal)]);
+    marca.style.background = colorCategoria(categoriaReal);
+    const encabezadoFila = crear('th', { class: 'matriz-fila-th', scope: 'row' }, [
+      crear('span', { class: 'matriz-fila-nombre' }, [marca, crear('span', { text: NOMBRE_CATEGORIA[categoriaReal] || categoriaReal })]),
+    ]);
+
+    const fila = crear('tr', {}, [encabezadoFila]);
+    matriz[i].forEach((valor, j) => {
+      const intensidad = valor / maximo;
+      const celda = crear('td', {
+        class: `matriz-celda${i === j ? ' matriz-diagonal' : ''}`,
+        text: String(valor),
+        title: `${NOMBRE_CATEGORIA[categoriaReal] || categoriaReal} clasificado como `
+          + `${NOMBRE_CATEGORIA[categorias[j]] || categorias[j]}: ${valor}`,
+      });
+      celda.style.background = `color-mix(in srgb, ${colorCategoria(categoriaReal)} ${Math.round(intensidad * 80)}%, transparent)`;
+      fila.append(celda);
+    });
+    fila.style.animationDelay = `${i * 45}ms`;
+    cuerpo.append(fila);
+  });
+
+  const tabla = crear('table', { class: 'matriz' }, [crear('thead', {}, [filaCabecera]), cuerpo]);
+  return crear('div', { class: 'matriz-envoltura' }, [tabla]);
+}
+
+/** Tabla del benchmark de modelos clásicos (Fase 9/10). Los valores ya llegan
+ *  formateados como texto ("0.4276 +/- 0.0733") desde metricas_resumen.json;
+ *  solo se cambia el separador por el signo ± para que se lea mejor. */
+function renderBenchmarkTabla(benchmark) {
+  const tabla = crear('table', { class: 'tabla' });
+  tabla.append(crear('thead', {}, [crear('tr', {}, [
+    crear('th', { text: 'Modelo / variante' }),
+    crear('th', { text: 'Accuracy' }),
+    crear('th', { text: 'F1 macro' }),
+    crear('th', { text: 'F1 weighted' }),
+    crear('th', { text: 'Balanced accuracy' }),
+  ])]));
+
+  const cuerpo = crear('tbody');
+  benchmark.forEach((fila, i) => {
+    const tr = crear('tr', {}, [
+      crear('td', { text: fila.modelo }),
+      crear('td', { class: 'num', text: String(fila.accuracy).replace('+/-', '±') }),
+      crear('td', { class: 'num', text: String(fila.f1_macro).replace('+/-', '±') }),
+      crear('td', { class: 'num', text: String(fila.f1_weighted).replace('+/-', '±') }),
+      crear('td', { class: 'num', text: String(fila.balanced_accuracy).replace('+/-', '±') }),
+    ]);
+    tr.style.animationDelay = `${i * 35}ms`;
+    cuerpo.append(tr);
+  });
+  tabla.append(cuerpo);
+  return crear('div', { class: 'tabla-envoltura' }, [tabla]);
+}
+
+/**
+ * Curva coverage-vs-accuracy (Fase 5/12): dos líneas (cobertura y exactitud
+ * en lo aceptado) contra el umbral de confianza, con los umbrales de la
+ * estrategia de abstención marcados. Mismo esqueleto que dibujarEvolucion.
+ */
+function dibujarCurvaCobertura(puntosCobertura) {
+  if (!Array.isArray(puntosCobertura) || puntosCobertura.length < 2) return null;
+
+  const ANCHO = 760;
+  const ALTO = 240;
+  const MARGEN = { arriba: 22, derecha: 18, abajo: 30, izquierda: 44 };
+
+  const puntos = puntosCobertura.slice().sort((a, b) => a.umbral - b.umbral);
+  const anchoUtil = ANCHO - MARGEN.izquierda - MARGEN.derecha;
+  const altoUtil = ALTO - MARGEN.arriba - MARGEN.abajo;
+  const maximoUmbral = Math.max(1, ...puntos.map((p) => p.umbral));
+
+  const lienzo = svg('svg', {
+    viewBox: `0 0 ${ANCHO} ${ALTO}`,
+    style: 'width:100%;height:auto;display:block;max-height:300px',
+  });
+
+  const x = (u) => MARGEN.izquierda + (u / maximoUmbral) * anchoUtil;
+  const y = (v) => MARGEN.arriba + altoUtil - v * altoUtil;
+
+  // Umbrales de la estrategia de abstención.
+  [
+    [UMBRAL_REQUIERE_REVISION, 'var(--ambar)', 'requiere_revision ≥ 0.5'],
+    [UMBRAL_ACEPTADO, 'var(--verde)', 'aceptado ≥ 0.8'],
+  ].forEach(([umbral, color, etiqueta]) => {
+    if (umbral > maximoUmbral) return;
+    lienzo.append(svg('line', {
+      x1: x(umbral), y1: MARGEN.arriba, x2: x(umbral), y2: ALTO - MARGEN.abajo,
+      stroke: color, 'stroke-width': 1, 'stroke-dasharray': '4 4', 'stroke-opacity': '.6',
+    }));
+    const texto = svg('text', {
+      x: x(umbral) + 4, y: MARGEN.arriba + 10, fill: color, 'font-size': '9.5', 'fill-opacity': '.9',
+    });
+    texto.textContent = etiqueta;
+    lienzo.append(texto);
+  });
+
+  const dibujarSerie = (clave, color) => {
+    const coords = puntos.map((p) => [x(p.umbral), y(p[clave])]);
+    const trazo = coords.map(([cx, cy], i) => `${i ? 'L' : 'M'} ${cx.toFixed(1)} ${cy.toFixed(1)}`).join(' ');
+    const linea = svg('path', {
+      d: trazo, fill: 'none', stroke: color, 'stroke-width': 2.5,
+      'stroke-linejoin': 'round', 'stroke-linecap': 'round',
+    });
+    lienzo.append(linea);
+
+    coords.forEach(([cx, cy], i) => {
+      const punto = svg('circle', { cx, cy, r: 3.6, fill: color, stroke: 'var(--lienzo)', 'stroke-width': 1.5 });
+      const titulo = svg('title');
+      const etiquetaSerie = clave === 'coverage' ? 'cobertura' : 'exactitud en lo aceptado';
+      titulo.textContent = `umbral ${puntos[i].umbral.toFixed(2)} · ${etiquetaSerie}: `
+        + `${Math.round(puntos[i][clave] * 100)}%`;
+      punto.append(titulo);
+      lienzo.append(punto);
+    });
+
+    if (!sinMovimiento() && typeof linea.getTotalLength === 'function') {
+      const largo = linea.getTotalLength();
+      linea.style.strokeDasharray = String(largo);
+      linea.style.strokeDashoffset = String(largo);
+      linea.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.22,1,.36,1)';
+      requestAnimationFrame(() => requestAnimationFrame(() => { linea.style.strokeDashoffset = '0'; }));
+    }
+  };
+
+  dibujarSerie('coverage', 'var(--acento-2)');
+  dibujarSerie('accuracy_aceptadas', '#7c6cff');
+
+  [0, .5, 1].forEach((valor) => {
+    const marca = svg('text', {
+      x: MARGEN.izquierda - 9, y: y(valor) + 3.5, 'text-anchor': 'end',
+      fill: 'currentColor', 'font-size': '10', 'fill-opacity': '.5',
+    });
+    marca.textContent = `${Math.round(valor * 100)}%`;
+    lienzo.append(marca);
+  });
+
+  puntos.map((p) => p.umbral).forEach((valor) => {
+    const marca = svg('text', {
+      x: x(valor), y: ALTO - MARGEN.abajo + 16, 'text-anchor': 'middle',
+      fill: 'currentColor', 'font-size': '9.5', 'fill-opacity': '.5',
+    });
+    marca.textContent = valor.toFixed(1);
+    lienzo.append(marca);
+  });
+
+  return lienzo;
+}
+
+let metricasCache = null;
+
+function renderMetricas(datos) {
+  if (datos.baseline && datos.cv_agrupada) {
+    $('#metricas-baseline').replaceChildren(...renderBaselineComparativo(datos.baseline, datos.cv_agrupada));
+  }
+  if (datos.matriz_confusion) {
+    $('#metricas-matriz').replaceChildren(dibujarMatrizConfusion(datos.matriz_confusion));
+  }
+  if (Array.isArray(datos.benchmark)) {
+    $('#metricas-benchmark').replaceChildren(renderBenchmarkTabla(datos.benchmark));
+  }
+  if (datos.calibracion?.coverage_vs_accuracy) {
+    const grafico = dibujarCurvaCobertura(datos.calibracion.coverage_vs_accuracy);
+    $('#metricas-cobertura').replaceChildren(grafico || crear('p', {
+      class: 'vacio',
+      text: 'No hay suficientes puntos para dibujar la curva de cobertura.',
+    }));
+  }
+}
+
+/** Carga GET /metricas-modelo (Fase 16, proxy del backend Java hacia
+ *  srv-python) para el bloque plegable que cuelga del perfil. Igual que
+ *  /ml-status: si el servicio no responde o devuelve un cuerpo vacío, se avisa
+ *  sin romper el resto de la página. Se cachea en memoria porque el resumen no
+ *  cambia durante la sesión y el bloque puede abrirse y cerrarse varias veces. */
+async function cargarMetricas() {
+  const estado = $('#metricas-estado');
+  const estadoTexto = $('#metricas-estado-texto');
+  const cuerpo = $('#metricas-cuerpo');
+
+  if (metricasCache) {
+    renderMetricas(metricasCache);
+    estado.hidden = true;
+    cuerpo.hidden = false;
+    return;
+  }
+
+  estado.hidden = false;
+  cuerpo.hidden = true;
+  estadoTexto.textContent = 'Cargando métricas del modelo…';
+
+  try {
+    if (!Api.base) await Api.resolver();
+    const datos = await Api.get('/metricas-modelo');
+    if (!datos || !Object.keys(datos).length) {
+      estadoTexto.textContent = 'Las métricas del modelo no están disponibles en este momento.';
+      return;
+    }
+    metricasCache = datos;
+    renderMetricas(datos);
+    estado.hidden = true;
+    cuerpo.hidden = false;
+  } catch (e) {
+    estadoTexto.textContent = `No se pudieron cargar las métricas del modelo. ${e.message}`;
   }
 }
 
@@ -1134,6 +1460,16 @@ function inicializar() {
       if (pestana.dataset.panel === 'panel-historial') renderHistorial();
     });
   });
+
+  // Métricas del modelo: material de respaldo que vive plegado bajo el perfil.
+  // Se piden a la API la primera vez que alguien lo despliega, no al cargar la
+  // página: la mayoría nunca lo abre y no vale una petición de arranque.
+  const detalleMetricas = $('#metricas-detalle');
+  if (detalleMetricas) {
+    detalleMetricas.addEventListener('toggle', () => {
+      if (detalleMetricas.open) cargarMetricas();
+    });
+  }
 
   $('#deuda').addEventListener('input', (e) => ponerDeuda(e.target.value));
   $('#moneda').addEventListener('change', () => {

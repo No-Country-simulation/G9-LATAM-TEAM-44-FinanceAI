@@ -95,6 +95,9 @@
       <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
       <path d="M6 7v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"/>
     </symbol>
+    <symbol id="i-metricas" viewBox="0 0 24 24">
+      <path d="M4 21V10M10 21V6M16 21v-8M3 21h18"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -303,6 +306,52 @@
           </p>
           <ul class="factores" id="factores"></ul>
         </div>
+
+        <!-- Ficha técnica del clasificador: material de respaldo, no producto. Va
+             plegada y al final para no competir con el diagnóstico; los datos se
+             piden a la API la primera vez que alguien la abre. -->
+        <details class="vidrio metricas-detalle surge" id="metricas-detalle">
+          <summary>
+            <svg class="ic"><use href="#i-metricas"/></svg>
+            <span class="metricas-detalle-titulo">Métricas del modelo</span>
+            <span class="metricas-detalle-nota">Cómo se evaluó el clasificador de gastos</span>
+            <svg class="ic metricas-chevron"><use href="#i-tendencia"/></svg>
+          </summary>
+          <div class="metricas-detalle-cuerpo">
+            <p class="ayuda">No afecta a tu diagnóstico: es la evidencia de cuánto acierta el modelo que categoriza tus transacciones, y dónde se equivoca.</p>
+            <!-- El texto de reposo no debe afirmar que algo esta cargando: si el JS
+                 no llega a ejecutarse (por ejemplo con un app.js cacheado tras un
+                 despliegue) un "Cargando..." fijo se ve igual que una carga eterna.
+                 cargarMetricas() lo sustituye en cuanto arranca de verdad. -->
+            <p class="vacio" id="metricas-estado"><span id="metricas-estado-texto">Las métricas se piden al desplegar este bloque. Si no aparecen, recarga la página.</span></p>
+            <div id="metricas-cuerpo" hidden>
+              <section class="metricas-bloque">
+                <h4 class="titulo-tarjeta">Baseline: partición aleatoria vs. comercio no visto</h4>
+                <p class="ayuda">La partición aleatoria sobrestima el desempeño porque mezcla el mismo comercio en entrenamiento y prueba. La validación agrupada por comercio es la medida honesta frente a comercios que nunca vio.</p>
+                <div class="metricas-tarjetas" id="metricas-baseline"></div>
+              </section>
+              <section class="metricas-bloque">
+                <h4 class="titulo-tarjeta">Matriz de confusión (comercio no visto)</h4>
+                <p class="ayuda">Filas: categoría real. Columnas: categoría predicha. Color más intenso = más transacciones; el borde resalta la diagonal (aciertos).</p>
+                <div id="metricas-matriz"></div>
+              </section>
+              <section class="metricas-bloque">
+                <h4 class="titulo-tarjeta">Benchmark de modelos clásicos</h4>
+                <p class="ayuda">Exactitud y F1 (media ± desviación estándar) de la validación cruzada agrupada por comercio, por variante de modelo o de características.</p>
+                <div id="metricas-benchmark"></div>
+              </section>
+              <section class="metricas-bloque">
+                <h4 class="titulo-tarjeta">Cobertura vs. exactitud</h4>
+                <p class="ayuda">Al exigir más confianza el modelo se abstiene más (menor cobertura) pero acierta más en lo que resuelve. Las líneas marcan los umbrales del clasificador: desde <strong>0.5</strong> pasa a <em>requiere_revision</em> y desde <strong>0.8</strong> a <em>aceptado</em>; por debajo de 0.5 se reporta como <em>otras</em>.</p>
+                <div id="metricas-cobertura"></div>
+                <div class="leyenda-lineas">
+                  <span><i style="color:var(--acento-2)"></i> Cobertura</span>
+                  <span><i style="color:#7c6cff"></i> Exactitud en lo aceptado</span>
+                </div>
+              </section>
+            </div>
+          </div>
+        </details>
       </div>
     </div>
 

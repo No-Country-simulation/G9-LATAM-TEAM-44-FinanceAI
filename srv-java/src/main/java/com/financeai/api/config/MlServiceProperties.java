@@ -16,7 +16,8 @@ public record MlServiceProperties(
         Boolean enabled,
         Duration connectTimeout,
         Duration readTimeout,
-        Double confianzaMinima
+        Double confianzaMinima,
+        Double confianzaAlta
 ) {
 
     public MlServiceProperties {
@@ -35,6 +36,14 @@ public record MlServiceProperties(
         // Por debajo de este umbral, la categoria del modelo pasa a "otras".
         if (confianzaMinima == null || confianzaMinima < 0 || confianzaMinima > 1) {
             confianzaMinima = 0.5;
+        }
+        // Por encima de este umbral, el estado_confianza pasa a "aceptado".
+        // Espejo de RegistroModelos.umbral_confianza_alta en srv-python
+        // (app/modelos.py): 0.8 sale de ciencia-datos/experimentos/
+        // calibracion.json, Fase 5 (ver ClassificationService para el detalle
+        // de las cifras).
+        if (confianzaAlta == null || confianzaAlta < 0 || confianzaAlta > 1) {
+            confianzaAlta = 0.8;
         }
     }
 }
