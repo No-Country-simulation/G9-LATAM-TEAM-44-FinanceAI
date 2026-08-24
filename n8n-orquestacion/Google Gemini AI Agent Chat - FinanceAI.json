@@ -80,7 +80,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const entrada = $json.body?.chatInput ?? $json.chatInput ?? '';\nconst texto = String(entrada).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\nconst temasFinanceAI = [\n  'financeai', 'finanza', 'finanzas', 'financiero', 'financiera', 'gasto', 'gastos',\n  'ingreso', 'ingresos', 'deuda', 'endeudamiento', 'ahorro', 'ahorrar', 'presupuesto',\n  'transaccion', 'transacciones', 'categoria', 'categorias', 'alimentacion', 'transporte',\n  'salud', 'vivienda', 'educacion', 'ocio', 'servicio', 'perfil', 'saludable',\n  'observacion', 'riesgo', 'recomendacion', 'diagnostico', 'modelo', 'csv', 'analisis',\n  'moneda', 'dolar', 'peso', 'sol', 'real', 'api', 'soporte', 'aplicacion', 'plataforma',\n  'reporte', 'informe', 'historial', 'clasificar', 'clasificacion', 'confianza', 'hola',\n  'buenos dias', 'buenas tardes', 'buenas noches', 'ayuda'\n];\nconst permitido = temasFinanceAI.some((tema) => texto.includes(tema));\nreturn [{\n  json: {\n    ...$json,\n    financeAiPermitido: permitido,\n    respuestaFueraAlcance: 'Soy el asistente virtual oficial de FinanceAI. Únicamente puedo responder dudas sobre nuestra plataforma de finanzas y dar soporte técnico de la aplicación.'\n  }\n}];"
+        "jsCode": "const entrada = $json.body?.chatInput ?? $json.chatInput ?? '';\nconst texto = String(entrada).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();\n\nconst temasFinanceAI = [\n  'financeai', 'finanza', 'finanzas', 'financiero', 'financiera', 'gasto', 'gastos',\n  'ingreso', 'ingresos', 'deuda', 'endeudamiento', 'ahorro', 'ahorrar', 'presupuesto',\n  'transaccion', 'transacciones', 'categoria', 'categorias', 'alimentacion', 'transporte',\n  'salud', 'vivienda', 'educacion', 'ocio', 'servicio', 'perfil', 'saludable',\n  'observacion', 'riesgo', 'recomendacion', 'diagnostico', 'modelo', 'csv', 'analisis',\n  'moneda', 'dolar', 'peso', 'sol', 'real', 'api', 'soporte', 'aplicacion', 'plataforma',\n  'reporte', 'informe', 'historial', 'clasificar', 'clasificacion', 'confianza', 'hola',\n  'buenos dias', 'buenas tardes', 'buenas noches', 'ayuda'\n];\n\nconst tieneTema = temasFinanceAI.some((tema) => texto.includes(tema));\n\n// Los mensajes cortos suelen ser continuaciones: \"si\", \"y que mas\", \"explicame\n// eso\". Exigirles una palabra financiera rompe la conversacion, porque el\n// agente pregunta algo y el filtro rechaza la respuesta. Se dejan pasar y es el\n// system prompt del agente quien mantiene el tema.\nconst palabras = texto ? texto.split(/\\s+/).length : 0;\nconst esContinuacion = palabras > 0 && palabras <= 5;\n\nreturn [{\n  json: {\n    ...$json,\n    financeAiPermitido: tieneTema || esContinuacion,\n    respuestaFueraAlcance: 'Soy el asistente virtual oficial de FinanceAI. Únicamente puedo responder dudas sobre nuestra plataforma de finanzas y dar soporte técnico de la aplicación.'\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -161,7 +161,11 @@
       }
     },
     {
-      "parameters": {},
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body?.sessionId || $json.sessionId || 'financeai-anonimo' }}",
+        "contextWindowLength": 5
+      },
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
@@ -242,6 +246,17 @@
           {
             "node": "AI Agent FinanceAI",
             "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent FinanceAI",
+            "type": "ai_memory",
             "index": 0
           }
         ]

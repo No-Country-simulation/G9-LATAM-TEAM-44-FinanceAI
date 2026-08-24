@@ -451,6 +451,11 @@ a:hover { text-decoration: underline; }
 }
 .titulo-tarjeta .ic { font-size: 1.15em; color: var(--acento-2); }
 
+/* Por defecto un hijo de grid no baja de su min-content, asi que un select
+   o una tabla anchos bloquean el encogido de toda la columna. */
+.rejilla > * { min-width: 0; }
+.formulario, .resultado, .vidrio { min-width: 0; }
+
 .rejilla {
   display: grid;
   grid-template-columns: minmax(320px, 400px) 1fr;
@@ -541,7 +546,12 @@ textarea {
 }
 
 .entrada-adorno { position: relative; }
-.entrada-moneda { display: grid; grid-template-columns: minmax(150px, .9fr) minmax(0, 1.4fr); gap: 8px; }
+.entrada-moneda { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 8px; }
+/* El selector se lleva mas espacio que el importe: los nombres de divisa
+   ('COP · Peso colombiano') no caben en una columna estrecha y se cortan,
+   mientras que una cifra necesita poco ancho. */
+/* minmax(0,...) y no minmax(150px,...): con un minimo fijo el select no puede
+   encogerse, arrastra a la tarjeta y la pagina desborda en horizontal. */
 .entrada-moneda select {
   width: 100%;
   min-width: 0;
@@ -1321,4 +1331,64 @@ th.matriz-fila-th { text-align: left; border-right: 1px solid var(--borde); whit
   }
   body { background: #fff; color: #000; }
   .resplandor { display: none; }
+}
+
+
+/* ====================================================================
+   Ajustes para pantallas estrechas
+   ==================================================================== */
+
+@media (max-width: 720px) {
+  /* Mas ancho util: 16px de margen en vez de 22. */
+  .contenedor { padding: 0 16px; }
+  .vidrio { padding: 18px; border-radius: 14px; }
+
+  /* Moneda e importe, uno debajo del otro: en una sola fila el nombre de la
+     divisa se corta ("COP · Peso colombia..."). */
+  .entrada-moneda { grid-template-columns: 1fr; gap: 6px; }
+  .entrada-moneda select { font-size: .9rem; }
+
+  /* El importe necesita menos sitio que la descripcion. */
+  .transaccion { grid-template-columns: minmax(0, 1fr) 76px 30px; gap: 5px; }
+  .transaccion input { padding: 8px; font-size: .84rem; }
+
+  .perfil-cabecera { gap: 14px; }
+  .perfil-id h2 { font-size: 1.65rem; }
+  .perfil-pie { max-width: none; }
+
+  /* La dona y su leyenda, centradas y apiladas. */
+  .grafico-fila { gap: 18px; justify-content: center; }
+  .leyenda { min-width: 100%; }
+  .dona-envoltura { margin: 0 auto; }
+
+  .indicadores { grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 8px; }
+  .indicador { padding: 10px; }
+  .indicador dd { font-size: 1.12rem; }
+
+  .titulo-tarjeta { font-size: .96rem; }
+  .factor { flex-wrap: wrap; gap: 8px; }
+  .factor .fnombre { flex: 1 1 100%; order: -1; }
+
+  .acciones-informe .boton-mini { flex: 1 1 auto; justify-content: center; }
+}
+
+@media (max-width: 420px) {
+  .marca-texto small { display: none; }
+  .marca-orbe { width: 36px; height: 36px; font-size: 18px; }
+  .estado { padding: 5px 10px 5px 9px; font-size: .74rem; }
+
+  /* Cuatro segmentos no caben con texto completo; se reduce la tipografia
+     antes que romper la fila. */
+  .segmento { font-size: .78rem; padding: 8px 2px; }
+
+  .pestana { padding: 9px 13px; font-size: .85rem; }
+  .perfil-id h2 { font-size: 1.45rem; }
+  .medidor svg { width: 108px; height: 108px; }
+  .chips { gap: 5px; }
+  .chip { padding: 6px 10px; font-size: .75rem; }
+}
+
+/* El teclado de iOS hace zoom si la fuente del campo baja de 16px. */
+@media (max-width: 720px) and (pointer: coarse) {
+  input[type="number"], input[type="text"], select, textarea { font-size: 16px; }
 }
