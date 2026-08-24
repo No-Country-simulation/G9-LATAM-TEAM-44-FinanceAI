@@ -37,7 +37,6 @@ iniciar.cmd          # Windows (o doble clic)
 | API · Swagger | http://localhost:8080/swagger-ui.html |
 | ml-service · docs | http://localhost:8000/docs |
 | Estado del modelo | http://localhost:8080/api/v1/ml-status |
-| n8n · editor | http://localhost:5678 |
 
 ### Tres terminales
 
@@ -63,11 +62,8 @@ En Linux/macOS, las mismas rutas con `/`, `.venv/bin/python` y `./mvnw`.
 docker compose up -d --build
 ```
 
-Compose levanta `web`, `api`, `ml-service` y n8n. El workflow `FinanceAI Support Chat`
-se conserva en un volumen persistente y se importa automáticamente en el primer arranque.
-Después de abrir n8n, crea la credencial `Google Gemini(PaLM) Api account` y asígnala al
-nodo **Google Gemini Chat Model**. El chat del frontend aparece debajo del análisis y llega
-a n8n por `/n8n/webhook/chat-support` a través del proxy de nginx.
+Compose levanta tres servicios: `web`, `api` y `ml-service`. **n8n no está incluido**, ver
+la sección siguiente.
 
 El ml-service no publica puerto: solo se llega a él desde la red interna del stack.
 
@@ -78,6 +74,31 @@ La ruta de las tres terminales sí está comprobada de punta a punta.
 
 El frontend detecta solo a qué backend hablar: primero prueba el mismo origen (detrás del
 proxy de nginx) y si no responde, `http://localhost:8080`.
+
+### El chat y n8n
+
+El chat usa una instancia de **n8n externa al stack**, no una que levante este compose. Es
+una decisión de despliegue: el servidor ya tenía n8n corriendo, y arrancar un segundo choca
+con el puerto 5678 y consume memoria que no sobra.
+
+Cómo encaja:
+
+1. El frontend llama a `/n8n/webhook/chat-support`, del mismo origen.
+2. nginx reenvía esa ruta al contenedor de n8n. El nombre está en `web/nginx.conf`
+   (`n8n-n8n-1` por defecto); si el tuyo se llama de otra forma, cámbialo ahí.
+3. Para que se vean entre sí, el servicio `web` se conecta a la red donde vive n8n. Se
+   configura con la variable `RED_N8N` (por defecto `npm_network`).
+
+El workflow está en `n8n-orquestacion/`, pero **es una copia de referencia, no la fuente**:
+hay que importarlo a mano en n8n. Editarlo en el repositorio no cambia nada en producción.
+
+Al importarlo hacen falta dos cosas que no viajan en el JSON:
+
+- La **credencial de Gemini** en el nodo `Google Gemini Chat Model`.
+- **Publicar** el workflow, o el webhook de producción devuelve 404.
+
+nginx resuelve el nombre de n8n en cada petición, no al arrancar. Así, si n8n no está
+disponible, solo falla `/n8n/` con un 502 y el frontend sigue funcionando.
 
 ---
 

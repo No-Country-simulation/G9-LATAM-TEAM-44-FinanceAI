@@ -212,6 +212,47 @@ Con los artefactos dentro de la imagen esto no puede pasar. Si configuras Object
 
 ---
 
+## El chat: n8n externo al stack
+
+Este compose **no levanta n8n**. El chat usa la instancia que ya corría en el servidor.
+
+El motivo es doble: un segundo n8n chocaría con el puerto 5678 que ya ocupa el existente, y
+en una instancia de 1 GB no cabe. Además, montar el workflow con rutas relativas no funciona
+en un stack de Git, por lo mismo que pasaba con los artefactos del modelo.
+
+Para que el frontend alcance n8n hacen falta dos cosas, y las dos están ya en el compose:
+
+| Pieza | Dónde | Valor por defecto |
+|---|---|---|
+| Red compartida | `docker-compose.yml`, variable `RED_N8N` | `npm_network` |
+| Nombre del contenedor | `web/nginx.conf`, `set $n8n_upstream` | `n8n-n8n-1` |
+
+Si tu n8n tiene otro nombre o vive en otra red, esos son los dos sitios a tocar. Para
+averiguarlos:
+
+```bash
+docker inspect <tu-contenedor-n8n> --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+```
+
+Comprobar que el frontend llega:
+
+```bash
+docker exec financeai-web wget -qO- http://n8n-n8n-1:5678/healthz && echo OK
+```
+
+El upstream se resuelve en cada petición, no al arrancar nginx. Si n8n no responde, solo
+falla `/n8n/` con un 502 y el resto de la aplicación sigue en pie.
+
+### El workflow
+
+Está en `n8n-orquestacion/` como copia de referencia. **No se despliega solo**: hay que
+importarlo a mano en n8n, añadir la credencial de Gemini y publicarlo.
+
+Quien edite el chat debería hacerlo en el n8n del servidor y luego exportar el JSON al
+repositorio, no al revés. Nada obliga a que coincidan, así que es disciplina manual.
+
+---
+
 ## Qué queda cubierto del reto
 
 | Requisito | Cómo |
