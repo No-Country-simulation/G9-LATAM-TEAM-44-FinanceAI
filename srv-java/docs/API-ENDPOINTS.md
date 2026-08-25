@@ -68,6 +68,10 @@ opaco, aquí se rechaza antes con un 400 y un mensaje por campo.
     { "nombre": "ahorro_ordinal",      "valor": 3.0,    "impacto": "baja_riesgo" },
     { "nombre": "capacidad_ahorro",    "valor": 0.6578, "impacto": "baja_riesgo" }
   ],
+  "transacciones_clasificadas": [
+    { "descripcion": "Supermercado Exito", "valor": 420.0, "categoria": "alimentacion", "confianza": 0.9993, "estado_confianza": "aceptado", "top3": [ ... ] },
+    { "descripcion": "Arriendo Apartamento", "valor": 900.0, "categoria": "vivienda", "confianza": 0.9995, "estado_confianza": "aceptado", "top3": [ ... ] }
+  ],
   "modo_degradado": false
 }
 ```
@@ -79,7 +83,16 @@ opaco, aquí se rechaza antes con un 400 y un mensaje por campo.
 | `resumen_gastos` | Solo las categorías **con gasto**. La ausencia de una clave equivale a 0 |
 | `recomendaciones` | Entre 1 y 4, ordenadas por impacto. Nunca vacío |
 | `factores` | Los 3 atributos que más pesaron. Ver la nota de abajo |
+| `transacciones_clasificadas` | Una entrada por transacción recibida, en el mismo orden. Misma forma que en `/clasificar-transacciones` |
 | `modo_degradado` | `true` = calculado con reglas locales, no con el modelo |
+
+`transacciones_clasificadas` sale de la misma llamada al modelo que `resumen_gastos`, así que
+no cuesta una clasificación extra. Está para poder abrir cada porción del gráfico y ver de
+qué transacciones se compone: con solo el agregado no había forma de comprobar dónde había
+ido a parar cada movimiento, ni de detectar los que el modelo no supo asignar.
+
+Ese detalle **no se archiva** en Object Storage. El registro del historial guarda perfil,
+agregados e indicadores; las descripciones se quedan en la respuesta.
 
 ### Cómo leer `factores`
 
@@ -232,7 +245,10 @@ categoría de la keyword. Ver `_top3_desde_fila` en `srv-python/app/main.py` y
 
 ### Categorías
 
-`alimentacion` · `transporte` · `salud` · `vivienda` · `educacion` · `ocio` · `servicios` · `otras`
+`alimentacion` · `transporte` · `salud` · `vivienda` · `educacion` · `ocio` · `servicios` · `deudas` · `otras`
+
+`deudas` recoge los pagos de tarjeta de crédito y las cuotas de crédito de consumo. La cuota
+de la hipoteca no: va en **vivienda**, porque quien la paga la vive como el coste de su casa.
 
 El streaming (Netflix, Spotify, Disney+) se clasifica como **ocio**, no como servicios: es
 entretenimiento aunque se cobre como suscripción. `servicios` queda para telecomunicaciones,
@@ -261,7 +277,7 @@ llamadas de red: un ml-service lento haría fallar el health check de la propia 
     "metricas": {
       "clasificador_particion_aleatoria":  { "accuracy": 0.9999, "f1_macro": 0.9999 },
       "clasificador_comercios_no_vistos":  { "accuracy": 0.4111, "f1_macro": 0.4181 },
-      "perfil_cv_agrupada":                { "accuracy": 0.8692, "f1_macro": 0.8613 }
+      "perfil_cv_agrupada":                { "accuracy": 0.8733, "f1_macro": 0.8669 }
     },
     "oci": { "via": "no_configurado", "bucket": null }
   },
@@ -302,7 +318,7 @@ Si srv-python no responde, se devuelve `{}` (200) en vez de propagar el error.
     "balanced_accuracy":{ "media": 0.436218, "desviacion_estandar": 0.056681 }
   },
   "matriz_confusion": {
-    "categorias": ["alimentacion", "transporte", "salud", "vivienda", "educacion", "ocio", "servicios", "otras"],
+    "categorias": ["alimentacion", "transporte", "salud", "vivienda", "educacion", "ocio", "servicios", "deudas", "otras"],
     "matriz": [ [3449, 200, 4, 228, 125, 638, 179, 898], "... 7 filas mas" ],
     "accuracy_global": 0.426427
   },

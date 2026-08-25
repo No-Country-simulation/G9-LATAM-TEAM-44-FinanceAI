@@ -122,7 +122,9 @@ public class OCIStorageService {
      * evolucion financiera no hacen falta, y almacenarlas convertiria el bucket
      * en un archivo de habitos de consumo identificables.
      */
-    private Map<String, Object> construirRegistro(Instant ahora,
+    // Sin private a proposito: OCIStorageServiceTest comprueba desde el mismo
+    // paquete que las descripciones no acaban en el bucket.
+    Map<String, Object> construirRegistro(Instant ahora,
                                                   FinancialAnalysisRequestDTO peticion,
                                                   FinancialAnalysisResponseDTO respuesta) {
         Map<String, Object> registro = new LinkedHashMap<>();

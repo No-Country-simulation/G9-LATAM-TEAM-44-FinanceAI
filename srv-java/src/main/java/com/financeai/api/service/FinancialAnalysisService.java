@@ -57,6 +57,7 @@ public class FinancialAnalysisService {
                 resumenGastos,
                 recomendaciones,
                 perfil.factores(),
+                clasificacion.detalle(),
                 modoDegradado
         );
 

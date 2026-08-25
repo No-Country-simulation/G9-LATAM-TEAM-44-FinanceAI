@@ -2,8 +2,8 @@
 
 Hackathon ONE · Oracle Next Education.
 
-Categoriza los gastos de un extracto bancario, diagnostica la salud financiera del usuario y
-devuelve recomendaciones.
+Categoriza los gastos de un extracto bancario en nueve categorías, diagnostica la salud
+financiera del usuario y devuelve recomendaciones.
 
 ```
 Navegador  ->  web (:8081)  ->  srv-java (:8080)  ->  srv-python (:8000)  ->  OCI Object Storage
@@ -119,6 +119,11 @@ Tres pestañas: análisis (formulario, perfil con medidor de confianza, dona de 
 recomendaciones y factores), clasificador (pegas descripciones y ves cómo se categorizan con
 su confianza) y evolución (histórico local con línea de tendencia).
 
+Cada categoría de la dona se abre y muestra las transacciones que la componen, con su
+confianza. Las que el modelo no dio por buenas salen marcadas, junto a la categoría que
+quedó segunda, y la cabecera lleva un contador de cuántas conviene revisar. Antes el
+agregado no dejaba comprobar dónde había acabado cada movimiento.
+
 Trae tres casos de ejemplo, importación de CSV, exportación del informe a JSON, impresión a
 PDF, tema claro/oscuro y aviso cuando la respuesta viene en modo degradado.
 
@@ -149,17 +154,17 @@ transacciones) con semilla fija.
 | Modelo | Algoritmo | Métrica |
 |---|---|---|
 | Clasificador de gastos | TF-IDF (palabras + caracteres) → `LinearSVC` calibrado | accuracy 0.9999 · f1-macro 0.9999 |
-| Perfil financiero | `StandardScaler` → Regresión logística | accuracy 0.869 · f1-macro 0.861 |
+| Perfil financiero | `StandardScaler` → Regresión logística | accuracy 0.849 · f1-macro 0.836 |
 
 Sobre el 0.9999: en el dataset cada comercio pertenece a una sola categoría, así que
 memorizar el nombre basta y esa cifra no dice gran cosa. La medida útil es la otra: evaluando
-contra comercios que el modelo nunca vio, la accuracy baja a 0.41.
+contra comercios que el modelo nunca vio, la accuracy baja a 0.47.
 
 De ahí salen tres decisiones de diseño:
 
 1. Umbral de confianza 0.5 sobre `predict_proba`. Por debajo, la API devuelve `otras`. Ese
    número no es una probabilidad real de acertar (el modelo no está calibrado sobre comercios
-   no vistos: ECE 0.3335 y Brier score 0.1152 evaluando out-of-fold, ver
+   no vistos: ECE 0.3890 y Brier score 0.1083 evaluando out-of-fold, ver
    `ciencia-datos/experimentos/calibracion.json`); se usa solo como score para decidir cuándo
    abstenerse. En un informe financiero un gasto sin clasificar molesta menos que uno mal
    atribuido.
@@ -171,6 +176,12 @@ De ahí salen tres decisiones de diseño:
 El modelo de perfil se valida con `StratifiedGroupKFold` agrupada por usuario. Sin agrupar,
 los seis meses de una misma persona se reparten entre train y test y la métrica premia
 reconocer al usuario en lugar de entender su comportamiento.
+
+Su vector de atributos son 18 columnas, todas adimensionales: ratios, porcentajes y conteos.
+Ningún monto. La aplicación acepta varias monedas y no las convierte, así que un monto crudo
+en el vector hacía que el diagnóstico dependiera de la unidad en que el usuario escribiera
+las cifras: el mismo caso salía `Saludable` en dólares y `En observación` en pesos. Sobre
+ratios el factor de conversión se cancela. Ver [ARQUITECTURA.md](docs/ARQUITECTURA.md).
 
 ### Reentrenar
 
@@ -218,8 +229,8 @@ ml.service.enabled=false        # o ML_SERVICE_ENABLED=false
 ## Pruebas
 
 ```bash
-cd srv-java   && mvnw.cmd test   # 49 tests
-cd srv-python && pytest -q       # 50 tests
+cd srv-java   && mvnw.cmd test   # 67 tests
+cd srv-python && pytest -q       # 84 tests
 
 python docs/ejemplos.py          # prueba end-to-end contra la API levantada
 newman run postman/FinanceAI.postman_collection.json

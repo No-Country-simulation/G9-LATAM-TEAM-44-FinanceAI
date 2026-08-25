@@ -68,6 +68,8 @@ class FinancialControllerTest {
                 Map.of("alimentacion", 420.0, "transporte", 300.0),
                 List.of("Mantener el control de gastos."),
                 List.of(new FactorDTO("tasa_gasto", 0.16, "baja_riesgo")),
+                List.of(new ClassifiedTransactionDTO(
+                        "Supermercado Exito", 420.0, "alimentacion", 0.99, "aceptado", List.of())),
                 false));
 
         mockMvc.perform(post("/api/v1/analisis-financiero")
@@ -80,6 +82,13 @@ class FinancialControllerTest {
                 .andExpect(jsonPath("$.recomendaciones").isArray())
                 .andExpect(jsonPath("$.factores[0].nombre").value("tasa_gasto"))
                 .andExpect(jsonPath("$.factores[0].impacto").value("baja_riesgo"))
+                // El detalle por transaccion permite abrir cada porcion del grafico.
+                .andExpect(jsonPath("$.transacciones_clasificadas[0].descripcion")
+                        .value("Supermercado Exito"))
+                .andExpect(jsonPath("$.transacciones_clasificadas[0].categoria")
+                        .value("alimentacion"))
+                .andExpect(jsonPath("$.transacciones_clasificadas[0].estado_confianza")
+                        .value("aceptado"))
                 .andExpect(jsonPath("$.modo_degradado").value(false));
 
         verify(analysisService).analyze(any());

@@ -2,6 +2,7 @@ package com.financeai.api.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.financeai.api.config.OciProperties;
+import com.financeai.api.dto.ClassifiedTransactionDTO;
 import com.financeai.api.dto.FactorDTO;
 import com.financeai.api.dto.FinancialAnalysisRequestDTO;
 import com.financeai.api.dto.FinancialAnalysisResponseDTO;
@@ -9,6 +10,7 @@ import com.financeai.api.dto.TransactionDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +34,7 @@ class OCIStorageServiceTest {
     private FinancialAnalysisResponseDTO respuesta() {
         return new FinancialAnalysisResponseDTO("Saludable", 0.9,
                 Map.of("alimentacion", 420.0), List.of("Todo bien"),
-                List.of(new FactorDTO("tasa_gasto", 0.09, "baja_riesgo")), false);
+                List.of(new FactorDTO("tasa_gasto", 0.09, "baja_riesgo")), List.of(), false);
     }
 
     @Test
@@ -58,6 +60,24 @@ class OCIStorageServiceTest {
 
         // historial/AAAA/MM/DD/AAAAMMDDTHHMMSS-xxxxxxxx.json
         assertThat(objeto).matches("historial/\\d{4}/\\d{2}/\\d{2}/\\d{8}T\\d{6}-[0-9a-f]{8}\\.json");
+    }
+
+    @Test
+    @DisplayName("Las descripciones de las transacciones no salen hacia Object Storage")
+    void elArchivadoNoLlevaDescripciones() {
+        List<ClassifiedTransactionDTO> detalle = List.of(new ClassifiedTransactionDTO(
+                "Farmacia San Pablo", 130.0, "salud", 0.99, "aceptado", List.of()));
+        FinancialAnalysisResponseDTO conDetalle = new FinancialAnalysisResponseDTO(
+                "Saludable", 0.9, Map.of("salud", 130.0), List.of("Todo bien"),
+                List.of(new FactorDTO("tasa_gasto", 0.09, "baja_riesgo")), detalle, false);
+
+        // La respuesta lleva descripciones desde que el frontend abre cada
+        // categoria; el registro que se archiva no debe heredarlas.
+        Map<String, Object> registro = servicio("https://x/o/", true)
+                .construirRegistro(Instant.now(), peticion(), conDetalle);
+
+        assertThat(registro).doesNotContainKey("transacciones_clasificadas");
+        assertThat(registro.toString()).doesNotContain("Farmacia San Pablo");
     }
 
     @Test

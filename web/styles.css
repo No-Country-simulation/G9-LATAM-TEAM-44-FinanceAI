@@ -42,8 +42,10 @@
   --radio: 18px;
   --radio-s: 11px;
 
-  /* Paleta de las ocho categorías. Estable en toda la app: la misma categoría
-     debe tener siempre el mismo color en la dona, la leyenda y las tablas. */
+  /* Paleta de las nueve categorías. Estable en toda la app: la misma categoría
+     debe tener siempre el mismo color en la dona, la leyenda y las tablas.
+     El rojo de deudas no es el mismo tono que --rojo del perfil, para que una
+     porción grande de deuda no se lea como un veredicto de riesgo. */
   --c-alimentacion: #60a5fa;
   --c-transporte:   #22d3ee;
   --c-salud:        #34d399;
@@ -51,6 +53,7 @@
   --c-educacion:    #f472b6;
   --c-ocio:         #fb923c;
   --c-servicios:    #facc15;
+  --c-deudas:       #ef4444;
   --c-otras:        #94a3b8;
 
   --curva: cubic-bezier(.22, 1, .36, 1);
@@ -88,6 +91,7 @@
   --c-educacion:    #db2777;
   --c-ocio:         #ea580c;
   --c-servicios:    #b45309;
+  --c-deudas:       #b91c1c;
   --c-otras:        #64748b;
 }
 
@@ -940,15 +944,91 @@ textarea {
 
 .leyenda { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 250px; }
 
-.leyenda li {
+.leyenda > li {
+  border-radius: 10px;
+  font-size: .88rem;
+  animation: deslizar .45s var(--curva) backwards;
+}
+
+/* La fila visible de cada categoria. Antes era el propio <li>; ahora es el
+   summary del desplegable, o un div cuando no hay detalle que abrir. */
+.leyenda .cabecera-cat {
   display: flex; align-items: center; gap: 11px;
   padding: 9px 10px;
   border-radius: 10px;
-  font-size: .88rem;
   transition: background .25s, transform .25s var(--curva);
-  animation: deslizar .45s var(--curva) backwards;
 }
-.leyenda li:hover { background: var(--vidrio-alto); transform: translateX(3px); }
+.leyenda .cabecera-cat:hover { background: var(--vidrio-alto); transform: translateX(3px); }
+
+.grupo-cat > summary { cursor: pointer; list-style: none; }
+.grupo-cat > summary::-webkit-details-marker { display: none; }
+.grupo-cat > summary::marker { content: ""; }
+.grupo-cat > summary:focus-visible { outline: 2px solid var(--acento-2); outline-offset: -2px; }
+
+/* Chevron dibujado con dos bordes: evita meter otro icono en el sprite. */
+.grupo-cat > summary .nombre::after {
+  content: "";
+  display: inline-block;
+  width: 5px; height: 5px;
+  margin-left: 9px;
+  vertical-align: 2px;
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  transform: rotate(45deg);
+  opacity: .4;
+  transition: transform .25s var(--curva), opacity .25s;
+}
+.grupo-cat[open] > summary .nombre::after { transform: rotate(-135deg); opacity: .75; }
+
+/* Cuantas transacciones de la categoria quedaron por debajo del umbral. */
+.aviso-cat {
+  display: grid; place-items: center;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ambar) 22%, transparent);
+  color: var(--ambar);
+  font-size: .7rem; font-weight: 700;
+  flex: none;
+}
+
+.detalle-cat {
+  list-style: none;
+  margin: 2px 0 8px;
+  /* Sangrado a la altura del nombre, no del icono: la lista cuelga de el. */
+  padding: 0 10px 0 51px;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.detalle-cat li {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: .82rem;
+  color: var(--texto-suave);
+  animation: none;
+}
+.detalle-cat li:hover { background: var(--vidrio-alto); }
+.detalle-cat li.dudosa { background: color-mix(in srgb, var(--ambar) 8%, transparent); }
+.detalle-cat .d-desc {
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.detalle-cat .d-valor { color: var(--texto); font-variant-numeric: tabular-nums; }
+.detalle-cat .d-alt {
+  font-size: .72rem;
+  color: var(--ambar);
+  border: 1px solid color-mix(in srgb, var(--ambar) 38%, transparent);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+.detalle-cat .d-conf {
+  width: 38px; text-align: right;
+  font-size: .74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto-tenue);
+}
+.detalle-cat .d-conf.baja { color: var(--ambar); font-weight: 650; }
 
 @keyframes deslizar {
   from { opacity: 0; transform: translateX(-12px); }
@@ -1359,6 +1439,8 @@ th.matriz-fila-th { text-align: left; border-right: 1px solid var(--borde); whit
   /* La dona y su leyenda, centradas y apiladas. */
   .grafico-fila { gap: 18px; justify-content: center; }
   .leyenda { min-width: 100%; }
+  .detalle-cat { padding-left: 14px; }
+  .detalle-cat .d-alt { display: none; }
   .dona-envoltura { margin: 0 auto; }
 
   .indicadores { grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 8px; }

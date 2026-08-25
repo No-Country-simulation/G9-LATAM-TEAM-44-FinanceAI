@@ -12,7 +12,7 @@
 
 const CATEGORIAS = [
   'alimentacion', 'transporte', 'salud', 'vivienda',
-  'educacion', 'ocio', 'servicios', 'otras',
+  'educacion', 'ocio', 'servicios', 'deudas', 'otras',
 ];
 
 const MONEDAS = {
@@ -45,6 +45,7 @@ const NOMBRE_CATEGORIA = {
   educacion: 'Educación',
   ocio: 'Ocio',
   servicios: 'Servicios',
+  deudas: 'Deudas y tarjetas',
   otras: 'Otros gastos',
 };
 
@@ -84,14 +85,11 @@ const NOMBRE_FACTOR = {
   capacidad_ahorro: 'Capacidad de ahorro',
   ahorro_ordinal: 'Hábito de ahorro',
   frecuencia_ahorro: 'Frecuencia de ahorro',
-  gasto_total: 'Gasto total del periodo',
-  ingreso_mensual: 'Ingreso mensual',
   gasto_esencial_pct: 'Peso de los gastos esenciales',
   gasto_discrecional_pct: 'Peso de los gastos prescindibles',
   concentracion_gasto: 'Concentración del gasto',
   categorias_activas: 'Categorías con gasto',
   vivienda_sobre_ingreso: 'Vivienda sobre el ingreso',
-  carga_deuda_absoluta: 'Deuda en valor absoluto',
   pct_alimentacion: 'Peso de alimentación',
   pct_transporte: 'Peso de transporte',
   pct_salud: 'Peso de salud',
@@ -99,6 +97,7 @@ const NOMBRE_FACTOR = {
   pct_educacion: 'Peso de educación',
   pct_ocio: 'Peso de ocio',
   pct_servicios: 'Peso de servicios',
+  pct_deudas: 'Peso de deudas y tarjetas',
   pct_otras: 'Peso de otros gastos',
 };
 
@@ -576,7 +575,10 @@ function dibujarMedidor(probabilidad, color) {
     x: centro, y: centro + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
     fill: 'currentColor', 'font-size': '25', 'font-weight': '680',
   });
-  numero.textContent = `${Math.round(probabilidad * 100)}%`;
+  // Se recorta al 99%. El modelo no esta calibrado, y la logistica satura a 1.0
+  // precisamente con entradas alejadas de lo que vio entrenando: anunciar
+  // certeza absoluta justo ahi seria lo contrario de informar.
+  numero.textContent = `${Math.min(99, Math.round(probabilidad * 100))}%`;
   lienzo.append(numero);
 
   const pie = svg('text', {
@@ -680,6 +682,67 @@ function dibujarDona(resumen, moneda) {
   animarNumero(monto, total, (v) => dineroMoneda(v, moneda), 1000);
 
   return lienzo;
+}
+
+/**
+ * Reparte el detalle por transaccion en la categoria que le toco.
+ *
+ * El agregado de la dona dice cuanto, pero no de donde sale. Con esto cada
+ * porcion se puede abrir y ver que transacciones la componen, que era lo que
+ * no se podia comprobar desde la pestaña de analisis.
+ */
+function agruparPorCategoria(transacciones) {
+  const grupos = new Map();
+  for (const t of transacciones || []) {
+    const categoria = CATEGORIAS.includes(t.categoria) ? t.categoria : 'otras';
+    if (!grupos.has(categoria)) grupos.set(categoria, []);
+    grupos.get(categoria).push(t);
+  }
+  // Dentro de cada categoria, lo que mas pesa primero.
+  for (const lista of grupos.values()) lista.sort((a, b) => (b.valor || 0) - (a.valor || 0));
+  return grupos;
+}
+
+/**
+ * Si el backend dio la categoria por buena.
+ *
+ * `estado_confianza` ya viene decidido con los umbrales del modelo. Si falta
+ * (backend anterior a esa version) se compara contra el umbral alto a mano.
+ */
+function necesitaRevision(t) {
+  if (t.estado_confianza) return t.estado_confianza !== 'aceptado';
+  return (t.confianza || 0) < 0.8;
+}
+
+/** Una transaccion dentro de la categoria desplegada. */
+function filaDetalle(t, moneda) {
+  const dudosa = necesitaRevision(t);
+  const partes = [
+    crear('span', { class: 'd-desc', text: t.descripcion || '(sin descripción)' }),
+    crear('span', { class: 'd-valor', text: dineroMoneda(t.valor || 0, moneda) }),
+  ];
+
+  // La alternativa solo aparece cuando hay duda: en lo demas seria ruido.
+  const alternativa = (t.top3 || []).find((c) => c.categoria !== t.categoria);
+  if (dudosa && alternativa) {
+    const nombre = NOMBRE_CATEGORIA[alternativa.categoria] || alternativa.categoria;
+    partes.push(crear('span', {
+      class: 'd-alt',
+      text: `¿${nombre}?`,
+      title: `La segunda opción del modelo era ${nombre}, `
+           + `con ${Math.round((alternativa.confianza || 0) * 100)}% de confianza.`,
+    }));
+  }
+
+  partes.push(crear('span', {
+    class: `d-conf${dudosa ? ' baja' : ''}`,
+    text: `${Math.round((t.confianza || 0) * 100)}%`,
+    title: dudosa
+      ? 'Por debajo del umbral: conviene revisar esta categoría a mano.'
+      : 'El modelo la clasificó con confianza suficiente.',
+  }));
+
+  return crear('li', { class: dudosa ? 'dudosa' : '' }, partes);
 }
 
 function dibujarEvolucion(historial) {
@@ -798,12 +861,19 @@ function mostrarResultado(datos, entrada) {
   const tasaGasto = entrada.ingreso_mensual ? totalGastos / entrada.ingreso_mensual : 0;
   const disponible = entrada.ingreso_mensual - totalGastos;
 
+  // El endeudamiento es el unico dato de esta fila que no sale de las
+  // transacciones: lo declara el usuario en el formulario. Se muestra
+  // convertido a lo que representa al mes, que si es un calculo, para que no
+  // se lea como un indicador derivado igual que los de al lado.
+  const deudaDeclarada = entrada.nivel_endeudamiento || 0;
+  const pagoDeuda = entrada.ingreso_mensual * deudaDeclarada / 100;
+
   const indicadores = [
     ['Ingreso mensual', entrada.ingreso_mensual, (v) => dineroMoneda(v, moneda)],
     ['Gasto total', totalGastos, (v) => dineroMoneda(v, moneda)],
     ['Queda disponible', disponible, (v) => dineroMoneda(v, moneda)],
     ['Gastas de tu ingreso', tasaGasto * 100, (v) => `${Math.round(v)}%`],
-    ['Endeudamiento', entrada.nivel_endeudamiento, (v) => `${Math.round(v)}%`],
+    [`Deuda declarada (${deudaDeclarada}%)`, pagoDeuda, (v) => dineroMoneda(v, moneda)],
   ];
 
   $('#indicadores').replaceChildren(...indicadores.map(([titulo, valor, formato], i) => {
@@ -822,6 +892,8 @@ function mostrarResultado(datos, entrada) {
     .filter(([, v]) => v > 0)
     .sort((a, b) => b[1] - a[1]);
 
+  const detallePorCategoria = agruparPorCategoria(datos.transacciones_clasificadas);
+
   $('#leyenda').replaceChildren(...entradas.map(([categoria, valor], i) => {
     const marca = crear('span', { class: 'marca-cat' }, [icono(categoria)]);
     marca.style.background = colorCategoria(categoria);
@@ -829,13 +901,41 @@ function mostrarResultado(datos, entrada) {
     const monto = crear('span', { class: 'monto' });
     animarNumero(monto, valor, (v) => dineroMoneda(v, moneda), 700);
 
-    const fila = crear('li', {}, [
+    const partes = [
       marca,
       crear('span', { class: 'nombre', text: NOMBRE_CATEGORIA[categoria] || categoria }),
       monto,
       crear('span', { class: 'pct', text: `${Math.round((valor / totalGastos) * 100)}%` }),
-    ]);
+    ];
+
+    const fila = crear('li');
     fila.style.animationDelay = `${180 + i * 60}ms`;
+
+    // Sin detalle no hay nada que abrir: la fila se queda como estaba. Pasa con
+    // un backend anterior a este campo, y ahi es mejor no prometer un desplegable
+    // vacio.
+    const detalle = detallePorCategoria.get(categoria) || [];
+    if (!detalle.length) {
+      fila.append(crear('div', { class: 'cabecera-cat' }, partes));
+      return fila;
+    }
+
+    const dudosas = detalle.filter(necesitaRevision).length;
+    if (dudosas) {
+      partes.splice(2, 0, crear('span', {
+        class: 'aviso-cat',
+        text: String(dudosas),
+        title: dudosas === 1
+          ? 'Una transacción de esta categoría conviene revisarla.'
+          : `${dudosas} transacciones de esta categoría conviene revisarlas.`,
+      }));
+    }
+
+    const grupo = crear('details', { class: 'grupo-cat' }, [
+      crear('summary', { class: 'cabecera-cat' }, partes),
+      crear('ul', { class: 'detalle-cat' }, detalle.map((t) => filaDetalle(t, moneda))),
+    ]);
+    fila.append(grupo);
     return fila;
   }));
 
