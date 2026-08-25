@@ -1,8 +1,8 @@
 {
   "semilla": 42,
-  "dataset": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\G9-LATAM-TEAM-44-FinanceAI\\ciencia-datos\\datos\\limpios\\transacciones.csv",
-  "filas_entrenables": 58894,
-  "comercios_unicos": 159,
+  "dataset": "C:\\Users\\Rayle\\Desktop\\G9-LATAM-TEAM-44-FinanceAI-main\\ciencia-datos\\datos\\limpios\\transacciones.csv",
+  "filas_entrenables": 63309,
+  "comercios_unicos": 170,
   "n_splits": 5,
   "categorias": [
     "alimentacion",
@@ -12,97 +12,98 @@
     "educacion",
     "ocio",
     "servicios",
+    "deudas",
     "otras"
   ],
   "resultados_por_fold": [
     {
       "fold": 0,
-      "filas_train": 46307,
-      "filas_test": 12587,
-      "comercios_train": 126,
-      "comercios_test": 33,
-      "tiempo_entrenamiento_seg": 14.46,
+      "filas_train": 50178,
+      "filas_test": 13131,
+      "comercios_train": 135,
+      "comercios_test": 35,
+      "tiempo_entrenamiento_seg": 11.8,
       "metricas": {
-        "accuracy": 0.3200921585763089,
-        "f1_macro": 0.31431321770589027,
-        "f1_weighted": 0.2892863797406447,
-        "balanced_accuracy": 0.3617383636195022
+        "accuracy": 0.3815398674891478,
+        "f1_macro": 0.37565267398102753,
+        "f1_weighted": 0.3344832109152769,
+        "balanced_accuracy": 0.44938130933427356
       }
     },
     {
       "fold": 1,
-      "filas_train": 46697,
-      "filas_test": 12197,
-      "comercios_train": 126,
-      "comercios_test": 33,
-      "tiempo_entrenamiento_seg": 15.47,
+      "filas_train": 51111,
+      "filas_test": 12198,
+      "comercios_train": 138,
+      "comercios_test": 32,
+      "tiempo_entrenamiento_seg": 13.95,
       "metricas": {
-        "accuracy": 0.45093055669426907,
-        "f1_macro": 0.39938994654353366,
-        "f1_weighted": 0.4345627408758158,
-        "balanced_accuracy": 0.43067060364626614
+        "accuracy": 0.5300868994917199,
+        "f1_macro": 0.4940901259519571,
+        "f1_weighted": 0.48228525702328284,
+        "balanced_accuracy": 0.5457549642235868
       }
     },
     {
       "fold": 2,
-      "filas_train": 47511,
-      "filas_test": 11383,
-      "comercios_train": 129,
-      "comercios_test": 30,
-      "tiempo_entrenamiento_seg": 15.2,
+      "filas_train": 51092,
+      "filas_test": 12217,
+      "comercios_train": 137,
+      "comercios_test": 33,
+      "tiempo_entrenamiento_seg": 14.6,
       "metricas": {
-        "accuracy": 0.3892646929631907,
-        "f1_macro": 0.3397437461148318,
-        "f1_weighted": 0.3407736819156765,
-        "balanced_accuracy": 0.3935668808718572
+        "accuracy": 0.5340918392404027,
+        "f1_macro": 0.49573113208008684,
+        "f1_weighted": 0.5117620425334599,
+        "balanced_accuracy": 0.5206046081805068
       }
     },
     {
       "fold": 3,
-      "filas_train": 47134,
-      "filas_test": 11760,
-      "comercios_train": 128,
-      "comercios_test": 31,
-      "tiempo_entrenamiento_seg": 15.99,
+      "filas_train": 51464,
+      "filas_test": 11845,
+      "comercios_train": 136,
+      "comercios_test": 34,
+      "tiempo_entrenamiento_seg": 13.52,
       "metricas": {
-        "accuracy": 0.5425170068027211,
-        "f1_macro": 0.5130537996258799,
-        "f1_weighted": 0.5424140342214673,
-        "balanced_accuracy": 0.5214505295905916
+        "accuracy": 0.2592655128746306,
+        "f1_macro": 0.29790248182514373,
+        "f1_weighted": 0.2483430397612057,
+        "balanced_accuracy": 0.3210376759657436
       }
     },
     {
       "fold": 4,
-      "filas_train": 47927,
-      "filas_test": 10967,
-      "comercios_train": 127,
-      "comercios_test": 32,
-      "tiempo_entrenamiento_seg": 15.43,
+      "filas_train": 49391,
+      "filas_test": 13918,
+      "comercios_train": 134,
+      "comercios_test": 36,
+      "tiempo_entrenamiento_seg": 13.49,
       "metricas": {
-        "accuracy": 0.4353059177532598,
-        "f1_macro": 0.4370854061678165,
-        "f1_weighted": 0.42272898582879154,
-        "balanced_accuracy": 0.4736630048465603
+        "accuracy": 0.2951573501939934,
+        "f1_macro": 0.2552543351813057,
+        "f1_weighted": 0.25188343382200595,
+        "balanced_accuracy": 0.3249085939502876
       }
     }
   ],
   "resumen_metricas": {
     "accuracy": {
-      "media": 0.4276220665579499,
-      "desviacion_estandar": 0.07326273786189566
+      "media": 0.40002829385797883,
+      "desviacion_estandar": 0.11492795338353047
     },
     "f1_macro": {
-      "media": 0.4007172232315904,
-      "desviacion_estandar": 0.07089052104770088
+      "media": 0.3837261498039042,
+      "desviacion_estandar": 0.09865212966328744
     },
     "f1_weighted": {
-      "media": 0.4059531645164792,
-      "desviacion_estandar": 0.08669603061599108
+      "media": 0.36575139681104624,
+      "desviacion_estandar": 0.11191745528725176
     },
     "balanced_accuracy": {
-      "media": 0.43621787651495547,
-      "desviacion_estandar": 0.05668124962075796
+      "media": 0.4323374303308797,
+      "desviacion_estandar": 0.0947351209416561
     }
   },
-  "oof_predicciones_csv": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\FinanceAI-02-cv-agrupada-por-comercio\\ciencia-datos\\experimentos\\oof_predicciones_cv.csv"
+  "oof_predicciones_csv": "C:\\Users\\Rayle\\Desktop\\G9-LATAM-TEAM-44-FinanceAI-main\\ciencia-datos\\experimentos\\oof_predicciones_cv.csv"
 }

@@ -1,30 +1,30 @@
 {
   "semilla": 42,
-  "dataset": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\G9-LATAM-TEAM-44-FinanceAI\\ciencia-datos\\datos\\limpios\\transacciones.csv",
-  "filas_entrenables": 58894,
-  "comercios_unicos": 159,
+  "dataset": "C:\\Users\\Rayle\\Desktop\\G9-LATAM-TEAM-44-FinanceAI-main\\ciencia-datos\\datos\\limpios\\transacciones.csv",
+  "filas_entrenables": 63309,
+  "comercios_unicos": 170,
   "particion_aleatoria": {
     "metricas": {
-      "accuracy": 0.999932083672915,
-      "f1_macro": 0.9999292221134558,
-      "f1_weighted": 0.9999320881010015,
-      "balanced_accuracy": 0.9999455337690633
+      "accuracy": 0.9999368208238565,
+      "f1_macro": 0.9999241515643824,
+      "f1_weighted": 0.9999368206545812,
+      "balanced_accuracy": 0.9999235824545316
     },
-    "filas_train": 44170,
-    "filas_test": 14724,
-    "tiempo_entrenamiento_seg": 12.62
+    "filas_train": 47481,
+    "filas_test": 15828,
+    "tiempo_entrenamiento_seg": 11.09
   },
   "particion_por_comercio": {
     "metricas": {
-      "accuracy": 0.41247691360558175,
-      "f1_macro": 0.4189176117497567,
-      "f1_weighted": 0.4146979700139246,
-      "balanced_accuracy": 0.4389476408537935
+      "accuracy": 0.46746468485845577,
+      "f1_macro": 0.44273723891104355,
+      "f1_weighted": 0.4238291935658603,
+      "balanced_accuracy": 0.4913757565383141
     },
-    "filas_train": 44275,
-    "filas_test": 14619,
-    "comercios_totales": 159,
-    "comercios_reservados": 40,
-    "tiempo_entrenamiento_seg": 12.84
+    "filas_train": 45682,
+    "filas_test": 17627,
+    "comercios_totales": 170,
+    "comercios_reservados": 43,
+    "tiempo_entrenamiento_seg": 12.65
   }
 }

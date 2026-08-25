@@ -49,10 +49,12 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.svm import LinearSVC
 
 RAIZ_CIENCIA_DATOS = Path(__file__).resolve().parents[1]
-DATOS_POR_DEFECTO = (
-    "C:/Users/HardM/Desktop/Enterprise/hackaton-alura/G9-LATAM-TEAM-44-FinanceAI/"
-    "ciencia-datos/datos/limpios/transacciones.csv"
-)
+
+#: Los pagos de deuda son gasto: el dinero sale igual que el del supermercado.
+#: Mismo criterio que el notebook, o el clasificador se entrena y se evalua
+#: sobre universos distintos.
+TIPOS_DE_GASTO = ("egresos", "deudas")
+DATOS_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "datos" / "limpios" / "transacciones.csv"
 SALIDA_CSV_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "experimentos" / "benchmark_clasico.csv"
 SALIDA_MD_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "experimentos" / "benchmark_con_features.md"
 N_SPLITS = 5
@@ -180,7 +182,7 @@ def calcular_metricas(y_true, y_pred) -> dict[str, float]:
 def cargar_entrenables(ruta_datos: Path) -> pd.DataFrame:
     transacciones = pd.read_csv(ruta_datos)
     entrenables = transacciones[
-        (transacciones["tipo"] == "egresos") & transacciones["categoria"].notna()
+        transacciones["tipo"].isin(TIPOS_DE_GASTO) & transacciones["categoria"].notna()
     ].copy()
     entrenables["descripcion_limpia"] = entrenables["descripcion_limpia"].fillna("")
     entrenables = entrenables[entrenables["descripcion_limpia"].str.len() > 0]

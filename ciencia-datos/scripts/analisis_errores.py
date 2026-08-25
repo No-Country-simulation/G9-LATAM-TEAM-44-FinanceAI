@@ -48,11 +48,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from features import CATEGORIAS  # noqa: E402
 
 RAIZ_CIENCIA_DATOS = Path(__file__).resolve().parents[1]
+
+#: Los pagos de deuda son gasto: el dinero sale igual que el del supermercado.
+#: Mismo criterio que el notebook, o el clasificador se entrena y se evalua
+#: sobre universos distintos.
+TIPOS_DE_GASTO = ("egresos", "deudas")
 OOF_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "experimentos" / "oof_predicciones_cv.csv"
-DATOS_POR_DEFECTO = Path(
-    "C:/Users/HardM/Desktop/Enterprise/hackaton-alura/G9-LATAM-TEAM-44-FinanceAI/"
-    "ciencia-datos/datos/limpios/transacciones.csv"
-)
+DATOS_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "datos" / "limpios" / "transacciones.csv"
 SALIDA_CSV_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "experimentos" / "analisis_errores.csv"
 SALIDA_MD_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "experimentos" / "analisis_errores.md"
 
@@ -120,7 +122,7 @@ ACCIONES_SUGERIDAS = {
 def cargar_entrenables(ruta_datos: Path) -> pd.DataFrame:
     transacciones = pd.read_csv(ruta_datos)
     entrenables = transacciones[
-        (transacciones["tipo"] == "egresos") & transacciones["categoria"].notna()
+        transacciones["tipo"].isin(TIPOS_DE_GASTO) & transacciones["categoria"].notna()
     ].copy()
     entrenables["descripcion_limpia"] = entrenables["descripcion_limpia"].fillna("")
     entrenables = entrenables[entrenables["descripcion_limpia"].str.len() > 0]

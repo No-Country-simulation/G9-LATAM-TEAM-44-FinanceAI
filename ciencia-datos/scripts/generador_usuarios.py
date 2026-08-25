@@ -91,7 +91,7 @@ CATALOGO_VARIABLE: dict[str, list[str]] = {
     ],
     "otras": [
         "Retiro Cajero Automatico", "Transferencia a Terceros", "Comision Bancaria",
-        "Cuota de Manejo Tarjeta", "Envio de Remesa", "Donacion Fundacion",
+        "Envio de Remesa", "Donacion Fundacion",
         "Regalo Cumpleanos", "Peluqueria y Barberia", "Lavanderia Express",
         "Tienda de Ropa Zara", "Zapateria Centro", "Perfumeria Belleza",
         "Veterinaria Mascota", "Alimento para Mascota", "Compra Marketplace",
@@ -127,9 +127,16 @@ CATALOGO_INGRESOS = [
     "PAGO HONORARIOS FREELANCE", "DEPOSITO QUINCENA",
 ]
 
+# Tarjetas y creditos de consumo. La hipoteca no esta aqui: vive en vivienda,
+# porque quien la paga la vive como el coste de su casa, no como una deuda mas.
+# Repartir "hipoteca" entre dos categorias solo enseñaria al modelo a dudar.
 CATALOGO_DEUDAS = [
-    "PAGO TARJETA DE CREDITO", "CUOTA PRESTAMO BANCARIO", "CREDITO HIPOTECARIO",
-    "PAGO PRESTAMO AUTOMOTRIZ", "ABONO EXTRAORDINARIO HIPOTECA", "CUOTA CREDITO LIBRE INVERSION",
+    "PAGO TARJETA DE CREDITO", "PAGO MINIMO TARJETA VISA",
+    "ABONO TARJETA MASTERCARD", "AVANCE TARJETA DE CREDITO",
+    "INTERESES TARJETA DE CREDITO", "Cuota de Manejo Tarjeta",
+    "CUOTA PRESTAMO BANCARIO", "PAGO PRESTAMO AUTOMOTRIZ",
+    "CUOTA CREDITO LIBRE INVERSION", "PAGO CREDITO PERSONAL",
+    "CUOTA CREDITO DE CONSUMO", "PAGO CUOTA ELECTRODOMESTICOS",
 ]
 
 MAPEO_LETRAS = {"Saludable": "S", "En observación": "O", "En riesgo": "R"}
@@ -304,12 +311,18 @@ def generar_usuario(idx: int, meses: int, fecha_base: datetime,
                     descripcion, categoria, monto, rng,
                 ))
 
-        if rng.random() < 0.35:
-            transacciones.append(_tx(
-                mes.replace(day=rng.randint(1, 28)), "deudas",
-                rng.choice(CATALOGO_DEUDAS), None,
-                round(ingreso_mensual * nivel_endeudamiento / 100 * rng.uniform(0.2, 0.5), 2), rng,
-            ))
+        # El servicio de la deuda del mes, repartido entre uno y tres pagos.
+        # Antes era un unico cargo en el 35% de los meses, y la categoria se
+        # quedaba en menos de mil filas: demasiado poco para aprenderla.
+        if rng.random() < 0.9:
+            conceptos = rng.sample(CATALOGO_DEUDAS, k=rng.choice([1, 1, 2, 2, 3]))
+            servicio = ingreso_mensual * nivel_endeudamiento / 100 * rng.uniform(0.25, 0.6)
+            for concepto in conceptos:
+                transacciones.append(_tx(
+                    mes.replace(day=rng.randint(1, 28)), "deudas",
+                    concepto, "deudas",
+                    round(servicio / len(conceptos), 2), rng,
+                ))
 
     usuario = {
         "usuario_id": f"{idx:03d}",

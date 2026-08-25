@@ -1,21 +1,22 @@
 # Matriz de confusion sobre predicciones OOD (out-of-fold)
 
-Construida sobre 58,894 predicciones out-of-fold de `ciencia-datos/experimentos/oof_predicciones_cv.csv` (Fase 2: StratifiedGroupKFold(n_splits=5) agrupado por comercio). Cada prediccion fue hecha por un modelo que nunca vio ese comercio en entrenamiento, por lo que estas confusiones reflejan el comportamiento del clasificador ante comercios no vistos (out-of-distribution relativo a cada fold).
+Construida sobre 63,309 predicciones out-of-fold de `ciencia-datos/experimentos/oof_predicciones_cv.csv` (Fase 2: StratifiedGroupKFold(n_splits=5) agrupado por comercio). Cada prediccion fue hecha por un modelo que nunca vio ese comercio en entrenamiento, por lo que estas confusiones reflejan el comportamiento del clasificador ante comercios no vistos (out-of-distribution relativo a cada fold).
 
-Accuracy global sobre el OOF (diagonal / total): 0.4264
+Accuracy global sobre el OOF (diagonal / total): 0.3977
 
 ## Matriz de confusion (filas = real, columnas = predicha)
 
-| real \ predicha | alimentacion | transporte | salud | vivienda | educacion | ocio | servicios | otras |
-|---|---|---|---|---|---|---|---|---|
-| **alimentacion** | 3449 | 200 | 4 | 228 | 125 | 638 | 179 | 898 |
-| **transporte** | 1209 | 2833 | 6 | 532 | 236 | 342 | 293 | 496 |
-| **salud** | 276 | 41 | 3806 | 2363 | 315 | 314 | 4 | 914 |
-| **vivienda** | 1233 | 383 | 749 | 3537 | 1 | 405 | 753 | 2023 |
-| **educacion** | 912 | 509 | 478 | 4 | 1801 | 1464 | 1 | 791 |
-| **ocio** | 1925 | 310 | 238 | 482 | 1329 | 4366 | 230 | 300 |
-| **servicios** | 1629 | 1492 | 15 | 542 | 464 | 714 | 4345 | 28 |
-| **otras** | 2293 | 1048 | 257 | 273 | 279 | 601 | 12 | 977 |
+| real \ predicha | alimentacion | transporte | salud | vivienda | educacion | ocio | servicios | deudas | otras |
+|---|---|---|---|---|---|---|---|---|---|
+| **alimentacion** | 3908 | 194 | 5 | 154 | 203 | 448 | 23 | 0 | 951 |
+| **transporte** | 1444 | 1924 | 9 | 252 | 242 | 274 | 469 | 447 | 757 |
+| **salud** | 23 | 89 | 3212 | 592 | 607 | 20 | 7 | 2566 | 971 |
+| **vivienda** | 1809 | 886 | 344 | 3469 | 5 | 75 | 735 | 1021 | 818 |
+| **educacion** | 555 | 978 | 505 | 0 | 1953 | 1432 | 7 | 0 | 540 |
+| **ocio** | 1766 | 507 | 207 | 420 | 1236 | 4509 | 382 | 0 | 253 |
+| **servicios** | 2076 | 739 | 8 | 2641 | 812 | 70 | 2232 | 801 | 59 |
+| **deudas** | 15 | 307 | 1 | 0 | 0 | 1 | 129 | 3291 | 21 |
+| **otras** | 2424 | 1170 | 571 | 363 | 0 | 677 | 4 | 12 | 682 |
 
 ## Confusiones mas frecuentes (fuera de la diagonal)
 
@@ -23,14 +24,14 @@ Ordenadas por proporcion de la fila real (que fraccion de esa categoria real ter
 
 | real | predicha | casos | % de la fila real | total fila real |
 |---|---|---|---|---|
-| otras | alimentacion | 2,293 | 39.9477% | 5,740 |
-| salud | vivienda | 2,363 | 29.4162% | 8,033 |
-| educacion | ocio | 1,464 | 24.5638% | 5,960 |
-| vivienda | otras | 2,023 | 22.2699% | 9,084 |
-| ocio | alimentacion | 1,925 | 20.9695% | 9,180 |
-| transporte | alimentacion | 1,209 | 20.3296% | 5,947 |
-| otras | transporte | 1,048 | 18.2578% | 5,740 |
-| servicios | alimentacion | 1,629 | 17.6509% | 9,229 |
+| otras | alimentacion | 2,424 | 41.0639% | 5,903 |
+| salud | deudas | 2,566 | 31.7299% | 8,087 |
+| servicios | vivienda | 2,641 | 27.9826% | 9,438 |
+| transporte | alimentacion | 1,444 | 24.8195% | 5,818 |
+| educacion | ocio | 1,432 | 23.9866% | 5,970 |
+| servicios | alimentacion | 2,076 | 21.9962% | 9,438 |
+| otras | transporte | 1,170 | 19.8204% | 5,903 |
+| vivienda | alimentacion | 1,809 | 19.7446% | 9,162 |
 
 ## Distribucion real vs. predicha por categoria
 
@@ -38,66 +39,65 @@ Si el clasificador generalizara bien a comercios no vistos, la columna de filas 
 
 | categoria | filas reales | filas predichas | razon predichas/reales |
 |---|---|---|---|
-| alimentacion | 5,721 | 12,926 | 2.2594 |
-| transporte | 5,947 | 6,816 | 1.1461 |
-| salud | 8,033 | 5,553 | 0.6913 |
-| vivienda | 9,084 | 7,961 | 0.8764 |
-| educacion | 5,960 | 4,550 | 0.7634 |
-| ocio | 9,180 | 8,844 | 0.9634 |
-| servicios | 9,229 | 5,817 | 0.6303 |
-| otras | 5,740 | 6,427 | 1.1197 |
+| alimentacion | 5,886 | 14,020 | 2.3819 |
+| transporte | 5,818 | 6,794 | 1.1678 |
+| salud | 8,087 | 4,862 | 0.6012 |
+| vivienda | 9,162 | 7,891 | 0.8613 |
+| educacion | 5,970 | 5,058 | 0.8472 |
+| ocio | 9,280 | 7,506 | 0.8088 |
+| servicios | 9,438 | 3,988 | 0.4225 |
+| deudas | 3,765 | 8,138 | 2.1615 |
+| otras | 5,903 | 5,052 | 0.8558 |
 
 ## Analisis
 
 Para cada confusion se listan los comercios (nunca vistos por el modelo en ese fold, por la agrupacion de la CV) que mas casos aportan a esa celda, junto con que fraccion de TODAS las filas de ese comercio en el OOF cayeron ahi. Cuando esa fraccion es cercana a 1.0, no se trata de una confusion parcial dentro de una categoria heterogenea, sino de un comercio completo que el modelo redirige casi siempre hacia la misma categoria equivocada al no reconocer ninguno de sus tokens exactos.
 
-### otras -> alimentacion (2,293 casos, 39.9477% de las filas reales de `otras`)
+### otras -> alimentacion (2,424 casos, 41.0639% de las filas reales de `otras`)
 
-- `Comision Bancaria`: 305 de sus 307 filas en el OOF cayeron en esta celda (99.3485% de ese comercio).
-- `Compra Marketplace`: 304 de sus 307 filas en el OOF cayeron en esta celda (99.0228% de ese comercio).
-- `Lavanderia Express`: 301 de sus 301 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
+- `Perfumeria Belleza`: 320 de sus 321 filas en el OOF cayeron en esta celda (99.6885% de ese comercio).
+- `Mercado Libre Compra`: 308 de sus 308 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
+- `Compra Marketplace`: 295 de sus 295 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
 
-### salud -> vivienda (2,363 casos, 29.4162% de las filas reales de `salud`)
+### salud -> deudas (2,566 casos, 31.7299% de las filas reales de `salud`)
 
-- `EPS Cuota Moderadora`: 1,838 de sus 2,653 filas en el OOF cayeron en esta celda (69.2801% de ese comercio).
-- `Medicamentos Recetados`: 319 de sus 338 filas en el OOF cayeron en esta celda (94.3787% de ese comercio).
-- `Optica Vision Center`: 206 de sus 292 filas en el OOF cayeron en esta celda (70.5479% de ese comercio).
+- `EPS Cuota Moderadora`: 2,566 de sus 2,639 filas en el OOF cayeron en esta celda (97.2338% de ese comercio).
 
-### educacion -> ocio (1,464 casos, 24.5638% de las filas reales de `educacion`)
+### servicios -> vivienda (2,641 casos, 27.9826% de las filas reales de `servicios`)
 
-- `Suscripcion Platzi`: 513 de sus 514 filas en el OOF cayeron en esta celda (99.8054% de ese comercio).
-- `Curso Udemy Online`: 452 de sus 482 filas en el OOF cayeron en esta celda (93.7759% de ese comercio).
-- `Pension Colegio`: 392 de sus 464 filas en el OOF cayeron en esta celda (84.4828% de ese comercio).
+- `Movistar Internet Hogar`: 1,138 de sus 1,156 filas en el OOF cayeron en esta celda (98.4429% de ese comercio).
+- `Servicio Agua Potable`: 1,056 de sus 1,056 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
+- `Antivirus Licencia Anual`: 407 de sus 433 filas en el OOF cayeron en esta celda (93.9954% de ese comercio).
 
-### vivienda -> otras (2,023 casos, 22.2699% de las filas reales de `vivienda`)
+### transporte -> alimentacion (1,444 casos, 24.8195% de las filas reales de `transporte`)
 
-- `Cuota Hipoteca Vivienda`: 1,432 de sus 1,491 filas en el OOF cayeron en esta celda (96.0429% de ese comercio).
-- `Reparacion Plomeria`: 367 de sus 394 filas en el OOF cayeron en esta celda (93.1472% de ese comercio).
-- `Administracion Edificio`: 174 de sus 1,464 filas en el OOF cayeron en esta celda (11.8852% de ese comercio).
+- `DiDi Ride`: 263 de sus 265 filas en el OOF cayeron en esta celda (99.2453% de ese comercio).
+- `Uber Trip`: 252 de sus 252 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
+- `Shell Combustible`: 244 de sus 246 filas en el OOF cayeron en esta celda (99.1870% de ese comercio).
 
-### ocio -> alimentacion (1,925 casos, 20.9695% de las filas reales de `ocio`)
+### educacion -> ocio (1,432 casos, 23.9866% de las filas reales de `educacion`)
 
-- `Gimnasio SmartFit`: 828 de sus 1,061 filas en el OOF cayeron en esta celda (78.0396% de ese comercio).
-- `Restaurante Gourmet`: 239 de sus 239 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
-- `Bar El Callejon`: 233 de sus 248 filas en el OOF cayeron en esta celda (93.9516% de ese comercio).
+- `Suscripcion Platzi`: 485 de sus 486 filas en el OOF cayeron en esta celda (99.7942% de ese comercio).
+- `Utiles Escolares`: 483 de sus 493 filas en el OOF cayeron en esta celda (97.9716% de ese comercio).
+- `Pension Colegio`: 419 de sus 457 filas en el OOF cayeron en esta celda (91.6849% de ese comercio).
 
-### transporte -> alimentacion (1,209 casos, 20.3296% de las filas reales de `transporte`)
+### servicios -> alimentacion (2,076 casos, 21.9962% de las filas reales de `servicios`)
 
-- `Shell Combustible`: 243 de sus 249 filas en el OOF cayeron en esta celda (97.5904% de ese comercio).
-- `Taxi Amarillo`: 233 de sus 254 filas en el OOF cayeron en esta celda (91.7323% de ese comercio).
-- `DiDi Ride`: 233 de sus 251 filas en el OOF cayeron en esta celda (92.8287% de ese comercio).
+- `Gas Natural Domiciliario`: 1,170 de sus 1,170 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
+- `Almacenamiento iCloud`: 408 de sus 422 filas en el OOF cayeron en esta celda (96.6825% de ese comercio).
+- `Tigo Une Plan`: 407 de sus 425 filas en el OOF cayeron en esta celda (95.7647% de ese comercio).
 
-### otras -> transporte (1,048 casos, 18.2578% de las filas reales de `otras`)
+### otras -> transporte (1,170 casos, 19.8204% de las filas reales de `otras`)
 
-- `Transferencia a Terceros`: 294 de sus 300 filas en el OOF cayeron en esta celda (98.0000% de ese comercio).
-- `Retiro Cajero Automatico`: 270 de sus 270 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
-- `Impuesto Retencion`: 258 de sus 315 filas en el OOF cayeron en esta celda (81.9048% de ese comercio).
+- `Retiro Cajero Automatico`: 311 de sus 311 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
+- `Regalo Cumpleanos`: 298 de sus 315 filas en el OOF cayeron en esta celda (94.6032% de ese comercio).
+- `Transferencia a Terceros`: 292 de sus 296 filas en el OOF cayeron en esta celda (98.6486% de ese comercio).
 
-### servicios -> alimentacion (1,629 casos, 17.6509% de las filas reales de `servicios`)
+### vivienda -> alimentacion (1,809 casos, 19.7446% de las filas reales de `vivienda`)
 
-- `Gas Natural Domiciliario`: 1,080 de sus 1,080 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
-- `Almacenamiento iCloud`: 410 de sus 410 filas en el OOF cayeron en esta celda (100.0000% de ese comercio).
-- `Claro Telefonia Movil`: 74 de sus 1,035 filas en el OOF cayeron en esta celda (7.1498% de ese comercio).
+- `Cuota Hipoteca Vivienda`: 559 de sus 1,582 filas en el OOF cayeron en esta celda (35.3350% de ese comercio).
+- `Impuesto Predial`: 405 de sus 412 filas en el OOF cayeron en esta celda (98.3010% de ese comercio).
+- `Ferreteria El Martillo`: 381 de sus 386 filas en el OOF cayeron en esta celda (98.7047% de ese comercio).
 
 ### Hipotesis
 

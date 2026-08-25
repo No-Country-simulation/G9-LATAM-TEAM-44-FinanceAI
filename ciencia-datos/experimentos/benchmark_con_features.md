@@ -1,7 +1,7 @@
 # Benchmark "solo texto" vs. "texto + features adicionales" (Fase 10)
 
-Dataset: `C:\Users\HardM\Desktop\Enterprise\hackaton-alura\G9-LATAM-TEAM-44-FinanceAI\ciencia-datos\datos\limpios\transacciones.csv`
-Filas entrenables: 58,894 | Comercios unicos: 159
+Dataset: `C:\Users\Rayle\Desktop\G9-LATAM-TEAM-44-FinanceAI-main\ciencia-datos\datos\limpios\transacciones.csv`
+Filas entrenables: 63,309 | Comercios unicos: 170
 Split: `StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)`
 agrupado por `comercio`, estratificado por `categoria` (igual que las Fases 2 y 9).
 
@@ -19,13 +19,13 @@ ese mismo pipeline y le agrega bloques de features numericas/categoricas via
   columna **"descripcion" original** (sin limpiar), porque `normalizar_texto()`
   los quita a proposito al construir `descripcion_limpia`.
   Frecuencia de cada flag en el conjunto entrenable:
-  - `flag_pos`: 10,665 filas (18.11%)
-  - `flag_trf`: 10,665 filas (18.11%)
-  - `flag_compra`: 823 filas (1.40%)
-  - `flag_pago`: 1,095 filas (1.86%)
+  - `flag_pos`: 11,453 filas (18.09%)
+  - `flag_trf`: 11,453 filas (18.09%)
+  - `flag_compra`: 837 filas (1.32%)
+  - `flag_pago`: 2,669 filas (4.22%)
   - `flag_debito`: 0 filas (0.00%)
-  - `flag_credito`: 0 filas (0.00%)
-  - `flag_tarj`: 6 filas (0.01%)
+  - `flag_credito`: 1,729 filas (2.73%)
+  - `flag_tarj`: 8 filas (0.01%)
 - `dia_semana` (0-6) y `mes` (1-12) de la columna "fecha", codificados con
   `OneHotEncoder` (categoricas, no ordinales/ciclicas de verdad).
 
@@ -37,35 +37,35 @@ pipeline vigente. Se combinan con `sklearn.compose.ColumnTransformer`.
 
 | modelo | accuracy | f1_macro | f1_weighted | balanced_accuracy |
 | --- | --- | --- | --- | --- |
-| solo texto (control, igual pipeline vigente/Fase 9) | 0.4276 +/- 0.0733 | 0.4007 +/- 0.0709 | 0.4060 +/- 0.0867 | 0.4362 +/- 0.0567 |
-| +monto | 0.4301 +/- 0.0772 | 0.4020 +/- 0.0732 | 0.4075 +/- 0.0893 | 0.4383 +/- 0.0597 |
-| +log1p(monto) | 0.4296 +/- 0.0770 | 0.4015 +/- 0.0733 | 0.4070 +/- 0.0893 | 0.4377 +/- 0.0598 |
-| +longitud_texto | 0.4229 +/- 0.0884 | 0.3863 +/- 0.0764 | 0.3896 +/- 0.0986 | 0.4309 +/- 0.0624 |
-| +flags_prefijos_extracto | 0.4374 +/- 0.0853 | 0.4109 +/- 0.0882 | 0.4118 +/- 0.0990 | 0.4500 +/- 0.0714 |
-| +dia_semana+mes | 0.4267 +/- 0.0739 | 0.3996 +/- 0.0719 | 0.4049 +/- 0.0874 | 0.4351 +/- 0.0578 |
-| +todas las features (monto: monto) | 0.4276 +/- 0.0897 | 0.3930 +/- 0.0856 | 0.3918 +/- 0.1021 | 0.4412 +/- 0.0684 |
+| solo texto (control, igual pipeline vigente/Fase 9) | 0.4000 +/- 0.1149 | 0.3837 +/- 0.0987 | 0.3658 +/- 0.1119 | 0.4323 +/- 0.0947 |
+| +monto | 0.4018 +/- 0.1126 | 0.3847 +/- 0.0962 | 0.3681 +/- 0.1093 | 0.4324 +/- 0.0920 |
+| +log1p(monto) | 0.4006 +/- 0.1146 | 0.3842 +/- 0.0983 | 0.3666 +/- 0.1115 | 0.4324 +/- 0.0942 |
+| +longitud_texto | 0.4178 +/- 0.0862 | 0.3962 +/- 0.0810 | 0.3749 +/- 0.0800 | 0.4535 +/- 0.0783 |
+| +flags_prefijos_extracto | 0.4071 +/- 0.1107 | 0.3863 +/- 0.0938 | 0.3621 +/- 0.1036 | 0.4513 +/- 0.0958 |
+| +dia_semana+mes | 0.4003 +/- 0.1135 | 0.3836 +/- 0.0974 | 0.3660 +/- 0.1104 | 0.4322 +/- 0.0936 |
+| +todas las features (monto: monto) | 0.4227 +/- 0.0984 | 0.3983 +/- 0.0873 | 0.3739 +/- 0.0941 | 0.4690 +/- 0.0833 |
 
 ## Control (solo texto)
 
-accuracy = 0.4276 +/- 0.0733,
-f1_macro = 0.4007 +/- 0.0709,
-f1_weighted = 0.4060 +/- 0.0867,
-balanced_accuracy = 0.4362 +/- 0.0567.
+accuracy = 0.4000 +/- 0.1149,
+f1_macro = 0.3837 +/- 0.0987,
+f1_weighted = 0.3658 +/- 0.1119,
+balanced_accuracy = 0.4323 +/- 0.0947.
 (Deberia salir igual o muy cercano al candidato "actual" de la Fase 9 y a la
 Fase 2, porque es el mismo pipeline sobre el mismo split.)
 
 ## monto vs. log1p(monto)
 
-Entre **monto** (f1_macro = 0.4020 +/- 0.0732) y **log1p(monto)** (f1_macro = 0.4015 +/- 0.0733), se usa **monto** en '+todas las features' porque obtuvo el f1_macro medio mas alto (se descarta log1p(monto) para esa fila combinada).
+Entre **monto** (f1_macro = 0.3847 +/- 0.0962) y **log1p(monto)** (f1_macro = 0.3842 +/- 0.0983), se usa **monto** en '+todas las features' porque obtuvo el f1_macro medio mas alto (se descarta log1p(monto) para esa fila combinada).
 
 ## Cuanto aporta (o no) cada bloque de features, frente al control de solo texto
 
-- **+monto**: f1_macro = 0.4020 +/- 0.0732 (delta vs. control = +0.0013) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
-- **+log1p(monto)**: f1_macro = 0.4015 +/- 0.0733 (delta vs. control = +0.0008) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
-- **+longitud_texto**: f1_macro = 0.3863 +/- 0.0764 (delta vs. control = -0.0144) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
-- **+flags_prefijos_extracto**: f1_macro = 0.4109 +/- 0.0882 (delta vs. control = +0.0102) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
-- **+dia_semana+mes**: f1_macro = 0.3996 +/- 0.0719 (delta vs. control = -0.0011) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
-- **+todas las features (monto: monto)**: f1_macro = 0.3930 +/- 0.0856 (delta vs. control = -0.0078) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
+- **+monto**: f1_macro = 0.3847 +/- 0.0962 (delta vs. control = +0.0010) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
+- **+log1p(monto)**: f1_macro = 0.3842 +/- 0.0983 (delta vs. control = +0.0004) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
+- **+longitud_texto**: f1_macro = 0.3962 +/- 0.0810 (delta vs. control = +0.0125) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
+- **+flags_prefijos_extracto**: f1_macro = 0.3863 +/- 0.0938 (delta vs. control = +0.0025) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
+- **+dia_semana+mes**: f1_macro = 0.3836 +/- 0.0974 (delta vs. control = -0.0001) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
+- **+todas las features (monto: monto)**: f1_macro = 0.3983 +/- 0.0873 (delta vs. control = +0.0146) -> dentro de 1 desviacion estandar del control (no se distingue con confianza).
 
 ## Conclusion
 

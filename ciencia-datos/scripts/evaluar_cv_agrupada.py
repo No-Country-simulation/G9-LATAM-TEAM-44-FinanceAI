@@ -44,10 +44,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from features import CATEGORIAS  # noqa: E402
 
 RAIZ_CIENCIA_DATOS = Path(__file__).resolve().parents[1]
-DATOS_POR_DEFECTO = (
-    "C:/Users/HardM/Desktop/Enterprise/hackaton-alura/G9-LATAM-TEAM-44-FinanceAI/"
-    "ciencia-datos/datos/limpios/transacciones.csv"
-)
+
+#: Los pagos de deuda son gasto: el dinero sale igual que el del supermercado.
+#: Mismo criterio que el notebook, o el clasificador se entrena y se evalua
+#: sobre universos distintos.
+TIPOS_DE_GASTO = ("egresos", "deudas")
+DATOS_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "datos" / "limpios" / "transacciones.csv"
 SALIDA_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "experimentos" / "cv_agrupada_comercio.json"
 OOF_POR_DEFECTO = RAIZ_CIENCIA_DATOS / "experimentos" / "oof_predicciones_cv.csv"
 N_SPLITS = 5
@@ -81,7 +83,7 @@ def calcular_metricas(y_true, y_pred) -> dict[str, float]:
 def cargar_entrenables(ruta_datos: Path) -> pd.DataFrame:
     transacciones = pd.read_csv(ruta_datos)
     entrenables = transacciones[
-        (transacciones["tipo"] == "egresos") & transacciones["categoria"].notna()
+        transacciones["tipo"].isin(TIPOS_DE_GASTO) & transacciones["categoria"].notna()
     ].copy()
     entrenables["descripcion_limpia"] = entrenables["descripcion_limpia"].fillna("")
     entrenables = entrenables[entrenables["descripcion_limpia"].str.len() > 0]
@@ -127,8 +129,19 @@ def evaluar_cv_agrupada(entrenables: pd.DataFrame, semilla: int) -> tuple[list[d
         clases = list(clasificador.classes_)
         # Reordena las columnas de probabilidad al orden fijo de CATEGORIAS
         # (features.CATEGORIAS), no al orden alfabetico que da classes_.
-        indices_categorias = [clases.index(c) for c in CATEGORIAS]
-        proba_ordenada = proba[:, indices_categorias]
+        #
+        # Una categoria puede no estar en classes_: al agrupar por comercio,
+        # todos los comercios de una categoria pequena pueden caer en test y el
+        # modelo del fold no llega a verla. Se le da probabilidad 0 en lugar de
+        # fallar, que es justo lo que mide este experimento: que le pasa al
+        # clasificador ante algo que no vio.
+        ausentes = [c for c in CATEGORIAS if c not in clases]
+        if ausentes:
+            print(f"  fold {fold}: sin ejemplos de entrenamiento para {ausentes}")
+        proba_ordenada = np.zeros((len(pred), len(CATEGORIAS)), dtype=float)
+        for j, cat in enumerate(CATEGORIAS):
+            if cat in clases:
+                proba_ordenada[:, j] = proba[:, clases.index(cat)]
 
         metricas = calcular_metricas(y_te, pred)
         resultados_por_fold.append({

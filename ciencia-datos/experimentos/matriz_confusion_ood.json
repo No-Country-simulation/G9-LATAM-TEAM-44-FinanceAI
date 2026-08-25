@@ -1,6 +1,6 @@
 {
-  "fuente_oof": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\FinanceAI-03-matriz-de-confusion-ood\\ciencia-datos\\experimentos\\oof_predicciones_cv.csv",
-  "filas_totales": 58894,
+  "fuente_oof": "C:\\Users\\Rayle\\Desktop\\G9-LATAM-TEAM-44-FinanceAI-main\\ciencia-datos\\experimentos\\oof_predicciones_cv.csv",
+  "filas_totales": 63309,
   "categorias": [
     "alimentacion",
     "transporte",
@@ -9,315 +9,324 @@
     "educacion",
     "ocio",
     "servicios",
+    "deudas",
     "otras"
   ],
-  "accuracy_global": 0.4264271402859374,
+  "accuracy_global": 0.39773176009730055,
   "matriz": [
     [
-      3449,
-      200,
-      4,
-      228,
-      125,
-      638,
-      179,
-      898
+      3908,
+      194,
+      5,
+      154,
+      203,
+      448,
+      23,
+      0,
+      951
     ],
     [
-      1209,
-      2833,
-      6,
-      532,
-      236,
-      342,
-      293,
-      496
+      1444,
+      1924,
+      9,
+      252,
+      242,
+      274,
+      469,
+      447,
+      757
     ],
     [
-      276,
-      41,
-      3806,
-      2363,
-      315,
-      314,
-      4,
-      914
+      23,
+      89,
+      3212,
+      592,
+      607,
+      20,
+      7,
+      2566,
+      971
     ],
     [
-      1233,
-      383,
-      749,
-      3537,
-      1,
-      405,
-      753,
-      2023
+      1809,
+      886,
+      344,
+      3469,
+      5,
+      75,
+      735,
+      1021,
+      818
     ],
     [
-      912,
-      509,
-      478,
-      4,
-      1801,
-      1464,
-      1,
-      791
+      555,
+      978,
+      505,
+      0,
+      1953,
+      1432,
+      7,
+      0,
+      540
     ],
     [
-      1925,
-      310,
-      238,
-      482,
-      1329,
-      4366,
-      230,
-      300
+      1766,
+      507,
+      207,
+      420,
+      1236,
+      4509,
+      382,
+      0,
+      253
     ],
     [
-      1629,
-      1492,
+      2076,
+      739,
+      8,
+      2641,
+      812,
+      70,
+      2232,
+      801,
+      59
+    ],
+    [
       15,
-      542,
-      464,
-      714,
-      4345,
-      28
+      307,
+      1,
+      0,
+      0,
+      1,
+      129,
+      3291,
+      21
     ],
     [
-      2293,
-      1048,
-      257,
-      273,
-      279,
-      601,
+      2424,
+      1170,
+      571,
+      363,
+      0,
+      677,
+      4,
       12,
-      977
+      682
     ]
   ],
   "totales_por_fila": [
-    5721,
-    5947,
-    8033,
-    9084,
-    5960,
-    9180,
-    9229,
-    5740
+    5886,
+    5818,
+    8087,
+    9162,
+    5970,
+    9280,
+    9438,
+    3765,
+    5903
   ],
   "top_confusiones": [
     {
       "real": "otras",
       "predicha": "alimentacion",
-      "casos": 2293,
-      "proporcion_de_la_fila": 0.3994773519163763,
-      "total_fila_real": 5740,
+      "casos": 2424,
+      "proporcion_de_la_fila": 0.4106386583093342,
+      "total_fila_real": 5903,
       "comercios_dominantes": [
         {
-          "comercio": "Comision Bancaria",
-          "casos_en_celda": 305,
-          "filas_totales_del_comercio_en_oof": 307,
-          "proporcion_del_comercio": 0.993485342019544
+          "comercio": "Perfumeria Belleza",
+          "casos_en_celda": 320,
+          "filas_totales_del_comercio_en_oof": 321,
+          "proporcion_del_comercio": 0.9968847352024922
+        },
+        {
+          "comercio": "Mercado Libre Compra",
+          "casos_en_celda": 308,
+          "filas_totales_del_comercio_en_oof": 308,
+          "proporcion_del_comercio": 1.0
         },
         {
           "comercio": "Compra Marketplace",
-          "casos_en_celda": 304,
-          "filas_totales_del_comercio_en_oof": 307,
-          "proporcion_del_comercio": 0.990228013029316
-        },
-        {
-          "comercio": "Lavanderia Express",
-          "casos_en_celda": 301,
-          "filas_totales_del_comercio_en_oof": 301,
+          "casos_en_celda": 295,
+          "filas_totales_del_comercio_en_oof": 295,
           "proporcion_del_comercio": 1.0
         }
       ]
     },
     {
       "real": "salud",
-      "predicha": "vivienda",
-      "casos": 2363,
-      "proporcion_de_la_fila": 0.2941615834681937,
-      "total_fila_real": 8033,
+      "predicha": "deudas",
+      "casos": 2566,
+      "proporcion_de_la_fila": 0.3172993693582293,
+      "total_fila_real": 8087,
       "comercios_dominantes": [
         {
           "comercio": "EPS Cuota Moderadora",
-          "casos_en_celda": 1838,
-          "filas_totales_del_comercio_en_oof": 2653,
-          "proporcion_del_comercio": 0.6928006030908406
-        },
-        {
-          "comercio": "Medicamentos Recetados",
-          "casos_en_celda": 319,
-          "filas_totales_del_comercio_en_oof": 338,
-          "proporcion_del_comercio": 0.9437869822485208
-        },
-        {
-          "comercio": "Optica Vision Center",
-          "casos_en_celda": 206,
-          "filas_totales_del_comercio_en_oof": 292,
-          "proporcion_del_comercio": 0.7054794520547946
+          "casos_en_celda": 2566,
+          "filas_totales_del_comercio_en_oof": 2639,
+          "proporcion_del_comercio": 0.9723380068207654
         }
       ]
     },
     {
-      "real": "educacion",
-      "predicha": "ocio",
-      "casos": 1464,
-      "proporcion_de_la_fila": 0.24563758389261744,
-      "total_fila_real": 5960,
+      "real": "servicios",
+      "predicha": "vivienda",
+      "casos": 2641,
+      "proporcion_de_la_fila": 0.2798262343716889,
+      "total_fila_real": 9438,
       "comercios_dominantes": [
         {
-          "comercio": "Suscripcion Platzi",
-          "casos_en_celda": 513,
-          "filas_totales_del_comercio_en_oof": 514,
-          "proporcion_del_comercio": 0.9980544747081712
+          "comercio": "Movistar Internet Hogar",
+          "casos_en_celda": 1138,
+          "filas_totales_del_comercio_en_oof": 1156,
+          "proporcion_del_comercio": 0.9844290657439446
         },
         {
-          "comercio": "Curso Udemy Online",
-          "casos_en_celda": 452,
-          "filas_totales_del_comercio_en_oof": 482,
-          "proporcion_del_comercio": 0.9377593360995851
-        },
-        {
-          "comercio": "Pension Colegio",
-          "casos_en_celda": 392,
-          "filas_totales_del_comercio_en_oof": 464,
-          "proporcion_del_comercio": 0.8448275862068966
-        }
-      ]
-    },
-    {
-      "real": "vivienda",
-      "predicha": "otras",
-      "casos": 2023,
-      "proporcion_de_la_fila": 0.22269925143108762,
-      "total_fila_real": 9084,
-      "comercios_dominantes": [
-        {
-          "comercio": "Cuota Hipoteca Vivienda",
-          "casos_en_celda": 1432,
-          "filas_totales_del_comercio_en_oof": 1491,
-          "proporcion_del_comercio": 0.960429242119383
-        },
-        {
-          "comercio": "Reparacion Plomeria",
-          "casos_en_celda": 367,
-          "filas_totales_del_comercio_en_oof": 394,
-          "proporcion_del_comercio": 0.9314720812182741
-        },
-        {
-          "comercio": "Administracion Edificio",
-          "casos_en_celda": 174,
-          "filas_totales_del_comercio_en_oof": 1464,
-          "proporcion_del_comercio": 0.11885245901639344
-        }
-      ]
-    },
-    {
-      "real": "ocio",
-      "predicha": "alimentacion",
-      "casos": 1925,
-      "proporcion_de_la_fila": 0.20969498910675383,
-      "total_fila_real": 9180,
-      "comercios_dominantes": [
-        {
-          "comercio": "Gimnasio SmartFit",
-          "casos_en_celda": 828,
-          "filas_totales_del_comercio_en_oof": 1061,
-          "proporcion_del_comercio": 0.7803958529688972
-        },
-        {
-          "comercio": "Restaurante Gourmet",
-          "casos_en_celda": 239,
-          "filas_totales_del_comercio_en_oof": 239,
+          "comercio": "Servicio Agua Potable",
+          "casos_en_celda": 1056,
+          "filas_totales_del_comercio_en_oof": 1056,
           "proporcion_del_comercio": 1.0
         },
         {
-          "comercio": "Bar El Callejon",
-          "casos_en_celda": 233,
-          "filas_totales_del_comercio_en_oof": 248,
-          "proporcion_del_comercio": 0.9395161290322581
+          "comercio": "Antivirus Licencia Anual",
+          "casos_en_celda": 407,
+          "filas_totales_del_comercio_en_oof": 433,
+          "proporcion_del_comercio": 0.9399538106235565
         }
       ]
     },
     {
       "real": "transporte",
       "predicha": "alimentacion",
-      "casos": 1209,
-      "proporcion_de_la_fila": 0.20329577938456364,
-      "total_fila_real": 5947,
+      "casos": 1444,
+      "proporcion_de_la_fila": 0.2481952561017532,
+      "total_fila_real": 5818,
       "comercios_dominantes": [
         {
-          "comercio": "Shell Combustible",
-          "casos_en_celda": 243,
-          "filas_totales_del_comercio_en_oof": 249,
-          "proporcion_del_comercio": 0.9759036144578314
-        },
-        {
-          "comercio": "Taxi Amarillo",
-          "casos_en_celda": 233,
-          "filas_totales_del_comercio_en_oof": 254,
-          "proporcion_del_comercio": 0.9173228346456693
-        },
-        {
           "comercio": "DiDi Ride",
-          "casos_en_celda": 233,
-          "filas_totales_del_comercio_en_oof": 251,
-          "proporcion_del_comercio": 0.9282868525896414
+          "casos_en_celda": 263,
+          "filas_totales_del_comercio_en_oof": 265,
+          "proporcion_del_comercio": 0.9924528301886792
+        },
+        {
+          "comercio": "Uber Trip",
+          "casos_en_celda": 252,
+          "filas_totales_del_comercio_en_oof": 252,
+          "proporcion_del_comercio": 1.0
+        },
+        {
+          "comercio": "Shell Combustible",
+          "casos_en_celda": 244,
+          "filas_totales_del_comercio_en_oof": 246,
+          "proporcion_del_comercio": 0.991869918699187
         }
       ]
     },
     {
-      "real": "otras",
-      "predicha": "transporte",
-      "casos": 1048,
-      "proporcion_de_la_fila": 0.18257839721254354,
-      "total_fila_real": 5740,
+      "real": "educacion",
+      "predicha": "ocio",
+      "casos": 1432,
+      "proporcion_de_la_fila": 0.23986599664991626,
+      "total_fila_real": 5970,
       "comercios_dominantes": [
         {
-          "comercio": "Transferencia a Terceros",
-          "casos_en_celda": 294,
-          "filas_totales_del_comercio_en_oof": 300,
-          "proporcion_del_comercio": 0.98
+          "comercio": "Suscripcion Platzi",
+          "casos_en_celda": 485,
+          "filas_totales_del_comercio_en_oof": 486,
+          "proporcion_del_comercio": 0.9979423868312757
         },
         {
-          "comercio": "Retiro Cajero Automatico",
-          "casos_en_celda": 270,
-          "filas_totales_del_comercio_en_oof": 270,
-          "proporcion_del_comercio": 1.0
+          "comercio": "Utiles Escolares",
+          "casos_en_celda": 483,
+          "filas_totales_del_comercio_en_oof": 493,
+          "proporcion_del_comercio": 0.9797160243407708
         },
         {
-          "comercio": "Impuesto Retencion",
-          "casos_en_celda": 258,
-          "filas_totales_del_comercio_en_oof": 315,
-          "proporcion_del_comercio": 0.819047619047619
+          "comercio": "Pension Colegio",
+          "casos_en_celda": 419,
+          "filas_totales_del_comercio_en_oof": 457,
+          "proporcion_del_comercio": 0.9168490153172867
         }
       ]
     },
     {
       "real": "servicios",
       "predicha": "alimentacion",
-      "casos": 1629,
-      "proporcion_de_la_fila": 0.176508830859248,
-      "total_fila_real": 9229,
+      "casos": 2076,
+      "proporcion_de_la_fila": 0.2199618563254927,
+      "total_fila_real": 9438,
       "comercios_dominantes": [
         {
           "comercio": "Gas Natural Domiciliario",
-          "casos_en_celda": 1080,
-          "filas_totales_del_comercio_en_oof": 1080,
+          "casos_en_celda": 1170,
+          "filas_totales_del_comercio_en_oof": 1170,
           "proporcion_del_comercio": 1.0
         },
         {
           "comercio": "Almacenamiento iCloud",
-          "casos_en_celda": 410,
-          "filas_totales_del_comercio_en_oof": 410,
+          "casos_en_celda": 408,
+          "filas_totales_del_comercio_en_oof": 422,
+          "proporcion_del_comercio": 0.966824644549763
+        },
+        {
+          "comercio": "Tigo Une Plan",
+          "casos_en_celda": 407,
+          "filas_totales_del_comercio_en_oof": 425,
+          "proporcion_del_comercio": 0.9576470588235294
+        }
+      ]
+    },
+    {
+      "real": "otras",
+      "predicha": "transporte",
+      "casos": 1170,
+      "proporcion_de_la_fila": 0.1982043028968321,
+      "total_fila_real": 5903,
+      "comercios_dominantes": [
+        {
+          "comercio": "Retiro Cajero Automatico",
+          "casos_en_celda": 311,
+          "filas_totales_del_comercio_en_oof": 311,
           "proporcion_del_comercio": 1.0
         },
         {
-          "comercio": "Claro Telefonia Movil",
-          "casos_en_celda": 74,
-          "filas_totales_del_comercio_en_oof": 1035,
-          "proporcion_del_comercio": 0.07149758454106281
+          "comercio": "Regalo Cumpleanos",
+          "casos_en_celda": 298,
+          "filas_totales_del_comercio_en_oof": 315,
+          "proporcion_del_comercio": 0.946031746031746
+        },
+        {
+          "comercio": "Transferencia a Terceros",
+          "casos_en_celda": 292,
+          "filas_totales_del_comercio_en_oof": 296,
+          "proporcion_del_comercio": 0.9864864864864865
+        }
+      ]
+    },
+    {
+      "real": "vivienda",
+      "predicha": "alimentacion",
+      "casos": 1809,
+      "proporcion_de_la_fila": 0.1974459724950884,
+      "total_fila_real": 9162,
+      "comercios_dominantes": [
+        {
+          "comercio": "Cuota Hipoteca Vivienda",
+          "casos_en_celda": 559,
+          "filas_totales_del_comercio_en_oof": 1582,
+          "proporcion_del_comercio": 0.3533501896333755
+        },
+        {
+          "comercio": "Impuesto Predial",
+          "casos_en_celda": 405,
+          "filas_totales_del_comercio_en_oof": 412,
+          "proporcion_del_comercio": 0.9830097087378641
+        },
+        {
+          "comercio": "Ferreteria El Martillo",
+          "casos_en_celda": 381,
+          "filas_totales_del_comercio_en_oof": 386,
+          "proporcion_del_comercio": 0.9870466321243523
         }
       ]
     }

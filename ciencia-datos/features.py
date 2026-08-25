@@ -22,6 +22,7 @@ CATEGORIAS: tuple[str, ...] = (
     "educacion",
     "ocio",
     "servicios",
+    "deudas",
     "otras",
 )
 
@@ -32,6 +33,12 @@ PERFILES: tuple[str, ...] = ("Saludable", "En observación", "En riesgo")
 CATEGORIAS_ESENCIALES: tuple[str, ...] = ("vivienda", "alimentacion", "salud", "servicios")
 
 #: Gastos sobre los que una recomendacion puede actuar este mes.
+#:
+#: "deudas" no esta ni aqui ni en las esenciales, a proposito. Un pago de
+#: tarjeta o una cuota no se recorta este mes como se recorta el ocio, pero
+#: tampoco es un gasto de vida como el arriendo: se amortiza, que es otra
+#: conversacion. Dejarla fuera evita que una recomendacion la trate como
+#: grasa recortable.
 CATEGORIAS_DISCRECIONALES: tuple[str, ...] = ("ocio", "otras")
 
 #: Escala ordinal, no one-hot: hay orden real entre los niveles.
@@ -41,8 +48,13 @@ ESCALA_AHORRO: dict[str, int] = {"nula": 0, "baja": 1, "media": 2, "alta": 3}
 # ------------------------------------------------------- normalizacion texto
 
 # Prefijos tipicos de un extracto bancario.
+#
+# "credito" salio de la lista: aparece como prefijo de cobro, si, pero tambien
+# es la palabra que distingue un pago de tarjeta de cualquier otra cosa, y
+# borrarla dejaba "PAGO TARJETA DE CREDITO" reducido a "tarjeta de". "tarj" se
+# queda y no toca "tarjeta", porque el limite de palabra exige que termine ahi.
 _PREFIJOS_RUIDO = re.compile(
-    r"\b(trf|pos|compra|pago|debito|credito|tarj|ref|aut|nro|no|cod)\b[\s:/#.-]*",
+    r"\b(trf|pos|compra|pago|debito|tarj|ref|aut|nro|no|cod)\b[\s:/#.-]*",
     flags=re.IGNORECASE,
 )
 _BASURA = re.compile(r"[^a-z0-9\s]+")
@@ -120,11 +132,19 @@ def normalizar_frecuencia(valor: object) -> str:
 # --------------------------------------------------- features del perfil
 
 #: El modelo serializado depende de este orden. Reordenar obliga a reentrenar.
+#:
+#: Todas las columnas son adimensionales: ratios, porcentajes y conteos. Ninguna
+#: es un monto. Es deliberado, porque la aplicacion acepta varias monedas y no
+#: las convierte: el mismo sueldo son 3.000 o 12.000.000 segun se escriba en
+#: dolares o en pesos colombianos. Con montos crudos en el vector, el escalador
+#: llevaba esas cifras a z-scores enormes fuera del rango de entrenamiento y la
+#: misma situacion economica recibia diagnosticos distintos segun la moneda.
+#:
+#: Sobre ratios eso no puede pasar: el factor de conversion se cancela en la
+#: division. Ver la comprobacion de invariancia de escala en el notebook.
 COLUMNAS_PERFIL: tuple[str, ...] = (
-    "ingreso_mensual",
     "ratio_endeudamiento",
     "ahorro_ordinal",
-    "gasto_total",
     "tasa_gasto",
     "capacidad_ahorro",
     "gasto_esencial_pct",
@@ -132,7 +152,6 @@ COLUMNAS_PERFIL: tuple[str, ...] = (
     "concentracion_gasto",
     "categorias_activas",
     "vivienda_sobre_ingreso",
-    "carga_deuda_absoluta",
 ) + tuple(f"pct_{c}" for c in CATEGORIAS)
 
 
@@ -169,7 +188,7 @@ def construir_features_perfil(
     esencial = sum(porcentajes[c] for c in CATEGORIAS_ESENCIALES)
     discrecional = sum(porcentajes[c] for c in CATEGORIAS_DISCRECIONALES)
 
-    # Herfindahl: 1 = todo en una categoria, 0.125 = repartido entre las ocho.
+    # Herfindahl: 1 = todo en una categoria, 1/N = repartido entre las N.
     concentracion = sum(p * p for p in porcentajes.values())
     activas = sum(1 for c in CATEGORIAS if gastos[c] > 0)
 
@@ -177,10 +196,8 @@ def construir_features_perfil(
     tasa_gasto = total / ingreso
 
     features: dict[str, float] = {
-        "ingreso_mensual": ingreso,
         "ratio_endeudamiento": ratio_deuda,
         "ahorro_ordinal": float(ESCALA_AHORRO[normalizar_frecuencia(frecuencia_ahorro).lower()]),
-        "gasto_total": total,
         "tasa_gasto": tasa_gasto,
         # Negativa cuando gasta mas de lo que ingresa. No se recorta a 0.
         "capacidad_ahorro": 1.0 - tasa_gasto,
@@ -189,7 +206,6 @@ def construir_features_perfil(
         "concentracion_gasto": concentracion,
         "categorias_activas": float(activas),
         "vivienda_sobre_ingreso": gastos["vivienda"] / ingreso,
-        "carga_deuda_absoluta": ratio_deuda * ingreso,
     }
     for c in CATEGORIAS:
         features[f"pct_{c}"] = porcentajes[c]
@@ -215,7 +231,7 @@ def agregar_por_categoria(
     clave_categoria: str = "categoria",
     clave_monto: str = "monto",
 ) -> dict[str, float]:
-    """Suma montos por categoria, siempre con las ocho claves presentes."""
+    """Suma montos por categoria, siempre con todas las claves presentes."""
     resumen = {c: 0.0 for c in CATEGORIAS}
     for t in transacciones:
         categoria = normalizar_categoria(t.get(clave_categoria))

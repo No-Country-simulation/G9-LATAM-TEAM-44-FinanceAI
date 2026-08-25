@@ -1,7 +1,7 @@
 {
-  "oof_predicciones_csv": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\FinanceAI-05-calibracion\\ciencia-datos\\experimentos\\oof_predicciones_cv.csv",
-  "filas_oof": 58894,
-  "accuracy_global_ood": 0.4264271402859374,
+  "oof_predicciones_csv": "C:\\Users\\Rayle\\Desktop\\G9-LATAM-TEAM-44-FinanceAI-main\\ciencia-datos\\experimentos\\oof_predicciones_cv.csv",
+  "filas_oof": 63309,
+  "accuracy_global_ood": 0.39773176009730055,
   "categorias": [
     "alimentacion",
     "transporte",
@@ -10,50 +10,51 @@
     "educacion",
     "ocio",
     "servicios",
+    "deudas",
     "otras"
   ],
   "coverage_vs_accuracy": [
     {
       "umbral": 0.0,
       "coverage": 1.0,
-      "filas_aceptadas": 58894,
-      "accuracy_aceptadas": 0.4264271402859374
+      "filas_aceptadas": 63309,
+      "accuracy_aceptadas": 0.39773176009730055
     },
     {
       "umbral": 0.3,
-      "coverage": 0.9660916222365606,
-      "filas_aceptadas": 56897,
-      "accuracy_aceptadas": 0.43707049580821483
+      "coverage": 0.9754063403307587,
+      "filas_aceptadas": 61752,
+      "accuracy_aceptadas": 0.40120158051561083
     },
     {
       "umbral": 0.5,
-      "coverage": 0.8181987978401875,
-      "filas_aceptadas": 48187,
-      "accuracy_aceptadas": 0.45240417540000416
+      "coverage": 0.8324092940972058,
+      "filas_aceptadas": 52699,
+      "accuracy_aceptadas": 0.4190781608759179
     },
     {
       "umbral": 0.6,
-      "coverage": 0.6731755357082215,
-      "filas_aceptadas": 39646,
-      "accuracy_aceptadas": 0.49301316652373506
+      "coverage": 0.729848836658295,
+      "filas_aceptadas": 46206,
+      "accuracy_aceptadas": 0.4445526554992858
     },
     {
       "umbral": 0.7,
-      "coverage": 0.5888375725880395,
-      "filas_aceptadas": 34679,
-      "accuracy_aceptadas": 0.5015715562732489
+      "coverage": 0.6660348449667504,
+      "filas_aceptadas": 42166,
+      "accuracy_aceptadas": 0.4608689465446094
     },
     {
       "umbral": 0.8,
-      "coverage": 0.5426529018236154,
-      "filas_aceptadas": 31959,
-      "accuracy_aceptadas": 0.5223254795206358
+      "coverage": 0.588241798164558,
+      "filas_aceptadas": 37241,
+      "accuracy_aceptadas": 0.48019655755753066
     },
     {
       "umbral": 0.9,
-      "coverage": 0.4636465514313852,
-      "filas_aceptadas": 27306,
-      "accuracy_aceptadas": 0.5669816157621036
+      "coverage": 0.51750935885893,
+      "filas_aceptadas": 32763,
+      "accuracy_aceptadas": 0.5115526661172665
     }
   ],
   "curva_calibracion": {
@@ -75,9 +76,9 @@
           0.1,
           0.2
         ],
-        "soporte": 2,
-        "confianza_media": 0.19422289606824095,
-        "accuracy_observada": 0.5
+        "soporte": 32,
+        "confianza_media": 0.19839244239500195,
+        "accuracy_observada": 0.0
       },
       {
         "bin": 2,
@@ -85,9 +86,9 @@
           0.2,
           0.30000000000000004
         ],
-        "soporte": 1995,
-        "confianza_media": 0.2667542042239248,
-        "accuracy_observada": 0.12280701754385964
+        "soporte": 1525,
+        "confianza_media": 0.26928986448621145,
+        "accuracy_observada": 0.26557377049180325
       },
       {
         "bin": 3,
@@ -95,9 +96,9 @@
           0.30000000000000004,
           0.4
         ],
-        "soporte": 3533,
-        "confianza_media": 0.35363154414594383,
-        "accuracy_observada": 0.3266345881686952
+        "soporte": 4608,
+        "confianza_media": 0.3473251506945441,
+        "accuracy_observada": 0.3528645833333333
       },
       {
         "bin": 4,
@@ -105,9 +106,9 @@
           0.4,
           0.5
         ],
-        "soporte": 5177,
-        "confianza_media": 0.4502118726509266,
-        "accuracy_observada": 0.36971218852617344
+        "soporte": 4445,
+        "confianza_media": 0.4506177527898675,
+        "accuracy_observada": 0.23937007874015748
       },
       {
         "bin": 5,
@@ -115,9 +116,9 @@
           0.5,
           0.6000000000000001
         ],
-        "soporte": 8541,
-        "confianza_media": 0.5508093426144346,
-        "accuracy_observada": 0.2639035241774968
+        "soporte": 6493,
+        "confianza_media": 0.5447835457377584,
+        "accuracy_observada": 0.23779454797474203
       },
       {
         "bin": 6,
@@ -125,9 +126,9 @@
           0.6000000000000001,
           0.7000000000000001
         ],
-        "soporte": 4967,
-        "confianza_media": 0.6562380114233183,
-        "accuracy_observada": 0.4332595127843769
+        "soporte": 4040,
+        "confianza_media": 0.6487977590918422,
+        "accuracy_observada": 0.2742574257425743
       },
       {
         "bin": 7,
@@ -135,9 +136,9 @@
           0.7000000000000001,
           0.8
         ],
-        "soporte": 2720,
-        "confianza_media": 0.7464645165667539,
-        "accuracy_observada": 0.2577205882352941
+        "soporte": 4925,
+        "confianza_media": 0.75415254073026,
+        "accuracy_observada": 0.3147208121827411
       },
       {
         "bin": 8,
@@ -145,9 +146,9 @@
           0.8,
           0.9
         ],
-        "soporte": 4653,
-        "confianza_media": 0.8520890933880407,
-        "accuracy_observada": 0.2602621964324092
+        "soporte": 4478,
+        "confianza_media": 0.8479133263994063,
+        "accuracy_observada": 0.2507815989280929
       },
       {
         "bin": 9,
@@ -155,16 +156,16 @@
           0.9,
           1.0
         ],
-        "soporte": 27306,
-        "confianza_media": 0.9771923540112448,
-        "accuracy_observada": 0.5669816157621036
+        "soporte": 32763,
+        "confianza_media": 0.9786546653816562,
+        "accuracy_observada": 0.5115526661172665
       }
     ]
   },
-  "expected_calibration_error": 0.33351917945890486,
-  "brier_score_multiclase": 0.1152393999304468,
+  "expected_calibration_error": 0.38896175374855385,
+  "brier_score_multiclase": 0.10830409429339152,
   "graficas": {
-    "reliability": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\FinanceAI-05-calibracion\\ciencia-datos\\experimentos\\calibracion_reliability.png",
-    "coverage_accuracy": "C:\\Users\\HardM\\Desktop\\Enterprise\\hackaton-alura\\FinanceAI-05-calibracion\\ciencia-datos\\experimentos\\calibracion_coverage_accuracy.png"
+    "reliability": "C:\\Users\\Rayle\\Desktop\\G9-LATAM-TEAM-44-FinanceAI-main\\ciencia-datos\\experimentos\\calibracion_reliability.png",
+    "coverage_accuracy": "C:\\Users\\Rayle\\Desktop\\G9-LATAM-TEAM-44-FinanceAI-main\\ciencia-datos\\experimentos\\calibracion_coverage_accuracy.png"
   }
 }

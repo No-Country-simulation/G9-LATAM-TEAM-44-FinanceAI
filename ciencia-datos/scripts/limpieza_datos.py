@@ -148,7 +148,7 @@ def main() -> None:
     transacciones.to_csv(ruta_tx, index=False, encoding="utf-8")
     usuarios.to_csv(ruta_us, index=False, encoding="utf-8")
 
-    egresos = transacciones[transacciones["tipo"] == "egresos"]
+    egresos = transacciones[transacciones["tipo"].isin(("egresos", "deudas"))]
     print(f"  {len(transacciones):,} transacciones -> {ruta_tx}")
     print(f"  {len(usuarios):,} usuarios        -> {ruta_us}")
     print(f"  egresos etiquetados: {egresos['categoria'].notna().sum():,}")
