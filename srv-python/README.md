@@ -45,7 +45,7 @@ Configuración de OCI: [docs/OCI.md](../docs/OCI.md).
 | GET | `/health` | — | liveness (no toca los modelos) |
 | GET | `/modelo/info` | — | versión, origen, métricas, estado de OCI |
 
-Categorías: `alimentacion · transporte · salud · vivienda · educacion · ocio · servicios · otras`
+Categorías: `alimentacion · transporte · salud · vivienda · educacion · ocio · servicios · deudas · otras`
 Perfiles: `Saludable · En observación · En riesgo`
 
 ## Módulos compartidos con el notebook

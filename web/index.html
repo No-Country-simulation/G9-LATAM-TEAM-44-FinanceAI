@@ -45,6 +45,11 @@
     <symbol id="i-servicios" viewBox="0 0 24 24">
       <path d="M13 2.5 4.5 13.5H11l-1 8 8.5-11.5H12z"/>
     </symbol>
+    <symbol id="i-deudas" viewBox="0 0 24 24">
+      <rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/>
+      <path d="M2.5 10h19"/>
+      <path d="M6 14.5h4"/>
+    </symbol>
     <symbol id="i-otras" viewBox="0 0 24 24">
       <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
     </symbol>
@@ -200,7 +205,9 @@
             Nivel de endeudamiento
             <b class="valor-vivo" id="deuda-salida">25%</b>
           </span>
-          <input type="range" id="deuda" min="0" max="100" step="1" value="25" class="deslizador">
+          <input type="range" id="deuda" min="0" max="100" step="1" value="25" class="deslizador"
+                 aria-describedby="ayuda-deuda">
+          <p class="ayuda" id="ayuda-deuda">Parte de tu ingreso mensual que se va en pagar deudas: cuotas, préstamos y tarjetas.</p>
         </div>
 
         <div class="campo">
@@ -246,7 +253,7 @@
            financiera y explica en qué se basó.</p>
         <ul class="bienvenida-puntos">
           <li><span class="marca-cat" style="background:var(--c-alimentacion)"><svg class="ic"><use href="#i-alimentacion"/></svg></span>
-              <div><strong>Categorización automática</strong><small>Ocho categorías, incluso con descripciones sucias del banco</small></div></li>
+              <div><strong>Categorización automática</strong><small>Nueve categorías, incluso con descripciones sucias del banco</small></div></li>
           <li><span class="marca-cat" style="background:var(--c-vivienda)"><svg class="ic"><use href="#i-escaner"/></svg></span>
               <div><strong>Perfil explicable</strong><small>Los tres factores que más pesaron en la decisión</small></div></li>
           <li><span class="marca-cat" style="background:var(--c-salud)"><svg class="ic"><use href="#i-tendencia"/></svg></span>

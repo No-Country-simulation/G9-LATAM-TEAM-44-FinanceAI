@@ -70,7 +70,6 @@ def test_las_tasas_se_calculan_como_toca():
     vector = features.construir_features_perfil(
         2000, 40, "Baja", {"alimentacion": 500, "vivienda": 500})
 
-    assert vector["gasto_total"] == pytest.approx(1000)
     assert vector["tasa_gasto"] == pytest.approx(0.5)
     assert vector["capacidad_ahorro"] == pytest.approx(0.5)
     assert vector["ratio_endeudamiento"] == pytest.approx(0.4)
@@ -89,7 +88,6 @@ def test_la_capacidad_de_ahorro_puede_ser_negativa():
 
 def test_sin_gastos_no_hay_division_por_cero():
     vector = features.construir_features_perfil(3000, 0, "Alta", {})
-    assert vector["gasto_total"] == 0
     assert vector["tasa_gasto"] == 0
     assert all(math.isfinite(v) for v in vector.values())
 
@@ -99,11 +97,67 @@ def test_la_concentracion_distingue_gasto_repartido_de_gasto_unico():
     repartido = features.construir_features_perfil(
         3000, 0, "Alta", {c: 125 for c in features.CATEGORIAS})
 
+    # Herfindahl: 1 con todo en una categoria, 1/N repartido entre las N.
     assert concentrado["concentracion_gasto"] == pytest.approx(1.0)
-    assert repartido["concentracion_gasto"] == pytest.approx(0.125)
+    assert repartido["concentracion_gasto"] == pytest.approx(1 / len(features.CATEGORIAS))
 
 
-def test_agregar_por_categoria_devuelve_siempre_las_ocho():
+def test_el_vector_no_contiene_montos():
+    """Ninguna columna puede ser un monto.
+
+    La aplicacion acepta varias monedas y no las convierte, asi que un monto en
+    el vector hace que el diagnostico dependa de la unidad en la que el usuario
+    escriba las cifras.
+    """
+    vector = features.construir_features_perfil(
+        3000, 25, "Media", {"alimentacion": 500, "vivienda": 900})
+
+    # Un ratio, un porcentaje o un conteo no pueden acercarse a la escala del
+    # ingreso ni del gasto. Cualquier columna que lo haga es un monto colado.
+    assert all(abs(v) <= 100 for v in vector.values())
+
+
+@pytest.mark.parametrize("factor", [20, 350, 1000, 4000])
+def test_el_vector_es_invariante_a_la_moneda(factor):
+    """Misma situacion economica, distinta unidad, mismo vector.
+
+    Es la regresion del fallo que daba diagnosticos distintos al cambiar de
+    dolares a pesos: los montos crudos salian del rango de entrenamiento y el
+    escalador los mandaba a z-scores enormes.
+    """
+    gastos = {"vivienda": 900, "alimentacion": 500, "transporte": 400}
+    base = features.construir_features_perfil(3000, 20, "Media", gastos)
+    escalado = features.construir_features_perfil(
+        3000 * factor, 20, "Media", {c: v * factor for c, v in gastos.items()})
+
+    for columna in features.COLUMNAS_PERFIL:
+        assert escalado[columna] == pytest.approx(base[columna]), columna
+
+
+def test_los_pagos_de_deuda_van_a_su_categoria():
+    """Una tarjeta o una cuota no son un gasto de consumo mas.
+
+    Antes caian en "otras" porque el normalizador borraba "credito" junto con
+    los prefijos de extracto, y la descripcion se quedaba en "tarjeta de".
+    """
+    from app.reglas import clasificar_por_reglas
+
+    for descripcion in ("PAGO TARJETA DE CREDITO", "Pago Minimo Tarjeta Visa",
+                        "ABONO TARJETA MASTERCARD", "CUOTA PRESTAMO BANCARIO",
+                        "Avance Tarjeta de Credito", "Cuota de Manejo Tarjeta"):
+        categoria, _ = clasificar_por_reglas(descripcion)
+        assert categoria == "deudas", descripcion
+
+
+def test_lo_que_lleva_tarjeta_o_credito_sin_ser_deuda_no_se_confunde():
+    """Los dos casos que se rozan con la categoria nueva."""
+    from app.reglas import clasificar_por_reglas
+
+    assert clasificar_por_reglas("Recarga Tarjeta Metro")[0] == "transporte"
+    assert clasificar_por_reglas("Credito Hipotecario")[0] == "vivienda"
+
+
+def test_agregar_por_categoria_devuelve_todas_las_categorias():
     resumen = features.agregar_por_categoria([
         {"categoria": "ocio", "monto": 40},
         {"categoria": "ocio", "monto": 60},

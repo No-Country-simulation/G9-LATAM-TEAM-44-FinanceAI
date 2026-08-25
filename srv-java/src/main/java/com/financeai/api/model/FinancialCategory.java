@@ -18,6 +18,7 @@ public enum FinancialCategory {
     EDUCACION("educacion"),
     OCIO("ocio"),
     SERVICIOS("servicios"),
+    DEUDAS("deudas"),
     OTRAS("otras");
 
     private final String valor;

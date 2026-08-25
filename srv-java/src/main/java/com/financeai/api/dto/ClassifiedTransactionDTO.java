@@ -7,7 +7,7 @@ import java.util.List;
  *
  * @param descripcion     descripcion original, tal cual llego
  * @param valor           monto original, no el que devuelve el modelo
- * @param categoria       una de las ocho categorias canonicas
+ * @param categoria       una de las nueve categorias canonicas
  * @param confianza       0..1; por debajo del umbral la categoria pasa a "otras"
  * @param estadoConfianza "aceptado" | "requiere_revision" | "otras" (Fase 12,
  *                        estrategia de abstencion). Ver

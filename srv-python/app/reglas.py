@@ -60,6 +60,16 @@ KEYWORDS: dict[str, list[str]] = {
         "movistar", "tigo", "entel", "wom", "basuras", "icloud", "microsoft",
         "antivirus", "hosting", "telefonia",
     ],
+    # Va la ultima a proposito. "Recarga Tarjeta Metro" tiene que caer en
+    # transporte y "Credito Hipotecario" en vivienda, y las dos se resuelven
+    # antes de llegar aqui. Por eso tampoco hay un "tarjeta" suelto.
+    "deudas": [
+        "tarjeta de credito", "tarjeta credito", "avance tarjeta",
+        "abono tarjeta", "minimo tarjeta", "manejo tarjeta",
+        "intereses tarjeta", "mastercard", "prestamo", "credito libre",
+        "credito de consumo", "credito personal", "cuota credito",
+        "electrodomesticos",
+    ],
 }
 
 #: Alta porque una coincidencia literal con un comercio conocido es mas fiable

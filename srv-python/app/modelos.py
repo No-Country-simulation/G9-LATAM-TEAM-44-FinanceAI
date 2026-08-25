@@ -74,10 +74,10 @@ class RegistroModelos:
         """Corte para el estado 'aceptado' (Fase 12, estrategia de abstencion).
 
         Tomado de ciencia-datos/experimentos/calibracion.json
-        (coverage_vs_accuracy, Fase 5): en umbral=0.8 la accuracy de las
-        predicciones aceptadas es 0.5223254795206358 (31959/58894 filas,
-        coverage=0.5426529018236154) frente a un accuracy_global_ood de
-        0.4264271402859374 -- +9.59 puntos absolutos (+22.5% relativo). Ver
+        (coverage_vs_accuracy): en umbral=0.8 la accuracy de las predicciones
+        aceptadas es 0.48019655755753066 (37241/63309 filas,
+        coverage=0.588241798164558) frente a un accuracy_global_ood de
+        0.39773176009730055 -- +8.25 puntos absolutos (+20.7% relativo). Ver
         docs/API-ENDPOINTS.md para la tabla completa y la justificacion de
         por que no se usa 0.9 (coverage cae a 0.46) ni un valor menor a 0.8
         (la mejora sobre el promedio se diluye).

@@ -50,6 +50,15 @@ public class FallbackClassifier {
         KEYWORDS.put(FinancialCategory.SERVICIOS, List.of(
                 "luz", "agua", "internet", "gas", "celular", "energia",
                 "claro", "movistar", "tigo"));
+        // La ultima a proposito: "recarga tarjeta metro" tiene que resolverse
+        // en transporte y "credito hipotecario" en vivienda. Por eso tampoco
+        // hay un "tarjeta" suelto en la lista.
+        KEYWORDS.put(FinancialCategory.DEUDAS, List.of(
+                "tarjeta de credito", "tarjeta credito", "avance tarjeta",
+                "abono tarjeta", "minimo tarjeta", "manejo tarjeta",
+                "intereses tarjeta", "mastercard", "prestamo", "credito libre",
+                "credito de consumo", "credito personal", "cuota credito",
+                "electrodomesticos"));
     }
 
     public FinancialCategory clasificar(String descripcion) {

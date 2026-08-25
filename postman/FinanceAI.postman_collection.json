@@ -236,7 +236,7 @@
               "pm.test('responde 200', () => pm.response.to.have.status(200));",
               "const b = pm.response.json();",
               "pm.test('declara su origen', () => pm.expect(b.origen).to.be.oneOf(['oci','local','reglas']));",
-              "pm.test('expone las 8 categorías', () => pm.expect(b.categorias).to.have.lengthOf(8));",
+              "pm.test('expone las 9 categorías', () => pm.expect(b.categorias).to.have.lengthOf(9));",
               "pm.test('expone los 3 perfiles', () => pm.expect(b.perfiles).to.have.lengthOf(3));"
             ]}
           }]

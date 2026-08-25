@@ -8,6 +8,8 @@ respuesta, no los valores exactos del modelo actual.
 import pytest
 from fastapi.testclient import TestClient
 
+import features
+
 from app.main import app
 from app.modelos import registro
 
@@ -33,15 +35,22 @@ def test_modelo_metricas_responde_200_cuando_el_artefacto_existe(cliente):
         assert clave in cuerpo
 
 
-def test_modelo_metricas_trae_las_8_categorias(cliente):
+def test_modelo_metricas_trae_todas_las_categorias(cliente):
+    """Atado a features.CATEGORIAS, no a un numero.
+
+    Estaba fijado en 8 y se rompio al anadir 'deudas', que es justo el aviso
+    que no interesa: lo que importa es que la matriz cuadre con el vocabulario
+    vigente, no cuantas categorias haya.
+    """
     if registro.metricas_resumen() is None:
         pytest.skip("metricas_resumen.json no esta disponible en este entorno")
 
+    esperadas = len(features.CATEGORIAS)
     cuerpo = cliente.get("/modelo/metricas").json()
-    assert len(cuerpo["metricas_por_categoria"]) == 8
-    assert len(cuerpo["matriz_confusion"]["categorias"]) == 8
-    assert len(cuerpo["matriz_confusion"]["matriz"]) == 8
-    assert all(len(fila) == 8 for fila in cuerpo["matriz_confusion"]["matriz"])
+    assert len(cuerpo["metricas_por_categoria"]) == esperadas
+    assert len(cuerpo["matriz_confusion"]["categorias"]) == esperadas
+    assert len(cuerpo["matriz_confusion"]["matriz"]) == esperadas
+    assert all(len(fila) == esperadas for fila in cuerpo["matriz_confusion"]["matriz"])
 
 
 def test_modelo_metricas_trae_baseline_particion_aleatoria_y_comercio_no_visto(cliente):

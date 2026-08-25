@@ -39,6 +39,36 @@ class RecommendationServiceTest {
     }
 
     @Test
+    @DisplayName("Una carga de deuda alta en las transacciones se menciona")
+    void avisaDeLaCargaDeDeuda() {
+        List<String> recomendaciones = service.generateRecommendations(
+                peticion(4000, 15, "Alta"),
+                Map.of("vivienda", 600.0, "deudas", 400.0));
+
+        assertThat(recomendaciones).anyMatch(r -> r.contains("pagos de deuda son el"));
+    }
+
+    @Test
+    @DisplayName("Con el endeudamiento declarado alto no se repite el consejo de deuda")
+    void noDuplicaElConsejoDeDeuda() {
+        List<String> recomendaciones = service.generateRecommendations(
+                peticion(4000, 55, "Alta"),
+                Map.of("vivienda", 600.0, "deudas", 400.0));
+
+        assertThat(recomendaciones).noneMatch(r -> r.contains("pagos de deuda son el"));
+    }
+
+    @Test
+    @DisplayName("Los pagos de deuda no se sugieren como gasto recortable")
+    void noTrataLaDeudaComoGastoRecortable() {
+        List<String> recomendaciones = service.generateRecommendations(
+                peticion(4000, 10, "Alta"),
+                Map.of("deudas", 1200.0, "vivienda", 300.0));
+
+        assertThat(recomendaciones).noneMatch(r -> r.contains("Deudas y tarjetas"));
+    }
+
+    @Test
     @DisplayName("Ahorrar poco o nada dispara el consejo de automatizar el ahorro")
     void sugiereAutomatizarElAhorro() {
         for (String frecuencia : List.of("Baja", "Nula", "baja", "NULA")) {

@@ -111,7 +111,7 @@ class TransaccionClasificada(Transaccion):
 class ClasificarResponse(BaseModel):
     transacciones_clasificadas: list[TransaccionClasificada]
     resumen_gastos: dict[str, float] = Field(
-        description="Monto agregado por categoria, con las 8 categorias siempre presentes.",
+        description="Monto agregado por categoria, con todas las categorias siempre presentes.",
         examples=[{"alimentacion": 420.0, "transporte": 300.0}],
     )
 

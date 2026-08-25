@@ -51,6 +51,9 @@ public class RecommendationService {
     );
 
     private static final double UMBRAL_DEUDA_ALTA = 40.0;
+
+    /** Peso de los pagos de deuda dentro del gasto a partir del cual se menciona. */
+    private static final double PESO_DEUDA_ALTO = 0.25;
     private static final double DESVIACION_RELEVANTE = 1.5;
     private static final double PESO_MINIMO_PARA_MENCIONAR = 0.10;
     private static final int MAXIMO_RECOMENDACIONES = 4;
@@ -70,6 +73,7 @@ public class RecommendationService {
         // De mayor a menor impacto: lo estructural primero, la categoria al final.
         agregarSobreGasto(recomendaciones, tasaGasto);
         agregarSobreDeuda(recomendaciones, deuda);
+        agregarSobreCargaDeuda(recomendaciones, resumenGastos, totalGastos, deuda);
         agregarSobreAhorro(recomendaciones, request.frecuenciaAhorro());
         agregarCategoriasDesviadas(recomendaciones, resumenGastos, totalGastos);
 
@@ -96,9 +100,33 @@ public class RecommendationService {
 
     private void agregarSobreDeuda(List<String> recomendaciones, int deuda) {
         if (deuda >= UMBRAL_DEUDA_ALTA) {
-            recomendaciones.add("Tu nivel de endeudamiento (%d%%) supera el %.0f%% del ingreso. Prioriza "
+            // "alcanza o supera" porque la comparacion es >=: con deuda justo en el
+            // umbral, decir "supera el 40%" siendo 40% quedaba mal.
+            recomendaciones.add("Tu nivel de endeudamiento (%d%%) alcanza o supera el %.0f%% del ingreso. Prioriza "
                     .formatted(deuda, UMBRAL_DEUDA_ALTA)
                     + "amortizar la deuda de mayor interés antes de asumir nuevos compromisos.");
+        }
+    }
+
+    /**
+     * Lo que dicen las transacciones sobre la deuda, no lo que el usuario declara.
+     *
+     * Solo entra si {@link #agregarSobreDeuda} no habló ya: dos consejos seguidos
+     * sobre lo mismo se leen como insistencia, no como análisis.
+     */
+    private void agregarSobreCargaDeuda(List<String> recomendaciones,
+                                        Map<String, Double> resumenGastos,
+                                        double totalGastos, int deudaDeclarada) {
+        if (totalGastos <= 0 || deudaDeclarada >= UMBRAL_DEUDA_ALTA) {
+            return;
+        }
+        double pagos = resumenGastos.getOrDefault(FinancialCategory.DEUDAS.getValor(), 0.0);
+        double peso = pagos / totalGastos;
+        if (peso >= PESO_DEUDA_ALTO) {
+            recomendaciones.add("Los pagos de deuda son el %.0f%% de tu gasto del periodo. "
+                    .formatted(peso * 100)
+                    + "Concentra cualquier abono extra en la de mayor interés, normalmente la "
+                    + "tarjeta de crédito, en lugar de repartirlo entre todas.");
         }
     }
 

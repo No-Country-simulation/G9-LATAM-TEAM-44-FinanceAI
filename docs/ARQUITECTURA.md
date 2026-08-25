@@ -83,6 +83,30 @@ Alrededor de esa decisión hay tres apoyos:
 
 ---
 
+## El vector de atributos no lleva montos
+
+Las 17 columnas de `COLUMNAS_PERFIL` son ratios, porcentajes y conteos. Ninguna es una
+cantidad de dinero.
+
+El formulario deja elegir moneda pero no convierte, así que el mismo sueldo llega como
+`3.000` o como `12.000.000` según se escriba en dólares o en pesos colombianos. Mientras el
+vector llevó `ingreso_mensual`, `gasto_total` y `carga_deuda_absoluta` en crudo, esas cifras
+caían fuera del rango de entrenamiento (ingresos de 1.200 a 7.000), el `StandardScaler` las
+convertía en z-scores enormes y la regresión logística saturaba. El resultado era que la
+misma situación económica recibía un diagnóstico distinto según la unidad en que estuviera
+escrita, con una confianza cercana al 100% justo donde el modelo menos debía confiar.
+
+Sobre ratios eso no puede reproducirse: el factor de conversión aparece arriba y abajo de la
+división y se cancela. `srv-python/tests/test_features.py` lo fija con un test que compara el
+vector a cinco escalas distintas.
+
+La contrapartida es que el modelo no puede usar el nivel de ingreso como señal. En este
+proyecto no cuesta nada, porque la regla que genera la etiqueta en el dataset sintético
+tampoco lo usa. Con datos reales sí sería una señal legítima, y entonces la salida no es
+devolver los montos al vector sino convertir a una moneda de referencia antes de construirlo.
+
+---
+
 ## Degradación en capas
 
 | Nivel | Cuándo | Qué usa | Señal |
@@ -154,6 +178,7 @@ trabaja con los artefactos del notebook sin tocar la nube.
 | Historial en Object Storage, no en BD | Cero infraestructura adicional | No hay consultas por usuario en tiempo real |
 | Dataset sintético | Etiquetas de calidad y reproducibles | Las métricas no predicen el rendimiento real |
 | Artefactos versionados en git (~3 MB) | Funciona al clonar, sin credenciales | Peso en el repositorio |
+| Vector de atributos sin montos | El diagnóstico no depende de la moneda en que se escriba | El modelo no puede usar el nivel de ingreso como señal |
 
 ---
 

@@ -9,6 +9,14 @@ real resulto ser el dataset, no el algoritmo. Cada cifra citada sale de un
 archivo real bajo `ciencia-datos/experimentos/` o de `ciencia-datos/notebook.ipynb`;
 ninguna es de memoria.
 
+> **Nota de lectura.** Las secciones 1 a 9 describen el clasificador de **ocho**
+> categorias, que es el que existia mientras se hicieron esos experimentos. En
+> agosto de 2026 se anadio una novena, `deudas`, y se regeneraron el dataset y
+> todos los archivos de `experimentos/`. Las cifras de esas secciones ya no
+> coinciden con los archivos que estan hoy en el repositorio: se conservan como
+> registro de lo que se midio entonces, porque el razonamiento que justifica el
+> pipeline actual salio de ahi. Las cifras vigentes estan en la seccion 10.
+
 ## 1. El primer numero: accuracy 0.9999 (particion aleatoria)
 
 La primera evaluacion del clasificador de gastos se hizo con una particion
@@ -312,7 +320,57 @@ comercios, la forma responsable de usar el modelo no es fingir una precision
 que no tiene, sino decirle al usuario (o al sistema que consume la API)
 cuando la prediccion es confiable y cuando conviene revisarla a mano.
 
-## Resumen de la linea de tiempo
+## 10. Novena categoria: `deudas` (agosto de 2026)
+
+Los pagos de tarjeta de credito y las cuotas de credito caian en `otras` con
+confianza mediocre, y por el camino se descubrio que el normalizador borraba la
+palabra `credito` junto con los prefijos de extracto: `PAGO TARJETA DE CREDITO`
+se quedaba en `tarjeta de`. Se anadio `deudas` como novena categoria, se saco
+`credito` de la lista de ruido y se regenero el dataset con 3,909 pagos de deuda
+(antes 872, demasiado pocos para aprender la clase).
+
+El resultado no fue el esperado. `deudas` no solo se aprende: es **la categoria
+mas robusta de las nueve** ante comercios no vistos.
+
+| categoria | f1-score OOD | soporte |
+|---|---|---|
+| deudas | **0.5530** | 3,765 |
+| ocio | 0.5372 | 9,280 |
+| salud | 0.4961 | 8,087 |
+| vivienda | 0.4068 | 9,162 |
+| alimentacion | 0.3926 | 5,886 |
+| educacion | 0.3542 | 5,970 |
+| servicios | 0.3325 | 9,438 |
+| transporte | 0.3051 | 5,818 |
+| otras | 0.1245 | 5,903 |
+
+Tiene explicacion, y encaja con lo que dice la seccion 7. El cuello de botella
+del modelo es que los nombres de comercio son arbitrarios: *Exito*, *Jumbo* y
+*Ara* no comparten nada mas que el contexto. Los pagos de deuda no funcionan
+asi: *tarjeta*, *credito*, *cuota* y *prestamo* son vocabulario descriptivo, no
+marcas. El modelo generaliza bien justo donde el texto describe la operacion en
+vez de nombrar a un tercero.
+
+De paso subio la evaluacion honesta del clasificador: accuracy por comercio no
+visto de 0.4125 a **0.4675**, f1_macro de la CV agrupada a 0.3837 +/- 0.0987.
+
+Una nota sobre la eleccion del algoritmo: en este dataset el benchmark pone a
+Naive Bayes por delante del modelo vigente (f1_macro 0.4087 vs. 0.3837). La
+diferencia esta dentro de una desviacion estandar (+/-0.0595 y +/-0.0987), asi
+que no se distingue del ruido y no se cambio nada, igual que en la seccion 6.
+Merece una comprobacion con mas semillas antes de decidir.
+
+| paso | metrica | valor | fuente |
+|---|---|---|---|
+| 10. Particion aleatoria | accuracy | 0.9999 | `baseline_v1.json` |
+| 10. Particion por comercio | accuracy | 0.4675 | `baseline_v1.json` |
+| 10. CV agrupada 5-fold | f1_macro | 0.3837 +/- 0.0987 | `cv_agrupada_comercio.json` |
+| 10. Calibracion OOD | ECE / Brier | 0.3890 / 0.1083 | `calibracion.json` |
+| 10. Umbral 0.8 | accuracy aceptadas | 0.4802 (cobertura 0.5882) vs. 0.3977 global | `calibracion.json` |
+
+---
+
+## Resumen de la linea de tiempo (modelo de ocho categorias)
 
 | paso | metrica | valor | fuente |
 |---|---|---|---|
